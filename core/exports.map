@@ -1,0 +1,13 @@
+{
+global:
+    extern "C++" {
+        dll::createGraph*;
+        dll::setDefaultGraph*;
+        dll::getDefaultGraph*;
+        dll::initializeGraph*;
+        dll::createInput*;
+        dll::createWeights*;
+        dll::eval*
+    };
+local: *;
+};

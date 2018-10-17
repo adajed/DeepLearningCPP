@@ -1,9 +1,10 @@
-CC=g++
+# main paths
+ROOT_DIR=$(shell dirname $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+OUTDIR=$(ROOT_DIR)/build
 
 GTEST_LIB_PATH=/usr/lib
 
-ROOT_DIR=/home/adam/Projects/DLL
-OUTDIR=/home/adam/Projects/DLL/build
-
 COMMON_CFLAGS=-Wall -I/$(ROOT_DIR)/includes
 COMMON_LFLAGS=
+
+CC=g++

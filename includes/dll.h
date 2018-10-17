@@ -102,8 +102,6 @@ void setDefaultGraph(IGraphUPtr graph);
 
 //! \fn getDefaultGraph
 //! \brief This function returns current default graph.
-//! If there is none default graph set,
-//!   this will return nullptr.
 //!
 IGraphUPtr getDefaultGraph();
 

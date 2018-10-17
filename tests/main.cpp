@@ -1,10 +1,4 @@
 #include <gtest/gtest.h>
-#include "dll.h"
-
-TEST(InitializeTest, good)
-{
-    dll::initializeGraph();
-}
 
 int main(int argc, char** argv)
 {

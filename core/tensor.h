@@ -12,8 +12,8 @@ namespace core
 // forward declarations
 class Tensor;
 
-using TensorUPtr = SharedPtr<Tensor>;
-using TensorVecUPtr = std::vector<TensorUPtr>;
+using TensorSPtr = SharedPtr<Tensor>;
+using TensorVecUPtr = std::vector<TensorSPtr>;
 
 //! \class Tensor
 //! \brief Implementation of ITensor interface.
@@ -22,12 +22,12 @@ class Tensor : public ITensor
 {
 public:
     std::string getName() const override;
-    void setName(std::string const& name) override;
+    void setName(const std::string& name) override;
 
     Shape getShape() const override;
     void setShape(const Shape& shape) override;
 
-    HostTensor eval(InputDict const& inputs) override;
+    HostTensor eval(const InputDict& inputs) override;
 
 private:
     std::string mName; //!< Tensor name.

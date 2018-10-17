@@ -44,15 +44,15 @@ bool Graph::freeMemory()
 
 
 // TODO: Graph::addInput
-TensorUPtr Graph::addInput(const std::string& name, const Shape& shape)
+TensorSPtr Graph::addInput(const std::string& name, const Shape& shape)
 {
-    return TensorUPtr(nullptr);
+    return TensorSPtr(nullptr);
 }
 
 // TODO: Graph::addWeights
-TensorUPtr Graph::addWeights(const std::string& name, const Shape& shape)
+TensorSPtr Graph::addWeights(const std::string& name, const Shape& shape)
 {
-    return TensorUPtr(nullptr);
+    return TensorSPtr(nullptr);
 }
 
 GraphRegister& GraphRegister::getGlobalGraphRegister()
@@ -66,12 +66,12 @@ bool GraphRegister::hasKey(const std::string& name) const
     return mGraphDict.count(name);
 }
 
-GraphUPtr GraphRegister::at(const std::string& name)
+GraphSPtr GraphRegister::at(const std::string& name)
 {
     return mGraphDict.at(name);
 }
 
-bool GraphRegister::insert(GraphUPtr graph)
+bool GraphRegister::insert(GraphSPtr graph)
 {
     if (hasKey(graph->getName()))
         return false;
@@ -79,32 +79,57 @@ bool GraphRegister::insert(GraphUPtr graph)
     return true;
 }
 
-GraphUPtr GraphRegister::getDefaultGraph()
+GraphSPtr GraphRegister::getDefaultGraph()
 {
     return mDefaultGraph;
 }
 
-void GraphRegister::setDefaultGraph(GraphUPtr graph)
+void GraphRegister::setDefaultGraph(GraphSPtr graph)
 {
     mDefaultGraph = graph;
 }
 
+void GraphRegister::clear()
+{
+    GraphSPtr default_graph = mGraphDict.at(GraphRegister::DEFAULT_GRAPH_NAME);
+    mGraphDict.clear();
+    mGraphDict[GraphRegister::DEFAULT_GRAPH_NAME] = default_graph;
+}
+
 } // namespace core
+
+#define GLOBAL_REGISTER core::GraphRegister::getGlobalGraphRegister()
+
+IGraphUPtr createGraph(const std::string& name)
+{
+    if (GLOBAL_REGISTER.hasKey(name))
+        return nullptr;
+
+    core::GraphSPtr graph = std::make_shared<core::Graph>(name);
+    GLOBAL_REGISTER.insert(graph);
+    return graph;
+}
+
+void setDefaultGraph(IGraphUPtr graph)
+{
+    core::GraphSPtr g = std::static_pointer_cast<core::Graph>(graph);
+    GLOBAL_REGISTER.setDefaultGraph(g);
+}
 
 IGraphUPtr getDefaultGraph()
 {
-    return core::GraphRegister::getGlobalGraphRegister().getDefaultGraph();
+    return GLOBAL_REGISTER.getDefaultGraph();
 }
 
 ITensorUPtr createInput(const std::string& name, const Shape& shape)
 {
-    core::GraphUPtr graph = core::GraphRegister::getGlobalGraphRegister().getDefaultGraph();
+    core::GraphSPtr graph = GLOBAL_REGISTER.getDefaultGraph();
     return graph->addInput(name, shape);
 }
 
 ITensorUPtr createWeights(const std::string& name, const Shape& shape)
 {
-    core::GraphUPtr graph = core::GraphRegister::getGlobalGraphRegister().getDefaultGraph();
+    core::GraphSPtr graph = GLOBAL_REGISTER.getDefaultGraph();
     return graph->addWeights(name, shape);
 }
 

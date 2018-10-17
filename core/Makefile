@@ -12,8 +12,14 @@ CPP_SOURCES=graph.cpp tensor.cpp
 OBJS_R=$(patsubst %.cpp,$(OUTDIR_R)/%.o,$(CPP_SOURCES))
 OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
+COMMON_CFLAGS += -std=c++17
 CFLAGS_R=$(COMMON_CFLAGS) -O3 -fPIC
 CFLAGS_D=$(COMMON_CFLAGS) -g -fPIC
+
+EXPORTS_MAP=$(ROOT_DIR)/core/exports.map
+COMMON_LFLAGS +=-fPIC -shared -Wl,--version-script=$(EXPORTS_MAP)
+LFLAGS_R=$(COMMON_LFLAGS)
+LFLAGS_D=$(COMMON_LFLAGS)
 
 all: release debug
 
@@ -24,11 +30,11 @@ debug: $(SHARED_D) $(STATIC_D)
 
 $(SHARED_R): $(OBJS_R)
 	@echo "Linking: $@"
-	@$(CC) -o $@ $^ $(LFLAGS_R) -fPIC -shared
+	@$(CC) -o $@ $^ $(LFLAGS_R)
 
 $(SHARED_D): $(OBJS_D)
-	@echo "Linking: $@" -fPIC -shared
-	@$(CC) -o $@ $^ $(LFLAGS_D) -fPIC -shared
+	@echo "Linking: $@"
+	@$(CC) -o $@ $^ $(LFLAGS_D)
 
 $(STATIC_R): $(OBJS_R)
 	@echo "Linking: $@"

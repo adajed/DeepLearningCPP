@@ -10,7 +10,7 @@ namespace core
 {
 
 class Graph;
-using GraphUPtr = SharedPtr<Graph>;
+using GraphSPtr = SharedPtr<Graph>;
 
 //! \class Graph
 //! \brief Implementation of IGraph interface.
@@ -51,7 +51,7 @@ public:
     //! \param shape Shape of the new input.
     //!
     //! \return Pointer to tensor representing new input.
-    TensorUPtr addInput(const std::string& name, const Shape& shape);
+    TensorSPtr addInput(const std::string& name, const Shape& shape);
 
     //! \fn addWeights
     //! \brief Adds new weights to the graph.
@@ -59,7 +59,7 @@ public:
     //! \param shape Shape of new weights.
     //!
     //! \return Pointer to tensor representing new weights.
-    TensorUPtr addWeights(const std::string& name, const Shape& shape);
+    TensorSPtr addWeights(const std::string& name, const Shape& shape);
 
 private:
     std::string mName; //!< Name of the graph.
@@ -74,11 +74,13 @@ private:
     // name of initial default graph
     static const std::string DEFAULT_GRAPH_NAME;
 
+    static GraphRegister globalRegister;
+
     // private constructor to prevent creation of new registers
     GraphRegister() : mGraphDict()
     {
         // create initial graph and set it as the default
-        GraphUPtr graph = GraphUPtr(new Graph(DEFAULT_GRAPH_NAME));
+        GraphSPtr graph = GraphSPtr(new Graph(DEFAULT_GRAPH_NAME));
         mGraphDict[DEFAULT_GRAPH_NAME] = graph;
         mDefaultGraph = graph;
     }
@@ -97,30 +99,32 @@ public:
     //! \fn at
     //! \brief Returns graph with given name.
     //!
-    GraphUPtr at(std::string const& name);
+    GraphSPtr at(std::string const& name);
 
     //! \fn insert
     //! \brief Registers new graph.
     //! If there is already a graph with the same name,
     //!     this will return false and won't change the register.
     //!
-    bool insert(GraphUPtr graph);
+    bool insert(GraphSPtr graph);
 
     //! \fn getDefaultGraph
     //! \brief Returns the default graph.
     //!
-    GraphUPtr getDefaultGraph();
+    GraphSPtr getDefaultGraph();
 
     //! \fn setDefaultGraph
     //! \brief Sets given graph as a default one.
     //! If given graph is not registered yet, this will
     //!     register it and then set is as a deafult graph.
     //!
-    void setDefaultGraph(GraphUPtr);
+    void setDefaultGraph(GraphSPtr);
+
+    void clear();
 
 private:
-    std::map<std::string, GraphUPtr> mGraphDict;
-    GraphUPtr mDefaultGraph;
+    std::map<std::string, GraphSPtr> mGraphDict;
+    GraphSPtr mDefaultGraph;
 };
 
 } // namespace core
