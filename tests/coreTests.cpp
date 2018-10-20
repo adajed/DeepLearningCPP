@@ -54,3 +54,11 @@ TEST_F(CoreTest, addInput)
     EXPECT_EQ(inputs.size(), 1);
     EXPECT_EQ(inputs[0], input);
 }
+
+TEST_F(CoreTest, addInputWithTheSameName)
+{
+    dll::ITensor* input1 = dll::createInput("input1", {3, 224, 224});
+    EXPECT_NE(input1, nullptr);
+    dll::ITensor* input2 = dll::createInput("input1", {3, 224, 224});
+    EXPECT_EQ(input2, nullptr);
+}

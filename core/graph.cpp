@@ -102,7 +102,10 @@ void GraphRegister::clear()
     for (std::pair<std::string, Graph*> pair : mGraphDict)
         delete pair.second;
     mGraphDict.clear();
-    mGraphDict[GraphRegister::DEFAULT_GRAPH_NAME] = new Graph(GraphRegister::DEFAULT_GRAPH_NAME);
+
+    Graph* default_graph = new Graph(GraphRegister::DEFAULT_GRAPH_NAME);
+    mGraphDict[GraphRegister::DEFAULT_GRAPH_NAME] = default_graph;
+    mDefaultGraph = default_graph;
 }
 
 } // namespace core
