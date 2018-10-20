@@ -1,4 +1,4 @@
-#include "tensor.h"
+#include "oper.h"
 
 namespace dll
 {
@@ -27,7 +27,34 @@ void Tensor::setShape(const Shape& shape)
 
 HostTensor Tensor::eval(InputDict const& inputs)
 {
+    exec(inputs);
     return HostTensor{};
+}
+
+void Tensor::setHostTensor(HostTensor tensor)
+{
+}
+
+void Tensor::exec(const InputDict& inputs)
+{
+    if (!mIsEvaluated)
+    {
+        mOper->exec(inputs);
+        mIsEvaluated = true;
+    }
+}
+
+void Tensor::reset()
+{
+    mIsEvaluated = false;
+    for (Oper* op : mOutputOps)
+        op->reset();
+}
+
+Tensor::~Tensor()
+{
+    for (Oper* op : mOutputOps)
+        delete op;
 }
 
 } // namespace core

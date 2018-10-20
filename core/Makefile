@@ -8,7 +8,8 @@ SHARED_D=$(OUTDIR)/libdll_debug.so
 STATIC_R=$(OUTDIR)/libdll_static.a
 STATIC_D=$(OUTDIR)/libdll_static_debug.a
 
-CPP_SOURCES=graph.cpp tensor.cpp
+CPP_SOURCES=$(wildcard *.cpp)
+CPP_HEADERS=$(wildcard *.h)
 OBJS_R=$(patsubst %.cpp,$(OUTDIR_R)/%.o,$(CPP_SOURCES))
 OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
@@ -46,13 +47,13 @@ $(STATIC_D): $(OBJS_D)
 
 #### COMPILING
 
-$(OUTDIR_R)/%.o: %.cpp | $(OUTDIR_R)
-	@echo "Compiling release: $^"
-	@$(CC) -c -o $@ $(CFLAGS_R) $^
+$(OUTDIR_R)/%.o: %.cpp $(CPP_HEADERS) | $(OUTDIR_R)
+	@echo "Compiling release: $<"
+	@$(CC) -c -o $@ $(CFLAGS_R) $<
 
-$(OUTDIR_D)/%.o: %.cpp | $(OUTDIR_D)
-	@echo "Compiling debug: $^"
-	@$(CC) -c -o $@ $(CFLAGS_D) $^
+$(OUTDIR_D)/%.o: %.cpp $(CPP_HEADERS) | $(OUTDIR_D)
+	@echo "Compiling debug: $<"
+	@$(CC) -c -o $@ $(CFLAGS_D) $<
 
 #### DIRECTORIES
 

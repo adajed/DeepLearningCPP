@@ -21,22 +21,36 @@ const std::string SAMPLE_NAME = "sample_name";
 
 TEST_F(CoreTest, simple)
 {
-    dll::IGraphUPtr g = dll::createGraph(SAMPLE_NAME);
-    EXPECT_NE(g.get(), nullptr);
+    dll::IGraph* g = dll::createGraph(SAMPLE_NAME);
+    EXPECT_NE(g, nullptr);
 }
 
 TEST_F(CoreTest, graphWithGivenNameAlreadyExists)
 {
-    dll::IGraphUPtr g = dll::createGraph(SAMPLE_NAME);
-    EXPECT_NE(g.get(), nullptr);
+    dll::IGraph* g = dll::createGraph(SAMPLE_NAME);
+    EXPECT_NE(g, nullptr);
     g = dll::createGraph(SAMPLE_NAME);
-    EXPECT_EQ(g.get(), nullptr);
+    EXPECT_EQ(g, nullptr);
 }
 
 TEST_F(CoreTest, setDefaultGraph)
 {
-    dll::IGraphUPtr g = dll::createGraph(SAMPLE_NAME);
+    dll::IGraph* g = dll::createGraph(SAMPLE_NAME);
     dll::setDefaultGraph(g);
-    dll::IGraphUPtr g2 = dll::getDefaultGraph();
+    dll::IGraph* g2 = dll::getDefaultGraph();
     EXPECT_EQ(g, g2);
+}
+
+TEST_F(CoreTest, emptyInput)
+{
+    std::vector<dll::ITensor*> inputs = dll::getDefaultGraph()->getInputs();
+    EXPECT_EQ(inputs.size(), 0);
+}
+
+TEST_F(CoreTest, addInput)
+{
+    dll::ITensor* input = dll::createInput("input1", {3, 224, 224});
+    std::vector<dll::ITensor*> inputs = dll::getDefaultGraph()->getInputs();
+    EXPECT_EQ(inputs.size(), 1);
+    EXPECT_EQ(inputs[0], input);
 }

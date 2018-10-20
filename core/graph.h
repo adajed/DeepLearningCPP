@@ -2,7 +2,8 @@
 #define GRAPHDL_CORE_GRAPH_H_
 
 #include "dll.h"
-#include "tensor.h"
+#include "oper.h"
+#include "input.h"
 
 namespace dll
 {
@@ -10,7 +11,6 @@ namespace core
 {
 
 class Graph;
-using GraphSPtr = SharedPtr<Graph>;
 
 //! \class Graph
 //! \brief Implementation of IGraph interface.
@@ -28,7 +28,7 @@ public:
     //! \fn getInputs
     //! \brief Returns all the inputs to the graph.
     //!
-    std::vector<ITensorUPtr> getInputs() const override;
+    std::vector<ITensor*> getInputs() const override;
 
     //! \fn reset
     //! \brief Prepares graph for next computation.
@@ -51,7 +51,7 @@ public:
     //! \param shape Shape of the new input.
     //!
     //! \return Pointer to tensor representing new input.
-    TensorSPtr addInput(const std::string& name, const Shape& shape);
+    Tensor* addInput(const std::string& name, const Shape& shape);
 
     //! \fn addWeights
     //! \brief Adds new weights to the graph.
@@ -59,10 +59,17 @@ public:
     //! \param shape Shape of new weights.
     //!
     //! \return Pointer to tensor representing new weights.
-    TensorSPtr addWeights(const std::string& name, const Shape& shape);
+    Tensor* addWeights(const std::string& name, const Shape& shape);
+
+    ~Graph()
+    {
+        for (std::pair<std::string, InputOper*> pair : mInputOps)
+            delete pair.second;
+    }
 
 private:
     std::string mName; //!< Name of the graph.
+    std::map<std::string, InputOper*> mInputOps;
 };
 
 //! \class GraphRegister
@@ -80,7 +87,7 @@ private:
     GraphRegister() : mGraphDict()
     {
         // create initial graph and set it as the default
-        GraphSPtr graph = GraphSPtr(new Graph(DEFAULT_GRAPH_NAME));
+        Graph* graph = new Graph(DEFAULT_GRAPH_NAME);
         mGraphDict[DEFAULT_GRAPH_NAME] = graph;
         mDefaultGraph = graph;
     }
@@ -99,32 +106,38 @@ public:
     //! \fn at
     //! \brief Returns graph with given name.
     //!
-    GraphSPtr at(std::string const& name);
+    Graph* at(std::string const& name);
 
     //! \fn insert
     //! \brief Registers new graph.
     //! If there is already a graph with the same name,
     //!     this will return false and won't change the register.
     //!
-    bool insert(GraphSPtr graph);
+    bool insert(Graph* graph);
 
     //! \fn getDefaultGraph
     //! \brief Returns the default graph.
     //!
-    GraphSPtr getDefaultGraph();
+    Graph* getDefaultGraph();
 
     //! \fn setDefaultGraph
     //! \brief Sets given graph as a default one.
     //! If given graph is not registered yet, this will
     //!     register it and then set is as a deafult graph.
     //!
-    void setDefaultGraph(GraphSPtr);
+    void setDefaultGraph(Graph*);
 
     void clear();
 
+    ~GraphRegister()
+    {
+        for (std::pair<std::string, Graph*> pair : mGraphDict)
+            delete pair.second;
+    }
+
 private:
-    std::map<std::string, GraphSPtr> mGraphDict;
-    GraphSPtr mDefaultGraph;
+    std::map<std::string, Graph*> mGraphDict;
+    Graph* mDefaultGraph;
 };
 
 } // namespace core

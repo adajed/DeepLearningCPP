@@ -19,15 +19,19 @@ void Graph::setName(const std::string& name)
 }
 
 
-// TODO: Graph::getInputs
-std::vector<ITensorUPtr> Graph::getInputs() const
+std::vector<ITensor*> Graph::getInputs() const
 {
-    return {};
+    std::vector<ITensor*> inputs;
+    for (std::pair<std::string, InputOper*> op : mInputOps)
+        inputs.push_back(op.second->getOutputs()[0]);
+
+    return inputs;
 }
 
-// TODO: Graph::reset
 void Graph::reset()
 {
+    for (std::pair<std::string, InputOper*> op : mInputOps)
+        op.second->reset();
 }
 
 // TODO: Graph::allocateMemory
@@ -43,16 +47,20 @@ bool Graph::freeMemory()
 }
 
 
-// TODO: Graph::addInput
-TensorSPtr Graph::addInput(const std::string& name, const Shape& shape)
+Tensor* Graph::addInput(const std::string& name, const Shape& shape)
 {
-    return TensorSPtr(nullptr);
+    if (mInputOps.count(name) > 0)
+        return nullptr;
+
+    InputOper* oper = new InputOper(name, shape);
+    mInputOps[name] = oper;
+    return oper->getOutputs()[0];
 }
 
 // TODO: Graph::addWeights
-TensorSPtr Graph::addWeights(const std::string& name, const Shape& shape)
+Tensor* Graph::addWeights(const std::string& name, const Shape& shape)
 {
-    return TensorSPtr(nullptr);
+    return nullptr;
 }
 
 GraphRegister& GraphRegister::getGlobalGraphRegister()
@@ -66,12 +74,12 @@ bool GraphRegister::hasKey(const std::string& name) const
     return mGraphDict.count(name);
 }
 
-GraphSPtr GraphRegister::at(const std::string& name)
+Graph* GraphRegister::at(const std::string& name)
 {
     return mGraphDict.at(name);
 }
 
-bool GraphRegister::insert(GraphSPtr graph)
+bool GraphRegister::insert(Graph* graph)
 {
     if (hasKey(graph->getName()))
         return false;
@@ -79,57 +87,58 @@ bool GraphRegister::insert(GraphSPtr graph)
     return true;
 }
 
-GraphSPtr GraphRegister::getDefaultGraph()
+Graph* GraphRegister::getDefaultGraph()
 {
     return mDefaultGraph;
 }
 
-void GraphRegister::setDefaultGraph(GraphSPtr graph)
+void GraphRegister::setDefaultGraph(Graph* graph)
 {
     mDefaultGraph = graph;
 }
 
 void GraphRegister::clear()
 {
-    GraphSPtr default_graph = mGraphDict.at(GraphRegister::DEFAULT_GRAPH_NAME);
+    for (std::pair<std::string, Graph*> pair : mGraphDict)
+        delete pair.second;
     mGraphDict.clear();
-    mGraphDict[GraphRegister::DEFAULT_GRAPH_NAME] = default_graph;
+    mGraphDict[GraphRegister::DEFAULT_GRAPH_NAME] = new Graph(GraphRegister::DEFAULT_GRAPH_NAME);
 }
 
 } // namespace core
 
 #define GLOBAL_REGISTER core::GraphRegister::getGlobalGraphRegister()
 
-IGraphUPtr createGraph(const std::string& name)
+IGraph* createGraph(const std::string& name)
 {
     if (GLOBAL_REGISTER.hasKey(name))
         return nullptr;
 
-    core::GraphSPtr graph = std::make_shared<core::Graph>(name);
+    core::Graph* graph = new core::Graph(name);
     GLOBAL_REGISTER.insert(graph);
     return graph;
 }
 
-void setDefaultGraph(IGraphUPtr graph)
+void setDefaultGraph(IGraph* graph)
 {
-    core::GraphSPtr g = std::static_pointer_cast<core::Graph>(graph);
+    core::Graph* g = static_cast<core::Graph*>(graph);
     GLOBAL_REGISTER.setDefaultGraph(g);
 }
 
-IGraphUPtr getDefaultGraph()
+IGraph* getDefaultGraph()
 {
     return GLOBAL_REGISTER.getDefaultGraph();
 }
 
-ITensorUPtr createInput(const std::string& name, const Shape& shape)
+ITensor* createInput(const std::string& name, const Shape& shape)
 {
-    core::GraphSPtr graph = GLOBAL_REGISTER.getDefaultGraph();
+    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
     return graph->addInput(name, shape);
 }
 
-ITensorUPtr createWeights(const std::string& name, const Shape& shape)
+ITensor* createWeights(const std::string& name, const Shape& shape)
 {
-    core::GraphSPtr graph = GLOBAL_REGISTER.getDefaultGraph();
+    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
     return graph->addWeights(name, shape);
 }
 
@@ -138,7 +147,7 @@ void initializeGraph()
 {
 }
 
-std::vector<HostTensor> eval(std::vector<ITensorUPtr> const& tensors, InputDict const& inputs)
+std::vector<HostTensor> eval(std::vector<ITensor*> const& tensors, InputDict const& inputs)
 {
     return {};
 }
