@@ -21,13 +21,13 @@ namespace dll
 //!
 struct HostTensor
 {
-    const float* values;
-    size_t size;
+    float* values;
+    size_t count;
 };
 
 typedef std::map<std::string, HostTensor> InputDict;
 
-typedef std::vector<int> Shape;
+typedef std::vector<unsigned int> Shape;
 
 //! \class ITensor
 //! \brief Interface representing tensor.
@@ -59,7 +59,7 @@ public:
     //! \brief Evaulates tensor.
     //! \param inputs Map from names of input tensors to values.
     //!
-    virtual HostTensor eval(InputDict const& inputs) = 0;
+    virtual void eval(InputDict const& inputs, HostTensor* hostTensor) = 0;
 
     virtual ~ITensor() {}
 };
@@ -123,7 +123,7 @@ void initializeGraph();
 //! \param tensors Vector of tensors to evaluate.
 //! \param inputs Map of input values.
 //!
-std::vector<HostTensor> eval(std::vector<ITensor*> const& tensors, InputDict const& inputs);
+void eval(std::vector<ITensor*> const& tensors, InputDict const& inputs, std::vector<HostTensor*> hostTensors);
 
 } // namespace dll
 

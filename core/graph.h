@@ -18,9 +18,7 @@ class Graph;
 class Graph : public IGraph
 {
 public:
-    Graph(std::string const& name)
-        : mName(name)
-    {}
+    Graph(std::string const& name);
 
     std::string getName() const override;
     void setName(std::string const& name) override;
@@ -68,8 +66,13 @@ public:
     }
 
 private:
+    void addOper(Oper* oper);
+
     std::string mName; //!< Name of the graph.
     std::map<std::string, InputOper*> mInputOps;
+
+    std::map<Oper::ID, Oper*> mOps;
+    std::map<Tensor::ID, Tensor*> mTensors;
 };
 
 //! \class GraphRegister

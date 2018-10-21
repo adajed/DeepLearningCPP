@@ -20,7 +20,11 @@ private:
     {
         std::string name = mOutputs[0]->getName();
         HostTensor input = inputs.at(name);
-        mOutputs[0]->setHostTensor(input);
+        Memory output = mOutputs[0]->getMemory();
+
+        assert(output.isAllocated());
+        for (std::size_t i = 0; i < input.count; ++i)
+            output.getValues()[i] = input.values[i];
     }
 };
 

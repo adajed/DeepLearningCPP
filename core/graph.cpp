@@ -1,4 +1,7 @@
+#include <assert.h>
+
 #include "dll.h"
+#include "dll_errors.h"
 #include "graph.h"
 
 namespace dll
@@ -7,6 +10,13 @@ namespace core
 {
 
 const std::string GraphRegister::DEFAULT_GRAPH_NAME = "default_graph";
+
+Graph::Graph(const std::string& name)
+    : mName(name)
+    , mInputOps()
+    , mOps()
+    , mTensors()
+{}
 
 std::string Graph::getName() const
 {
@@ -34,10 +44,20 @@ void Graph::reset()
         op.second->reset();
 }
 
-// TODO: Graph::allocateMemory
 bool Graph::allocateMemory()
 {
-    return false;
+    std::vector<Tensor*> allocatedTensors;
+    for (std::pair<Tensor::ID, Tensor*> pair : mTensors)
+    {
+        if (!pair.second->allocateMemory())
+        {
+            for (Tensor* t : allocatedTensors)
+                t->freeMemory();
+            return false;
+        }
+        allocatedTensors.push_back(pair.second);
+    }
+    return true;
 }
 
 // TODO: Graph::freeMemory
@@ -53,7 +73,9 @@ Tensor* Graph::addInput(const std::string& name, const Shape& shape)
         return nullptr;
 
     InputOper* oper = new InputOper(name, shape);
-    mInputOps[name] = oper;
+    mInputOps.insert({name, oper});
+    addOper(oper);
+
     return oper->getOutputs()[0];
 }
 
@@ -61,6 +83,17 @@ Tensor* Graph::addInput(const std::string& name, const Shape& shape)
 Tensor* Graph::addWeights(const std::string& name, const Shape& shape)
 {
     return nullptr;
+}
+
+void Graph::addOper(Oper* oper)
+{
+    Oper::ID opID = oper->getID();
+    mOps.insert({opID, oper});
+    for (Tensor* tensor : oper->getOutputs())
+    {
+        Tensor::ID tensorID = tensor->getID();
+        mTensors.insert({tensorID, tensor});
+    }
 }
 
 GraphRegister& GraphRegister::getGlobalGraphRegister()
@@ -145,14 +178,22 @@ ITensor* createWeights(const std::string& name, const Shape& shape)
     return graph->addWeights(name, shape);
 }
 
-// TODO: initializeGraph
 void initializeGraph()
 {
+    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
+    if (!graph->allocateMemory())
+        throw errors::MemoryAllocationError();
 }
 
-std::vector<HostTensor> eval(std::vector<ITensor*> const& tensors, InputDict const& inputs)
+void eval(std::vector<ITensor*> const& tensors, InputDict const& inputs, std::vector<HostTensor*> hostTensors)
 {
-    return {};
+    assert(tensors.size() == hostTensors.size());
+
+    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
+    graph->reset();
+
+    for (std::size_t i = 0; i < tensors.size(); ++i)
+        tensors[i]->eval(inputs, hostTensors[i]);
 }
 
 } // namespace dll

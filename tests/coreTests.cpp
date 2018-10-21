@@ -62,3 +62,27 @@ TEST_F(CoreTest, addInputWithTheSameName)
     dll::ITensor* input2 = dll::createInput("input1", {3, 224, 224});
     EXPECT_EQ(input2, nullptr);
 }
+
+TEST_F(CoreTest, evalInputOper)
+{
+    const int SIZE = 10;
+    dll::ITensor* input = dll::createInput("input", {SIZE});
+
+    dll::initializeGraph();
+
+    dll::HostTensor inT{nullptr, SIZE};
+    dll::HostTensor outT{nullptr, SIZE};
+
+    inT.values = new float[SIZE];
+    outT.values = new float[SIZE];
+    for (int i = 0; i < SIZE; ++i)
+        inT.values[i] = i;
+
+    input->eval({{"input", inT}}, &outT);
+
+    for (int i = 0; i < SIZE; ++i)
+        EXPECT_EQ(inT.values[i], outT.values[i]);
+
+    delete [] inT.values;
+    delete [] outT.values;
+}

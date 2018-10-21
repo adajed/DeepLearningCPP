@@ -5,6 +5,11 @@ namespace dll
 namespace core
 {
 
+Oper::ID Oper::getID() const
+{
+    return mID;
+}
+
 std::vector<Tensor*> Oper::getInputs()
 {
     return mInputs;

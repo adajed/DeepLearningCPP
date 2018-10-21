@@ -25,3 +25,6 @@ test_debug: lib_debug
 
 clean:
 	rm -r $(OUTDIR)
+
+ctags:
+	ctags -R --tag-relative=yes --exclude=.git $(ROOT_DIR)
