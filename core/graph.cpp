@@ -138,6 +138,11 @@ void GraphRegister::clear()
     mDefaultGraph = default_graph;
 }
 
+Graph::SPtr getDefaultGraph()
+{
+    return GraphRegister::getGlobalGraphRegister().getDefaultGraph();
+}
+
 } // namespace core
 
 #define GLOBAL_REGISTER core::GraphRegister::getGlobalGraphRegister()

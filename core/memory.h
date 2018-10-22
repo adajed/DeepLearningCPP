@@ -24,8 +24,10 @@ public:
     bool isAllocated() const;
 
     float* getValues();
-
     const float* getValues() const;
+
+    float& operator [](std::size_t pos);
+    const float& operator [](std::size_t pos) const;
 
     std::size_t getCount() const;
 
@@ -34,8 +36,6 @@ public:
     bool allocate();
 
     void free();
-
-    ~Memory();
 
 private:
     MemoryType mType;

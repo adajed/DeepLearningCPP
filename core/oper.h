@@ -58,6 +58,8 @@ public:
 
     void reset();
 
+    ~Tensor();
+
 private:
     static ID nextID()
     {

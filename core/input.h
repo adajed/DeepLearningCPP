@@ -1,6 +1,7 @@
 #ifndef DLL_CORE_INPUT_H_
 #define DLL_CORE_INPUT_H_
 
+#include <assert.h>
 #include "oper.h"
 
 namespace dll

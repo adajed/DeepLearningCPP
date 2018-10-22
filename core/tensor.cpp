@@ -82,5 +82,10 @@ void Tensor::reset()
         op->reset();
 }
 
+Tensor::~Tensor()
+{
+    mMemory.free();
+}
+
 } // namespace core
 } // namespace dll

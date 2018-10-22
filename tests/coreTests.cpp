@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 #include "dll.h"
+#include "dll_ops.h"
 #include "graph.h"
+
+/* using namespace dll; */
 
 class CoreTest : public testing::Test
 {
@@ -85,4 +88,33 @@ TEST_F(CoreTest, evalInputOper)
 
     delete [] inT.values;
     delete [] outT.values;
+}
+
+TEST_F(CoreTest, add)
+{
+    const int SIZE = 10;
+    dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
+    dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
+    dll::ITensorSPtr output = input1 + input2;
+}
+TEST_F(CoreTest, sub)
+{
+    const int SIZE = 10;
+    dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
+    dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
+    dll::ITensorSPtr output = input1 - input2;
+}
+TEST_F(CoreTest, mul)
+{
+    const int SIZE = 10;
+    dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
+    dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
+    dll::ITensorSPtr output = input1 * input2;
+}
+TEST_F(CoreTest, div)
+{
+    const int SIZE = 10;
+    dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
+    dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
+    dll::ITensorSPtr output = input1 / input2;
 }
