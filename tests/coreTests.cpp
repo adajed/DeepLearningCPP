@@ -70,19 +70,19 @@ TEST_F(CoreTest, evalInputOper)
 
     dll::initializeGraph();
 
-    dll::HostTensor inT{nullptr, SIZE};
-    dll::HostTensor outT{nullptr, SIZE};
+    dll::HostTensor in{nullptr, SIZE};
+    dll::HostTensor out{nullptr, SIZE};
 
-    inT.values = new float[SIZE];
-    outT.values = new float[SIZE];
+    in.values = new float[SIZE];
+    out.values = new float[SIZE];
     for (int i = 0; i < SIZE; ++i)
-        inT.values[i] = i;
+        in.values[i] = i;
 
-    input->eval({{"input", inT}}, outT);
+    input->eval({{"input", in}}, out);
 
     for (int i = 0; i < SIZE; ++i)
-        EXPECT_EQ(inT.values[i], outT.values[i]);
+        EXPECT_EQ(in.values[i], out.values[i]);
 
-    delete [] inT.values;
-    delete [] outT.values;
+    delete [] in.values;
+    delete [] out.values;
 }

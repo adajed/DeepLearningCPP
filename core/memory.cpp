@@ -74,10 +74,5 @@ void Memory::fill(HostTensor hostTensor) const
         hostTensor.values[i] = mValues[i];
 }
 
-Memory::~Memory()
-{
-    free();
-}
-
 } // namespace core
 } // namespace dll

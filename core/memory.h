@@ -35,8 +35,6 @@ public:
 
     void free();
 
-    ~Memory();
-
 private:
     MemoryType mType;
     float* mValues;
