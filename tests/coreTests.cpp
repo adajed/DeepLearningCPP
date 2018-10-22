@@ -21,52 +21,52 @@ const std::string SAMPLE_NAME = "sample_name";
 
 TEST_F(CoreTest, simple)
 {
-    dll::IGraph* g = dll::createGraph(SAMPLE_NAME);
+    dll::IGraphSPtr g = dll::createGraph(SAMPLE_NAME);
     EXPECT_NE(g, nullptr);
 }
 
 TEST_F(CoreTest, graphWithGivenNameAlreadyExists)
 {
-    dll::IGraph* g = dll::createGraph(SAMPLE_NAME);
-    EXPECT_NE(g, nullptr);
+    dll::IGraphSPtr g = dll::createGraph(SAMPLE_NAME);
+    EXPECT_NE(g.get(), nullptr);
     g = dll::createGraph(SAMPLE_NAME);
-    EXPECT_EQ(g, nullptr);
+    EXPECT_EQ(g.get(), nullptr);
 }
 
 TEST_F(CoreTest, setDefaultGraph)
 {
-    dll::IGraph* g = dll::createGraph(SAMPLE_NAME);
+    dll::IGraphSPtr g = dll::createGraph(SAMPLE_NAME);
     dll::setDefaultGraph(g);
-    dll::IGraph* g2 = dll::getDefaultGraph();
+    dll::IGraphSPtr g2 = dll::getDefaultGraph();
     EXPECT_EQ(g, g2);
 }
 
 TEST_F(CoreTest, emptyInput)
 {
-    std::vector<dll::ITensor*> inputs = dll::getDefaultGraph()->getInputs();
+    std::vector<dll::ITensorSPtr> inputs = dll::getDefaultGraph()->getInputs();
     EXPECT_EQ(inputs.size(), 0);
 }
 
 TEST_F(CoreTest, addInput)
 {
-    dll::ITensor* input = dll::createInput("input1", {3, 224, 224});
-    std::vector<dll::ITensor*> inputs = dll::getDefaultGraph()->getInputs();
+    dll::ITensorSPtr input = dll::createInput("input1", {3, 224, 224});
+    std::vector<dll::ITensorSPtr> inputs = dll::getDefaultGraph()->getInputs();
     EXPECT_EQ(inputs.size(), 1);
     EXPECT_EQ(inputs[0], input);
 }
 
 TEST_F(CoreTest, addInputWithTheSameName)
 {
-    dll::ITensor* input1 = dll::createInput("input1", {3, 224, 224});
+    dll::ITensorSPtr input1 = dll::createInput("input1", {3, 224, 224});
     EXPECT_NE(input1, nullptr);
-    dll::ITensor* input2 = dll::createInput("input1", {3, 224, 224});
+    dll::ITensorSPtr input2 = dll::createInput("input1", {3, 224, 224});
     EXPECT_EQ(input2, nullptr);
 }
 
 TEST_F(CoreTest, evalInputOper)
 {
     const int SIZE = 10;
-    dll::ITensor* input = dll::createInput("input", {SIZE});
+    dll::ITensorSPtr input = dll::createInput("input", {SIZE});
 
     dll::initializeGraph();
 
@@ -78,7 +78,7 @@ TEST_F(CoreTest, evalInputOper)
     for (int i = 0; i < SIZE; ++i)
         inT.values[i] = i;
 
-    input->eval({{"input", inT}}, &outT);
+    input->eval({{"input", inT}}, outT);
 
     for (int i = 0; i < SIZE; ++i)
         EXPECT_EQ(inT.values[i], outT.values[i]);

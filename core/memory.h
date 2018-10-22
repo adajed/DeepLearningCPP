@@ -29,12 +29,13 @@ public:
 
     std::size_t getCount() const;
 
-    void fill(HostTensor* hostTensor) const;
+    void fill(HostTensor hostTensor) const;
 
     bool allocate();
 
     void free();
 
+    ~Memory();
 
 private:
     MemoryType mType;

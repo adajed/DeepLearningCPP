@@ -40,12 +40,17 @@ void Tensor::setTensorShape(const TensorShape& shape)
     mShape = shape;
 }
 
+void Tensor::setOper(Oper::SPtr oper)
+{
+    mOper = Oper::WeakPtr(oper);
+}
+
 Memory Tensor::getMemory()
 {
     return mMemory;
 }
 
-void Tensor::eval(InputDict const& inputs, HostTensor* hostTensor)
+void Tensor::eval(InputDict const& inputs, HostTensor hostTensor)
 {
     exec(inputs);
     mMemory.fill(hostTensor);
@@ -55,7 +60,7 @@ void Tensor::exec(const InputDict& inputs)
 {
     if (!mIsEvaluated)
     {
-        mOper->exec(inputs);
+        mOper.lock()->exec(inputs);
         mIsEvaluated = true;
     }
 }
@@ -73,16 +78,8 @@ void Tensor::freeMemory()
 void Tensor::reset()
 {
     mIsEvaluated = false;
-    for (Oper* op : mOutputOps)
+    for (Oper::SPtr op : mOutputOps)
         op->reset();
-}
-
-Tensor::~Tensor()
-{
-    for (Oper* op : mOutputOps)
-        delete op;
-
-    mMemory.free();
 }
 
 } // namespace core

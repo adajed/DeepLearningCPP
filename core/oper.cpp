@@ -10,12 +10,15 @@ Oper::ID Oper::getID() const
     return mID;
 }
 
-std::vector<Tensor*> Oper::getInputs()
+std::vector<Tensor::SPtr> Oper::getInputs()
 {
-    return mInputs;
+    std::vector<Tensor::SPtr> inputs;
+    for (Tensor::WeakPtr input : inputs)
+        inputs.push_back(input.lock());
+    return inputs;
 }
 
-std::vector<Tensor*> Oper::getOutputs()
+std::vector<Tensor::SPtr> Oper::getOutputs()
 {
     return mOutputs;
 }
@@ -33,7 +36,7 @@ void Oper::exec(const InputDict& inputs)
 void Oper::reset()
 {
     mIsEvaluated = false;
-    for (Tensor* output : mOutputs)
+    for (Tensor::SPtr output : mOutputs)
         output->reset();
 }
 

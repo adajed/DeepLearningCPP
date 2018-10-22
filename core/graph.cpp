@@ -29,29 +29,28 @@ void Graph::setName(const std::string& name)
 }
 
 
-std::vector<ITensor*> Graph::getInputs() const
+std::vector<ITensorSPtr> Graph::getInputs() const
 {
-    std::vector<ITensor*> inputs;
-    for (std::pair<std::string, InputOper*> op : mInputOps)
+    std::vector<ITensorSPtr> inputs;
+    for (std::pair<std::string, std::shared_ptr<InputOper>> op : mInputOps)
         inputs.push_back(op.second->getOutputs()[0]);
-
     return inputs;
 }
 
 void Graph::reset()
 {
-    for (std::pair<std::string, InputOper*> op : mInputOps)
+    for (std::pair<std::string, std::shared_ptr<InputOper>> op : mInputOps)
         op.second->reset();
 }
 
 bool Graph::allocateMemory()
 {
-    std::vector<Tensor*> allocatedTensors;
-    for (std::pair<Tensor::ID, Tensor*> pair : mTensors)
+    std::vector<Tensor::SPtr> allocatedTensors;
+    for (std::pair<Tensor::ID, Tensor::SPtr> pair : mTensors)
     {
         if (!pair.second->allocateMemory())
         {
-            for (Tensor* t : allocatedTensors)
+            for (Tensor::SPtr t : allocatedTensors)
                 t->freeMemory();
             return false;
         }
@@ -67,31 +66,32 @@ bool Graph::freeMemory()
 }
 
 
-Tensor* Graph::addInput(const std::string& name, const Shape& shape)
+Tensor::SPtr Graph::addInput(const std::string& name, const Shape& shape)
 {
     if (mInputOps.count(name) > 0)
         return nullptr;
 
-    InputOper* oper = new InputOper(name, shape);
+    std::shared_ptr<InputOper> oper = std::make_shared<InputOper>(name, shape);
     mInputOps.insert({name, oper});
-    addOper(oper);
+    addOper(Oper::SPtr(oper));
 
     return oper->getOutputs()[0];
 }
 
 // TODO: Graph::addWeights
-Tensor* Graph::addWeights(const std::string& name, const Shape& shape)
+Tensor::SPtr Graph::addWeights(const std::string& name, const Shape& shape)
 {
     return nullptr;
 }
 
-void Graph::addOper(Oper* oper)
+void Graph::addOper(Oper::SPtr oper)
 {
     Oper::ID opID = oper->getID();
     mOps.insert({opID, oper});
-    for (Tensor* tensor : oper->getOutputs())
+    for (Tensor::SPtr tensor : oper->getOutputs())
     {
         Tensor::ID tensorID = tensor->getID();
+        tensor->setOper(oper);
         mTensors.insert({tensorID, tensor});
     }
 }
@@ -107,12 +107,12 @@ bool GraphRegister::hasKey(const std::string& name) const
     return mGraphDict.count(name);
 }
 
-Graph* GraphRegister::at(const std::string& name)
+Graph::SPtr GraphRegister::at(const std::string& name)
 {
     return mGraphDict.at(name);
 }
 
-bool GraphRegister::insert(Graph* graph)
+bool GraphRegister::insert(Graph::SPtr graph)
 {
     if (hasKey(graph->getName()))
         return false;
@@ -120,23 +120,20 @@ bool GraphRegister::insert(Graph* graph)
     return true;
 }
 
-Graph* GraphRegister::getDefaultGraph()
+Graph::SPtr GraphRegister::getDefaultGraph()
 {
     return mDefaultGraph;
 }
 
-void GraphRegister::setDefaultGraph(Graph* graph)
+void GraphRegister::setDefaultGraph(Graph::SPtr graph)
 {
     mDefaultGraph = graph;
 }
 
 void GraphRegister::clear()
 {
-    for (std::pair<std::string, Graph*> pair : mGraphDict)
-        delete pair.second;
     mGraphDict.clear();
-
-    Graph* default_graph = new Graph(GraphRegister::DEFAULT_GRAPH_NAME);
+    Graph::SPtr default_graph = std::make_shared<Graph>(GraphRegister::DEFAULT_GRAPH_NAME);
     mGraphDict[GraphRegister::DEFAULT_GRAPH_NAME] = default_graph;
     mDefaultGraph = default_graph;
 }
@@ -145,51 +142,51 @@ void GraphRegister::clear()
 
 #define GLOBAL_REGISTER core::GraphRegister::getGlobalGraphRegister()
 
-IGraph* createGraph(const std::string& name)
+IGraphSPtr createGraph(const std::string& name)
 {
     if (GLOBAL_REGISTER.hasKey(name))
         return nullptr;
 
-    core::Graph* graph = new core::Graph(name);
+    core::Graph::SPtr graph = std::make_shared<core::Graph>(name);
     GLOBAL_REGISTER.insert(graph);
-    return graph;
+    return IGraphSPtr(graph);
 }
 
-void setDefaultGraph(IGraph* graph)
+void setDefaultGraph(IGraphSPtr graph)
 {
-    core::Graph* g = static_cast<core::Graph*>(graph);
+    core::Graph::SPtr g = std::static_pointer_cast<core::Graph>(graph);
     GLOBAL_REGISTER.setDefaultGraph(g);
 }
 
-IGraph* getDefaultGraph()
+IGraphSPtr getDefaultGraph()
 {
-    return GLOBAL_REGISTER.getDefaultGraph();
+    return IGraphSPtr(GLOBAL_REGISTER.getDefaultGraph());
 }
 
-ITensor* createInput(const std::string& name, const Shape& shape)
+ITensorSPtr createInput(const std::string& name, const Shape& shape)
 {
-    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
-    return graph->addInput(name, shape);
+    core::Graph::SPtr graph = GLOBAL_REGISTER.getDefaultGraph();
+    return ITensorSPtr(graph->addInput(name, shape));
 }
 
-ITensor* createWeights(const std::string& name, const Shape& shape)
+ITensorSPtr createWeights(const std::string& name, const Shape& shape)
 {
-    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
-    return graph->addWeights(name, shape);
+    core::Graph::SPtr graph = GLOBAL_REGISTER.getDefaultGraph();
+    return ITensorSPtr(graph->addWeights(name, shape));
 }
 
 void initializeGraph()
 {
-    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
+    core::Graph::SPtr graph = GLOBAL_REGISTER.getDefaultGraph();
     if (!graph->allocateMemory())
         throw errors::MemoryAllocationError();
 }
 
-void eval(std::vector<ITensor*> const& tensors, InputDict const& inputs, std::vector<HostTensor*> hostTensors)
+void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs, std::vector<HostTensor> hostTensors)
 {
     assert(tensors.size() == hostTensors.size());
 
-    core::Graph* graph = GLOBAL_REGISTER.getDefaultGraph();
+    core::Graph::SPtr graph = GLOBAL_REGISTER.getDefaultGraph();
     graph->reset();
 
     for (std::size_t i = 0; i < tensors.size(); ++i)

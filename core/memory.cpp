@@ -65,13 +65,18 @@ void Memory::free()
     }
 }
 
-void Memory::fill(HostTensor* hostTensor) const
+void Memory::fill(HostTensor hostTensor) const
 {
     assert(isAllocated());
-    assert(getCount() == hostTensor->count);
+    assert(getCount() == hostTensor.count);
 
-    for (std::size_t i = 0; i < hostTensor->count; ++i)
-        hostTensor->values[i] = mValues[i];
+    for (std::size_t i = 0; i < hostTensor.count; ++i)
+        hostTensor.values[i] = mValues[i];
+}
+
+Memory::~Memory()
+{
+    free();
 }
 
 } // namespace core

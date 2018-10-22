@@ -18,6 +18,10 @@ class Graph;
 class Graph : public IGraph
 {
 public:
+    using UPtr = std::shared_ptr<Graph>;
+    using SPtr = std::shared_ptr<Graph>;
+    using WeakPtr = std::weak_ptr<Graph>;
+
     Graph(std::string const& name);
 
     std::string getName() const override;
@@ -26,7 +30,7 @@ public:
     //! \fn getInputs
     //! \brief Returns all the inputs to the graph.
     //!
-    std::vector<ITensor*> getInputs() const override;
+    std::vector<ITensorSPtr> getInputs() const override;
 
     //! \fn reset
     //! \brief Prepares graph for next computation.
@@ -49,7 +53,7 @@ public:
     //! \param shape Shape of the new input.
     //!
     //! \return Pointer to tensor representing new input.
-    Tensor* addInput(const std::string& name, const Shape& shape);
+    Tensor::SPtr addInput(const std::string& name, const Shape& shape);
 
     //! \fn addWeights
     //! \brief Adds new weights to the graph.
@@ -57,22 +61,16 @@ public:
     //! \param shape Shape of new weights.
     //!
     //! \return Pointer to tensor representing new weights.
-    Tensor* addWeights(const std::string& name, const Shape& shape);
-
-    ~Graph()
-    {
-        for (std::pair<std::string, InputOper*> pair : mInputOps)
-            delete pair.second;
-    }
+    Tensor::SPtr addWeights(const std::string& name, const Shape& shape);
 
 private:
-    void addOper(Oper* oper);
+    void addOper(Oper::SPtr oper);
 
     std::string mName; //!< Name of the graph.
-    std::map<std::string, InputOper*> mInputOps;
+    std::map<std::string, std::shared_ptr<InputOper>> mInputOps;
 
-    std::map<Oper::ID, Oper*> mOps;
-    std::map<Tensor::ID, Tensor*> mTensors;
+    std::map<Oper::ID, Oper::SPtr> mOps;
+    std::map<Tensor::ID, Tensor::SPtr> mTensors;
 };
 
 //! \class GraphRegister
@@ -90,7 +88,7 @@ private:
     GraphRegister() : mGraphDict()
     {
         // create initial graph and set it as the default
-        Graph* graph = new Graph(DEFAULT_GRAPH_NAME);
+        Graph::SPtr graph = std::make_shared<Graph>(DEFAULT_GRAPH_NAME);
         mGraphDict[DEFAULT_GRAPH_NAME] = graph;
         mDefaultGraph = graph;
     }
@@ -109,38 +107,32 @@ public:
     //! \fn at
     //! \brief Returns graph with given name.
     //!
-    Graph* at(std::string const& name);
+    Graph::SPtr at(std::string const& name);
 
     //! \fn insert
     //! \brief Registers new graph.
     //! If there is already a graph with the same name,
     //!     this will return false and won't change the register.
     //!
-    bool insert(Graph* graph);
+    bool insert(Graph::SPtr graph);
 
     //! \fn getDefaultGraph
     //! \brief Returns the default graph.
     //!
-    Graph* getDefaultGraph();
+    Graph::SPtr getDefaultGraph();
 
     //! \fn setDefaultGraph
     //! \brief Sets given graph as a default one.
     //! If given graph is not registered yet, this will
     //!     register it and then set is as a deafult graph.
     //!
-    void setDefaultGraph(Graph*);
+    void setDefaultGraph(Graph::SPtr graph);
 
     void clear();
 
-    ~GraphRegister()
-    {
-        for (std::pair<std::string, Graph*> pair : mGraphDict)
-            delete pair.second;
-    }
-
 private:
-    std::map<std::string, Graph*> mGraphDict;
-    Graph* mDefaultGraph;
+    std::map<std::string, Graph::SPtr> mGraphDict;
+    Graph::SPtr mDefaultGraph;
 };
 
 } // namespace core

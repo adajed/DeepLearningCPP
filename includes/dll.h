@@ -29,6 +29,12 @@ typedef std::map<std::string, HostTensor> InputDict;
 
 typedef std::vector<unsigned int> Shape;
 
+class ITensor;
+using ITensorSPtr = std::shared_ptr<ITensor>;
+
+class IGraph;
+using IGraphSPtr = std::shared_ptr<IGraph>;
+
 //! \class ITensor
 //! \brief Interface representing tensor.
 //!
@@ -59,7 +65,7 @@ public:
     //! \brief Evaulates tensor.
     //! \param inputs Map from names of input tensors to values.
     //!
-    virtual void eval(InputDict const& inputs, HostTensor* hostTensor) = 0;
+    virtual void eval(InputDict const& inputs, HostTensor hostTensor) = 0;
 
     virtual ~ITensor() {}
 };
@@ -73,7 +79,7 @@ public:
     virtual std::string getName() const = 0;
     virtual void setName(std::string const& name) = 0;
 
-    virtual std::vector<ITensor*> getInputs() const = 0;
+    virtual std::vector<ITensorSPtr> getInputs() const = 0;
 
     virtual ~IGraph() {}
 };
@@ -84,33 +90,33 @@ public:
 //! If graph with the same name already exists,
 //!   this will return nullptr.
 //!
-IGraph* createGraph(std::string const& name);
+IGraphSPtr createGraph(std::string const& name);
 
 //! \fn setDefaultGraph
 //! \bried This function sets graph as a default graph.
 //! \param graph Graph to be set as the default.
 //! Later all new operations will be added to this graph.
 //!
-void setDefaultGraph(IGraph* graph);
+void setDefaultGraph(IGraphSPtr graph);
 
 //! \fn getDefaultGraph
 //! \brief This function returns current default graph.
 //!
-IGraph* getDefaultGraph();
+IGraphSPtr getDefaultGraph();
 
 //! \fn createInput
 //! \brief This function creates new input in the default graph.
 //! \param name Name of the input.
 //! \param shape Dimensions of the input.
 //!
-ITensor* createInput(std::string const& name, Shape const& shape);
+ITensorSPtr createInput(std::string const& name, Shape const& shape);
 
 //! \fn createWeights
 //! \brief This function creates new weights in current graph.
 //! \param name Name og the weights.
 //! \param shape Dimensions of the weights.
 //!
-ITensor* createWeights(std::string const& name, Shape const& shape);
+ITensorSPtr createWeights(std::string const& name, Shape const& shape);
 
 //! \fn
 //! \brief Initializes graph (i.e. initializes all weights).
@@ -123,7 +129,7 @@ void initializeGraph();
 //! \param tensors Vector of tensors to evaluate.
 //! \param inputs Map of input values.
 //!
-void eval(std::vector<ITensor*> const& tensors, InputDict const& inputs, std::vector<HostTensor*> hostTensors);
+void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs, std::vector<HostTensor> hostTensors);
 
 } // namespace dll
 

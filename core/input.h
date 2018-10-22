@@ -12,7 +12,7 @@ class InputOper : public Oper
 {
 public:
     InputOper(const std::string& name, const Shape& shape)
-        : Oper({}, {createTensor(this, name, shape)})
+        : Oper({}, {std::make_shared<Tensor>(name, shape)})
     {}
 
 private:

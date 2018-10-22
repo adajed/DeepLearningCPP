@@ -19,12 +19,15 @@ class Tensor : public ITensor
 {
 public:
     using ID = std::size_t;
+    using UPtr = std::unique_ptr<Tensor>;
+    using SPtr = std::shared_ptr<Tensor>;
+    using WeakPtr = std::weak_ptr<Tensor>;
 
-    Tensor(Oper* oper, const std::string& name, const TensorShape& shape)
+    Tensor(const std::string& name, const TensorShape& shape)
         : mID(nextID())
         , mName(name)
         , mShape(shape)
-        , mOper(oper)
+        , mOper()
         , mOutputOps()
         , mIsEvaluated(false)
         , mMemory(MemoryType::kHOST_MEMORY, shape.count())
@@ -41,19 +44,19 @@ public:
     TensorShape getTensorShape() const;
     void setTensorShape(const TensorShape& shape);
 
+    void setOper(std::shared_ptr<Oper> oper);
+
     Memory getMemory();
 
     bool allocateMemory();
 
     void freeMemory();
 
-    void eval(const InputDict& inputs, HostTensor* hostTensor) override;
+    void eval(const InputDict& inputs, HostTensor hostTensor) override;
 
     void exec(const InputDict& inputs);
 
     void reset();
-
-    ~Tensor();
 
 private:
     static ID nextID()
@@ -66,30 +69,31 @@ private:
     std::string mName; //!< Tensor name.
     TensorShape mShape; //< Tensor shape.
 
-    Oper* mOper;
-    std::vector<Oper*> mOutputOps;
+    std::weak_ptr<Oper> mOper;
+    std::vector<std::shared_ptr<Oper>> mOutputOps;
     bool mIsEvaluated;
 
     Memory mMemory;
 };
 
-inline Tensor* createTensor(Oper* oper, const std::string& name, const Shape& shape)
-{
-    return new Tensor(oper, name, shape);
-}
-
 class Oper
 {
 public:
     using ID = std::size_t;
+    using UPtr = std::unique_ptr<Oper>;
+    using SPtr = std::shared_ptr<Oper>;
+    using WeakPtr = std::weak_ptr<Oper>;
 
-    Oper(const std::vector<Tensor*>& inputs, std::vector<Tensor*> outputs)
-        : mID(nextID()), mIsEvaluated(false), mInputs(inputs), mOutputs(outputs)
-    {}
+    Oper(const std::vector<Tensor::SPtr>& inputs, std::vector<Tensor::SPtr> outputs)
+        : mID(nextID()), mIsEvaluated(false), mInputs(), mOutputs(outputs)
+    {
+        for (Tensor::SPtr input : inputs)
+            mInputs.push_back(Tensor::WeakPtr(input));
+    }
 
     ID getID() const;
-    std::vector<Tensor*> getInputs();
-    std::vector<Tensor*> getOutputs();
+    std::vector<Tensor::SPtr> getInputs();
+    std::vector<Tensor::SPtr> getOutputs();
 
     virtual void exec(const InputDict& inputs);
 
@@ -97,12 +101,6 @@ public:
     virtual bool supportsGPU() { return false; }
 
     void reset();
-
-    virtual ~Oper()
-    {
-        for (Tensor* tensor : mOutputs)
-            delete tensor;
-    }
 
 private:
     virtual void executeOper(const InputDict& inputs) = 0;
@@ -117,8 +115,8 @@ private:
     bool mIsEvaluated;
 
 protected:
-    std::vector<Tensor*> mInputs;
-    std::vector<Tensor*> mOutputs;
+    std::vector<Tensor::WeakPtr> mInputs;
+    std::vector<Tensor::SPtr> mOutputs;
 };
 
 } // namespace core
