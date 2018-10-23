@@ -79,7 +79,8 @@ public:
     virtual std::string getName() const = 0;
     virtual void setName(std::string const& name) = 0;
 
-    virtual std::vector<ITensorSPtr> getInputs() const = 0;
+    virtual std::map<std::string, ITensorSPtr> getInputs() const = 0;
+    virtual std::map<std::string, ITensorSPtr> getWeights() const = 0;
 
     virtual ~IGraph() {}
 };

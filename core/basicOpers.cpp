@@ -14,7 +14,7 @@ ITensorSPtr add(ITensorSPtr t1, ITensorSPtr t2)
     core::Tensor::SPtr tensor2 = std::static_pointer_cast<core::Tensor>(t2);
     std::shared_ptr<core::AddOper> oper = std::make_shared<core::AddOper>(
             tensor1, tensor2);
-    core::getDefaultGraph()->addOper(core::Oper::SPtr(oper));
+    core::getDefaultGraph()->insertOperation(core::Oper::SPtr(oper));
     return ITensorSPtr(oper->getOutputs()[0]);
 }
 
@@ -29,7 +29,7 @@ ITensorSPtr sub(ITensorSPtr t1, ITensorSPtr t2)
     core::Tensor::SPtr tensor2 = std::static_pointer_cast<core::Tensor>(t2);
     std::shared_ptr<core::SubOper> oper = std::make_shared<core::SubOper>(
             tensor1, tensor2);
-    core::getDefaultGraph()->addOper(core::Oper::SPtr(oper));
+    core::getDefaultGraph()->insertOperation(core::Oper::SPtr(oper));
     return ITensorSPtr(oper->getOutputs()[0]);
 }
 
@@ -44,7 +44,7 @@ ITensorSPtr mul(ITensorSPtr t1, ITensorSPtr t2)
     core::Tensor::SPtr tensor2 = std::static_pointer_cast<core::Tensor>(t2);
     std::shared_ptr<core::MulOper> oper = std::make_shared<core::MulOper>(
             tensor1, tensor2);
-    core::getDefaultGraph()->addOper(core::Oper::SPtr(oper));
+    core::getDefaultGraph()->insertOperation(core::Oper::SPtr(oper));
     return ITensorSPtr(oper->getOutputs()[0]);
 }
 
@@ -59,7 +59,7 @@ ITensorSPtr div(ITensorSPtr t1, ITensorSPtr t2)
     core::Tensor::SPtr tensor2 = std::static_pointer_cast<core::Tensor>(t2);
     std::shared_ptr<core::DivOper> oper = std::make_shared<core::DivOper>(
             tensor1, tensor2);
-    core::getDefaultGraph()->addOper(core::Oper::SPtr(oper));
+    core::getDefaultGraph()->insertOperation(core::Oper::SPtr(oper));
     return ITensorSPtr(oper->getOutputs()[0]);
 }
 

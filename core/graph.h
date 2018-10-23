@@ -4,6 +4,7 @@
 #include "dll.h"
 #include "oper.h"
 #include "input.h"
+#include "weights.h"
 
 namespace dll
 {
@@ -30,7 +31,12 @@ public:
     //! \fn getInputs
     //! \brief Returns all the inputs to the graph.
     //!
-    std::vector<ITensorSPtr> getInputs() const override;
+    std::map<std::string, ITensorSPtr> getInputs() const override;
+
+    //! \fn getWeights
+    //! \brief Returns all the weights in the graph.
+    //!
+    std::map<std::string, ITensorSPtr> getWeights() const override;
 
     //! \fn reset
     //! \brief Prepares graph for next computation.
@@ -42,10 +48,15 @@ public:
     //!
     bool allocateMemory();
 
+    //! \fn initializeWeights
+    //! \brief Initializes all weights in the graph.
+    //!
+    bool initializeWeights();
+
     //! \fn freeMemory
     //! \brief Frees memory for all tensors in te graph.
     //!
-    bool freeMemory();
+    void freeMemory();
 
     //! \fn addInput
     //! \brief Adds new input to the graph.
@@ -63,14 +74,19 @@ public:
     //! \return Pointer to tensor representing new weights.
     Tensor::SPtr addWeights(const std::string& name, const Shape& shape);
 
-    void addOper(Oper::SPtr oper);
+    //! \fn insertOperation
+    //! \brief Adds operation and all its tensors to the graph.
+    //! \param oper Shared pointer to oper that will be added to the graph.
+    //!
+    void insertOperation(Oper::SPtr oper);
 
 private:
     std::string mName; //!< Name of the graph.
-    std::map<std::string, std::shared_ptr<InputOper>> mInputOps;
+    std::map<std::string, std::shared_ptr<InputOper>> mInputOps; //!< Map of input ops.
+    std::map<std::string, std::shared_ptr<WeightsOper>> mWeightsOps; //!< Map of weights ops.
 
-    std::map<Oper::ID, Oper::SPtr> mOps;
-    std::map<Tensor::ID, Tensor::SPtr> mTensors;
+    std::map<Oper::ID, Oper::SPtr> mOps; //!< Map of all ops inside the graph.
+    std::map<Tensor::ID, Tensor::SPtr> mTensors; //!< MAp of all tensors inside the graph.
 };
 
 //! \class GraphRegister

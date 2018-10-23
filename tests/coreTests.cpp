@@ -5,6 +5,8 @@
 
 #include <random>
 
+#define COMMA ,
+
 std::random_device rd;
 std::mt19937 e2(rd());
 std::uniform_real_distribution<> dist(-5., 5.);
@@ -50,16 +52,32 @@ TEST_F(CoreTest, setDefaultGraph)
 
 TEST_F(CoreTest, emptyInput)
 {
-    std::vector<dll::ITensorSPtr> inputs = dll::getDefaultGraph()->getInputs();
+    auto inputs = dll::getDefaultGraph()->getInputs();
     EXPECT_EQ(inputs.size(), 0);
 }
 
 TEST_F(CoreTest, addInput)
 {
-    dll::ITensorSPtr input = dll::createInput("input1", {3, 224, 224});
-    std::vector<dll::ITensorSPtr> inputs = dll::getDefaultGraph()->getInputs();
-    EXPECT_EQ(inputs.size(), 1);
-    EXPECT_EQ(inputs[0], input);
+    const std::string INPUT_NAME = "input1";
+    dll::ITensorSPtr input = dll::createInput(INPUT_NAME, {3, 224, 224});
+    auto inputs = dll::getDefaultGraph()->getInputs();
+    std::map<std::string, dll::ITensorSPtr> testMap = {{INPUT_NAME, input}};
+    EXPECT_EQ(inputs, testMap);
+}
+
+TEST_F(CoreTest, emptyWeights)
+{
+    auto weights = dll::getDefaultGraph()->getWeights();
+    EXPECT_EQ(weights.size(), 0);
+}
+
+TEST_F(CoreTest, addWeights)
+{
+    const std::string WEIGHTS_NAME = "weights";
+    dll::ITensorSPtr w = dll::createWeights(WEIGHTS_NAME, {100, 100});
+    auto weights = dll::getDefaultGraph()->getWeights();
+    std::map<std::string, dll::ITensorSPtr> testMap = {{WEIGHTS_NAME, w}};
+    EXPECT_EQ(weights, testMap);
 }
 
 TEST_F(CoreTest, addInputWithTheSameName)
@@ -130,6 +148,7 @@ TEST_F(CoreTest, add)
     delete [] in2.values;
     delete [] out.values;
 }
+
 TEST_F(CoreTest, sub)
 {
     const int SIZE = 10;
@@ -151,6 +170,7 @@ TEST_F(CoreTest, sub)
     delete [] in2.values;
     delete [] out.values;
 }
+
 TEST_F(CoreTest, mul)
 {
     const int SIZE = 10;
@@ -172,6 +192,7 @@ TEST_F(CoreTest, mul)
     delete [] in2.values;
     delete [] out.values;
 }
+
 TEST_F(CoreTest, div)
 {
     const int SIZE = 10;

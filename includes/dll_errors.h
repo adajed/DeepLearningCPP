@@ -16,7 +16,15 @@ class MemoryAllocationError : public std::exception
     }
 };
 
+class WeightsInitializationError : public std::exception
+{
+    virtual const char* what() const throw()
+    {
+        return "WeightsInitializationError";
+    }
+};
+
 } // namespace errors
-} // dll
+} // namespace dll
 
 #endif // DLL_ERRORS_H_
