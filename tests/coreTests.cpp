@@ -3,7 +3,11 @@
 #include "dll_ops.h"
 #include "graph.h"
 
-/* using namespace dll; */
+#include <random>
+
+std::random_device rd;
+std::mt19937 e2(rd());
+std::uniform_real_distribution<> dist(-5., 5.);
 
 class CoreTest : public testing::Test
 {
@@ -90,12 +94,41 @@ TEST_F(CoreTest, evalInputOper)
     delete [] outT.values;
 }
 
+void test(int SIZE, dll::ITensorSPtr output, dll::HostTensor& in1, dll::HostTensor& in2, dll::HostTensor& out)
+{
+    in1.values = new float[SIZE];
+    in2.values = new float[SIZE];
+    out.values = new float[SIZE];
+
+    for (int i = 0; i < SIZE; ++i)
+    {
+        in1.values[i] = dist(e2);
+        in2.values[i] = dist(e2);
+    }
+
+    output->eval({{"input1", in1}, {"input2", in2}}, out);
+}
+
 TEST_F(CoreTest, add)
 {
     const int SIZE = 10;
     dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
     dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
     dll::ITensorSPtr output = input1 + input2;
+    dll::initializeGraph();
+
+    dll::HostTensor in1{nullptr, SIZE};
+    dll::HostTensor in2{nullptr, SIZE};
+    dll::HostTensor out{nullptr, SIZE};
+
+    test(SIZE, output, in1, in2, out);
+
+    for (int i = 0; i < SIZE; ++i)
+        EXPECT_EQ(out.values[i], in1.values[i] + in2.values[i]);
+
+    delete [] in1.values;
+    delete [] in2.values;
+    delete [] out.values;
 }
 TEST_F(CoreTest, sub)
 {
@@ -103,6 +136,20 @@ TEST_F(CoreTest, sub)
     dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
     dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
     dll::ITensorSPtr output = input1 - input2;
+    dll::initializeGraph();
+
+    dll::HostTensor in1{nullptr, SIZE};
+    dll::HostTensor in2{nullptr, SIZE};
+    dll::HostTensor out{nullptr, SIZE};
+
+    test(SIZE, output, in1, in2, out);
+
+    for (int i = 0; i < SIZE; ++i)
+        EXPECT_EQ(out.values[i], in1.values[i] - in2.values[i]);
+
+    delete [] in1.values;
+    delete [] in2.values;
+    delete [] out.values;
 }
 TEST_F(CoreTest, mul)
 {
@@ -110,6 +157,20 @@ TEST_F(CoreTest, mul)
     dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
     dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
     dll::ITensorSPtr output = input1 * input2;
+    dll::initializeGraph();
+
+    dll::HostTensor in1{nullptr, SIZE};
+    dll::HostTensor in2{nullptr, SIZE};
+    dll::HostTensor out{nullptr, SIZE};
+
+    test(SIZE, output, in1, in2, out);
+
+    for (int i = 0; i < SIZE; ++i)
+        EXPECT_EQ(out.values[i], in1.values[i] * in2.values[i]);
+
+    delete [] in1.values;
+    delete [] in2.values;
+    delete [] out.values;
 }
 TEST_F(CoreTest, div)
 {
@@ -117,4 +178,18 @@ TEST_F(CoreTest, div)
     dll::ITensorSPtr input1 = dll::createInput("input1", {SIZE});
     dll::ITensorSPtr input2 = dll::createInput("input2", {SIZE});
     dll::ITensorSPtr output = input1 / input2;
+    dll::initializeGraph();
+
+    dll::HostTensor in1{nullptr, SIZE};
+    dll::HostTensor in2{nullptr, SIZE};
+    dll::HostTensor out{nullptr, SIZE};
+
+    test(SIZE, output, in1, in2, out);
+
+    for (int i = 0; i < SIZE; ++i)
+        EXPECT_EQ(out.values[i], in1.values[i] / in2.values[i]);
+
+    delete [] in1.values;
+    delete [] in2.values;
+    delete [] out.values;
 }
