@@ -6,7 +6,8 @@ OUTDIR_D=$(OUTDIR)/tests_objs_d
 PROGRAM_R=$(OUTDIR)/test
 PROGRAM_D=$(OUTDIR)/test_debug
 
-CPP_SOURCES=main.cpp coreTests.cpp
+CPP_SOURCES=$(wildcard *.cpp)
+CPP_HEADERS=$(wildcard *.h)
 OBJS_R=$(patsubst %.cpp,$(OUTDIR_R)/%.o,$(CPP_SOURCES))
 OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
@@ -35,13 +36,13 @@ $(PROGRAM_D): $(OBJS_D)
 
 #### COMPILING
 
-$(OUTDIR_R)/%.o: %.cpp | $(OUTDIR_R)
-	@echo "Compiling release: $^"
-	@$(CC) -c -o $@ $(CFLAGS_R) $^
+$(OUTDIR_R)/%.o: %.cpp $(CPP_HEADERS) $(OUTDIR)/libdll_static.a | $(OUTDIR_R)
+	@echo "Compiling release: $<"
+	@$(CC) -c -o $@ $(CFLAGS_R) $<
 
-$(OUTDIR_D)/%.o: %.cpp | $(OUTDIR_D)
-	@echo "Compiling debug: $^"
-	@$(CC) -c -o $@ $(CFLAGS_D) $^
+$(OUTDIR_D)/%.o: %.cpp $(CPP_HEADERS) $(OUTDIR)/libdll_static_debug.a | $(OUTDIR_D)
+	@echo "Compiling debug: $<"
+	@$(CC) -c -o $@ $(CFLAGS_D) $<
 
 #### DIRECTORIES
 
