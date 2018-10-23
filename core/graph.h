@@ -63,9 +63,9 @@ public:
     //! \return Pointer to tensor representing new weights.
     Tensor::SPtr addWeights(const std::string& name, const Shape& shape);
 
-private:
     void addOper(Oper::SPtr oper);
 
+private:
     std::string mName; //!< Name of the graph.
     std::map<std::string, std::shared_ptr<InputOper>> mInputOps;
 
@@ -134,6 +134,8 @@ private:
     std::map<std::string, Graph::SPtr> mGraphDict;
     Graph::SPtr mDefaultGraph;
 };
+
+Graph::SPtr getDefaultGraph();
 
 } // namespace core
 } // namespace dll

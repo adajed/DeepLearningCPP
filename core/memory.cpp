@@ -27,6 +27,16 @@ const float* Memory::getValues() const
     return mValues;
 }
 
+float& Memory::operator [](std::size_t pos)
+{
+    return mValues[pos];
+}
+
+const float& Memory::operator [](std::size_t pos) const
+{
+    return mValues[pos];
+}
+
 size_t Memory::getCount() const
 {
     return mCount;
