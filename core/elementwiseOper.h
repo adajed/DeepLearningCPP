@@ -18,6 +18,7 @@ public:
 private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1, Tensor::SPtr t2)
     {
+        assert(t1->getTensorShape() == t2->getTensorShape());
         return {std::make_shared<Tensor>("", t1->getTensorShape())};
     }
 

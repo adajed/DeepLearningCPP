@@ -1,6 +1,8 @@
 #ifndef DLL_CORE_TENSOR_SHAPE_H_
 #define DLL_CORE_TENSOR_SHAPE_H_
 
+#include <initializer_list>
+
 #include "dll.h"
 
 namespace dll
@@ -15,6 +17,14 @@ public:
 
     TensorShape(const Shape& shape);
     TensorShape(const TensorShape& other);
+    TensorShape(std::initializer_list<unsigned> list);
+
+    bool operator ==(const TensorShape& other) const;
+
+    unsigned& operator [](std::size_t pos);
+    const unsigned& operator [] (std::size_t pos) const;
+
+    unsigned size() const;
 
     size_t count() const;
 
