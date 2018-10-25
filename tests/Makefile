@@ -11,13 +11,13 @@ CPP_HEADERS=$(wildcard *.h)
 OBJS_R=$(patsubst %.cpp,$(OUTDIR_R)/%.o,$(CPP_SOURCES))
 OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
-COMMON_CFLAGS += -std=c++17 -I$(ROOT_DIR)/core
+COMMON_CFLAGS += -std=c++17 -I$(ROOT_DIR)/core -I$(ROOT_DIR)/core/layers
 CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
 
 COMMON_LFLAGS +=-L$(OUTDIR) -L$(GTEST_LIB_PATH)
-LFLAGS_R=$(COMMON_LFLAGS) -ldll_static -pthread -lgtest -lgtest_main
-LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug -pthread -lgtest -lgtest_main
+LFLAGS_R=$(COMMON_LFLAGS) -ldll_static -pthread -lgtest
+LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug -pthread -lgtest
 
 .PHONY: release debug format
 

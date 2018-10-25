@@ -1,9 +1,7 @@
 #ifndef DLL_CORE_MUL_OPER_H_
 #define DLL_CORE_MUL_OPER_H_
 
-#include "dll_ops.h"
 #include "elementwiseOper.h"
-#include "graph.h"
 
 namespace dll
 {

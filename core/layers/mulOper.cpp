@@ -1,4 +1,6 @@
+#include "dll_ops.h"
 #include "mulOper.h"
+#include "graph.h"
 
 namespace dll
 {

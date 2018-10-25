@@ -1,7 +1,8 @@
-#include "gradientBuilder.h"
 #include "addOper.h"
 #include "constantOper.h"
+#include "gradientBuilder.h"
 #include "gradientOper.h"
+#include "graph.h"
 #include "mulOper.h"
 
 namespace dll
