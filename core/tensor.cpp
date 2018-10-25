@@ -30,7 +30,17 @@ void Tensor::setShape(const Shape& shape)
     mShape = shape;
 }
 
-TensorShape Tensor::getTensorShape() const
+Oper::SPtr Tensor::getOper() const
+{
+    return mOper.lock();
+}
+
+void Tensor::setOper(Oper::SPtr oper)
+{
+    mOper = Oper::WeakPtr(oper);
+}
+
+TensorShape Tensor::shape() const
 {
     return mShape;
 }
@@ -38,11 +48,6 @@ TensorShape Tensor::getTensorShape() const
 void Tensor::setTensorShape(const TensorShape& shape)
 {
     mShape = shape;
-}
-
-void Tensor::setOper(Oper::SPtr oper)
-{
-    mOper = Oper::WeakPtr(oper);
 }
 
 Memory Tensor::getMemory()

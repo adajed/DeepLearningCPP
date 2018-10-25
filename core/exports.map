@@ -8,10 +8,11 @@ global:
         dll::createInput*;
         dll::createWeights*;
         dll::eval*;
-        dll::add;
-        dll::sub;
-        dll::mul;
-        dll::div
+        dll::gradients*;
+        dll::add*;
+        dll::sub*;
+        dll::mul*;
+        dll::div*
     };
 local: *;
 };

@@ -17,25 +17,16 @@ public:
         : Oper({}, createOutputs(name, shape))
     {}
 
-    bool initialize()
+    void initialize() override
     {
-        Tensor::SPtr output = mOutputs[0];
-        Memory memory = output->getMemory();
-
-
-        if (!memory.isAllocated())
-            return false;
-
-        (void)memory.allocate();
+        Memory memory = mOutputs[0]->getMemory();
 
         std::random_device rd;
         std::mt19937 e2(rd());
         std::uniform_real_distribution<> dist(-1., 1.);
 
-        for (std::size_t i = 0; i < memory.getCount(); ++i)
+        for (std::size_t i = 0; i < memory.count(); ++i)
             memory[i] = dist(e2);
-
-        return true;
     }
 
 private:
@@ -44,9 +35,8 @@ private:
         return {std::make_shared<Tensor>(name, shape)};
     }
 
-    /*
-     * this method does nothing, because weights are already in the output tensor
-     */
+    //! This method does nothing, because weights are already
+    //!     in the tensor.
     void executeOper(const InputDict& inputs) override
     {
     }

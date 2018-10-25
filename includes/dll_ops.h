@@ -18,6 +18,8 @@ ITensorSPtr operator *(ITensorSPtr t1, ITensorSPtr t2);
 ITensorSPtr div(ITensorSPtr t1, ITensorSPtr t2);
 ITensorSPtr operator /(ITensorSPtr t1, ITensorSPtr t2);
 
+ITensorSPtr constant(float value, const Shape& shape);
+
 } // namespace dll
 
 #endif // DLL_OPS_H_

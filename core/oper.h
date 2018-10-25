@@ -41,9 +41,10 @@ public:
     Shape getShape() const override;
     void setShape(const Shape& shape) override;
 
-    TensorShape getTensorShape() const;
+    TensorShape shape() const;
     void setTensorShape(const TensorShape& shape);
 
+    std::shared_ptr<Oper> getOper() const;
     void setOper(std::shared_ptr<Oper> oper);
 
     Memory getMemory();
@@ -99,8 +100,9 @@ public:
 
     virtual void exec(const InputDict& inputs);
 
-    virtual bool supportsCPU() { return false; }
-    virtual bool supportsGPU() { return false; }
+    virtual bool hasGradient() const { return false; }
+
+    virtual void initialize() {}
 
     void reset();
 

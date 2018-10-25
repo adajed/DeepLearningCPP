@@ -48,10 +48,10 @@ public:
     //!
     bool allocateMemory();
 
-    //! \fn initializeWeights
-    //! \brief Initializes all weights in the graph.
+    //! \fn initializeOpers
+    //! \brief Initializes all operations in the graph.
     //!
-    bool initializeWeights();
+    void initializeOpers();
 
     //! \fn freeMemory
     //! \brief Frees memory for all tensors in te graph.

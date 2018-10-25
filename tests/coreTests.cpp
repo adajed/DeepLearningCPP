@@ -214,3 +214,29 @@ TEST_F(CoreTest, div)
     delete [] in2.values;
     delete [] out.values;
 }
+
+TEST_F(CoreTest, gradients)
+{
+    dll::ITensorSPtr i = dll::createInput("input", {2});
+    dll::ITensorSPtr w = dll::createWeights("weights", {2});
+    dll::ITensorSPtr output = (dll::constant(1., {2}) / i) * w;
+    dll::ITensorSPtr grad = dll::gradients(output)[w];
+    dll::initializeGraph();
+
+    dll::HostTensor iH{nullptr, 2};
+    dll::HostTensor wH{nullptr, 2};
+    dll::HostTensor gH{nullptr, 2};
+    iH.values = new float[2];
+    wH.values = new float[2];
+    gH.values = new float[2];
+    iH.values[0] = 5.;
+    iH.values[1] = 3.;
+
+    dll::eval({w, grad}, {{"input", iH}}, {wH, gH});
+    EXPECT_FLOAT_EQ(gH.values[0], 1. / 5.);
+    EXPECT_FLOAT_EQ(gH.values[1], 1. / 3.);
+
+    delete [] iH.values;
+    delete [] wH.values;
+    delete [] gH.values;
+}

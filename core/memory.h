@@ -29,7 +29,7 @@ public:
     float& operator [](std::size_t pos);
     const float& operator [](std::size_t pos) const;
 
-    std::size_t getCount() const;
+    std::size_t count() const;
 
     void fill(HostTensor hostTensor) const;
 

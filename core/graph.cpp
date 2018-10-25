@@ -70,14 +70,10 @@ bool Graph::allocateMemory()
     return true;
 }
 
-bool Graph::initializeWeights()
+void Graph::initializeOpers()
 {
-    for (auto pair : mWeightsOps)
-    {
-        if (!pair.second->initialize())
-            return false;
-    }
-    return true;
+    for (auto pair : mOps)
+        pair.second->initialize();
 }
 
 void Graph::freeMemory()
@@ -214,12 +210,8 @@ void initializeGraph()
     if (!graph->allocateMemory())
         throw errors::MemoryAllocationError();
 
-    // initialize all the weights
-    if (!graph->initializeWeights())
-    {
-        graph->freeMemory();
-        throw errors::WeightsInitializationError();
-    }
+    // initialize all the operations
+    graph->initializeOpers();
 }
 
 void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs, std::vector<HostTensor> hostTensors)
