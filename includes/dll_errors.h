@@ -7,13 +7,9 @@ namespace dll
 {
 namespace errors
 {
-
 class MemoryAllocationError : public std::exception
 {
-    virtual const char* what() const throw()
-    {
-        return "MemoryAllocationError";
-    }
+    virtual const char* what() const throw() { return "MemoryAllocationError"; }
 };
 
 class WeightsInitializationError : public std::exception
@@ -24,7 +20,7 @@ class WeightsInitializationError : public std::exception
     }
 };
 
-} // namespace errors
-} // namespace dll
+}  // namespace errors
+}  // namespace dll
 
-#endif // DLL_ERRORS_H_
+#endif  // DLL_ERRORS_H_

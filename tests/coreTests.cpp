@@ -13,11 +13,8 @@ std::uniform_real_distribution<> dist(-5., 5.);
 
 class CoreTest : public testing::Test
 {
-protected:
-    void SetUp() override
-    {
-        testing::Test::SetUp();
-    }
+   protected:
+    void SetUp() override { testing::Test::SetUp(); }
 
     void TearDown() override
     {
@@ -100,19 +97,18 @@ TEST_F(CoreTest, evalInputOper)
 
     in.values = new float[SIZE];
     out.values = new float[SIZE];
-    for (int i = 0; i < SIZE; ++i)
-        in.values[i] = i;
+    for (int i = 0; i < SIZE; ++i) in.values[i] = i;
 
     input->eval({{"input", in}}, out);
 
-    for (int i = 0; i < SIZE; ++i)
-        EXPECT_EQ(in.values[i], out.values[i]);
+    for (int i = 0; i < SIZE; ++i) EXPECT_EQ(in.values[i], out.values[i]);
 
-    delete [] in.values;
-    delete [] out.values;
+    delete[] in.values;
+    delete[] out.values;
 }
 
-void test(int SIZE, dll::ITensorSPtr output, dll::HostTensor& in1, dll::HostTensor& in2, dll::HostTensor& out)
+void test(int SIZE, dll::ITensorSPtr output, dll::HostTensor& in1,
+          dll::HostTensor& in2, dll::HostTensor& out)
 {
     in1.values = new float[SIZE];
     in2.values = new float[SIZE];
@@ -144,9 +140,9 @@ TEST_F(CoreTest, add)
     for (int i = 0; i < SIZE; ++i)
         EXPECT_EQ(out.values[i], in1.values[i] + in2.values[i]);
 
-    delete [] in1.values;
-    delete [] in2.values;
-    delete [] out.values;
+    delete[] in1.values;
+    delete[] in2.values;
+    delete[] out.values;
 }
 
 TEST_F(CoreTest, sub)
@@ -166,9 +162,9 @@ TEST_F(CoreTest, sub)
     for (int i = 0; i < SIZE; ++i)
         EXPECT_EQ(out.values[i], in1.values[i] - in2.values[i]);
 
-    delete [] in1.values;
-    delete [] in2.values;
-    delete [] out.values;
+    delete[] in1.values;
+    delete[] in2.values;
+    delete[] out.values;
 }
 
 TEST_F(CoreTest, mul)
@@ -188,9 +184,9 @@ TEST_F(CoreTest, mul)
     for (int i = 0; i < SIZE; ++i)
         EXPECT_EQ(out.values[i], in1.values[i] * in2.values[i]);
 
-    delete [] in1.values;
-    delete [] in2.values;
-    delete [] out.values;
+    delete[] in1.values;
+    delete[] in2.values;
+    delete[] out.values;
 }
 
 TEST_F(CoreTest, div)
@@ -210,7 +206,7 @@ TEST_F(CoreTest, div)
     for (int i = 0; i < SIZE; ++i)
         EXPECT_EQ(out.values[i], in1.values[i] / in2.values[i]);
 
-    delete [] in1.values;
-    delete [] in2.values;
-    delete [] out.values;
+    delete[] in1.values;
+    delete[] in2.values;
+    delete[] out.values;
 }

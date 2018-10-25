@@ -22,6 +22,8 @@ COMMON_LFLAGS +=-fPIC -shared -Wl,--version-script=$(EXPORTS_MAP)
 LFLAGS_R=$(COMMON_LFLAGS)
 LFLAGS_D=$(COMMON_LFLAGS)
 
+.PHONY: release debug format
+
 all: release debug
 
 release: $(SHARED_R) $(STATIC_R)
@@ -62,3 +64,7 @@ $(OUTDIR_R):
 
 $(OUTDIR_D):
 	@mkdir -p $@
+
+#### clang-format
+format:
+	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)

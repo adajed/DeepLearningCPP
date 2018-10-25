@@ -5,19 +5,18 @@
 
 namespace dll
 {
-
 ITensorSPtr add(ITensorSPtr t1, ITensorSPtr t2);
-ITensorSPtr operator +(ITensorSPtr t1, ITensorSPtr t2);
+ITensorSPtr operator+(ITensorSPtr t1, ITensorSPtr t2);
 
 ITensorSPtr sub(ITensorSPtr t1, ITensorSPtr t2);
-ITensorSPtr operator -(ITensorSPtr t1, ITensorSPtr t2);
+ITensorSPtr operator-(ITensorSPtr t1, ITensorSPtr t2);
 
 ITensorSPtr mul(ITensorSPtr t1, ITensorSPtr t2);
-ITensorSPtr operator *(ITensorSPtr t1, ITensorSPtr t2);
+ITensorSPtr operator*(ITensorSPtr t1, ITensorSPtr t2);
 
 ITensorSPtr div(ITensorSPtr t1, ITensorSPtr t2);
-ITensorSPtr operator /(ITensorSPtr t1, ITensorSPtr t2);
+ITensorSPtr operator/(ITensorSPtr t1, ITensorSPtr t2);
 
-} // namespace dll
+}  // namespace dll
 
-#endif // DLL_OPS_H_
+#endif  // DLL_OPS_H_

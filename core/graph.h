@@ -2,15 +2,14 @@
 #define GRAPHDL_CORE_GRAPH_H_
 
 #include "dll.h"
-#include "oper.h"
 #include "input.h"
+#include "oper.h"
 #include "weights.h"
 
 namespace dll
 {
 namespace core
 {
-
 class Graph;
 
 //! \class Graph
@@ -18,7 +17,7 @@ class Graph;
 //!
 class Graph : public IGraph
 {
-public:
+   public:
     using UPtr = std::shared_ptr<Graph>;
     using SPtr = std::shared_ptr<Graph>;
     using WeakPtr = std::weak_ptr<Graph>;
@@ -80,13 +79,16 @@ public:
     //!
     void insertOperation(Oper::SPtr oper);
 
-private:
-    std::string mName; //!< Name of the graph.
-    std::map<std::string, std::shared_ptr<InputOper>> mInputOps; //!< Map of input ops.
-    std::map<std::string, std::shared_ptr<WeightsOper>> mWeightsOps; //!< Map of weights ops.
+   private:
+    std::string mName;  //!< Name of the graph.
+    std::map<std::string, std::shared_ptr<InputOper>>
+        mInputOps;  //!< Map of input ops.
+    std::map<std::string, std::shared_ptr<WeightsOper>>
+        mWeightsOps;  //!< Map of weights ops.
 
-    std::map<Oper::ID, Oper::SPtr> mOps; //!< Map of all ops inside the graph.
-    std::map<Tensor::ID, Tensor::SPtr> mTensors; //!< MAp of all tensors inside the graph.
+    std::map<Oper::ID, Oper::SPtr> mOps;  //!< Map of all ops inside the graph.
+    std::map<Tensor::ID, Tensor::SPtr>
+        mTensors;  //!< MAp of all tensors inside the graph.
 };
 
 //! \class GraphRegister
@@ -94,7 +96,7 @@ private:
 //!
 class GraphRegister
 {
-private:
+   private:
     // name of initial default graph
     static const std::string DEFAULT_GRAPH_NAME;
 
@@ -109,7 +111,7 @@ private:
         mDefaultGraph = graph;
     }
 
-public:
+   public:
     //! \fn getGlobalIGraphRegister
     //! \brief Returns the global register of graphs.
     //!
@@ -146,14 +148,14 @@ public:
 
     void clear();
 
-private:
+   private:
     std::map<std::string, Graph::SPtr> mGraphDict;
     Graph::SPtr mDefaultGraph;
 };
 
 Graph::SPtr getDefaultGraph();
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // GRAPHDL_CORE_GRAPH_H_
+#endif  // GRAPHDL_CORE_GRAPH_H_
