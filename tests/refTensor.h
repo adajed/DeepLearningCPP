@@ -13,7 +13,7 @@ using namespace dll::core;
 
 class RefTensor
 {
-public:
+   public:
     RefTensor();
     RefTensor(const TensorShape& shape);
 
@@ -26,8 +26,8 @@ public:
     //! \fn operator []
     //! \brief Return value given its multidimensional coordinate.
     //!
-    float& operator [](const std::vector<unsigned int>& point);
-    const float& operator [](const std::vector<unsigned int>& point) const;
+    float& operator[](const std::vector<unsigned int>& point);
+    const float& operator[](const std::vector<unsigned int>& point) const;
 
     //! \fn count
     std::size_t count() const;
@@ -41,12 +41,12 @@ public:
     //! \fn toHostTensor
     HostTensor toHostTensor();
 
-private:
+   private:
     std::vector<float> mValues;
     std::size_t mCount;
     TensorShape mShape;
 };
 
-std::ostream& operator <<(std::ostream&, const RefTensor&);
+std::ostream& operator<<(std::ostream&, const RefTensor&);
 
-#endif // TESTS_REF_TENSOR_H_
+#endif  // TESTS_REF_TENSOR_H_

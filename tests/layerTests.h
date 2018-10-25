@@ -12,20 +12,19 @@ using namespace dll;
 
 class LayerTest : public testing::Test
 {
-protected:
+   protected:
     virtual void TearDown() override
     {
         dll::core::GraphRegister::getGlobalGraphRegister().clear();
         testing::Test::TearDown();
     }
 
-    using LayerBuilder= std::function<void(const std::vector<HostTensor>&, const std::vector<HostTensor>&)>;
+    using LayerBuilder = std::function<void(const std::vector<HostTensor>&,
+                                            const std::vector<HostTensor>&)>;
 
-    bool runTest(
-            const std::vector<RefTensor>& refInputs,
-            const std::vector<RefTensor>& refOutputs,
-            LayerBuilder builder);
-
+    bool runTest(const std::vector<RefTensor>& refInputs,
+                 const std::vector<RefTensor>& refOutputs,
+                 LayerBuilder builder);
 };
 
-#endif // TESTS_LAYER_TESTS_H_
+#endif  // TESTS_LAYER_TESTS_H_

@@ -5,21 +5,21 @@
 
 class RandGen
 {
-    public:
+   public:
     virtual float operator()() = 0;
 };
 
 class UniformGen : public RandGen
 {
-public:
+   public:
     UniformGen(unsigned int seed, float min, float max);
     UniformGen(unsigned int seed);
 
     virtual float operator()() override;
 
-private:
+   private:
     std::uniform_real_distribution<> mDist;
     std::mt19937 mE2;
 };
 
-#endif // TESTS_RAND_GEN_H_
+#endif  // TESTS_RAND_GEN_H_

@@ -8,35 +8,24 @@ TensorShape::TensorShape(const Shape& shape) : mDims(shape) {}
 
 TensorShape::TensorShape(const TensorShape& other) : mDims(other.mDims) {}
 
-TensorShape::TensorShape(std::initializer_list<unsigned> list)
-    : mDims(list)
-{
-}
+TensorShape::TensorShape(std::initializer_list<unsigned> list) : mDims(list) {}
 
-bool TensorShape::operator ==(const TensorShape& other) const
+bool TensorShape::operator==(const TensorShape& other) const
 {
-    if (mDims.size() != other.mDims.size())
-        return false;
+    if (mDims.size() != other.mDims.size()) return false;
     for (unsigned i = 0; i < mDims.size(); ++i)
-        if (mDims[i] != other.mDims[i])
-            return false;
+        if (mDims[i] != other.mDims[i]) return false;
     return true;
 }
 
-unsigned& TensorShape::operator [](std::size_t pos)
+unsigned& TensorShape::operator[](std::size_t pos) { return mDims[pos]; }
+
+const unsigned& TensorShape::operator[](std::size_t pos) const
 {
     return mDims[pos];
 }
 
-const unsigned& TensorShape::operator [](std::size_t pos) const
-{
-    return mDims[pos];
-}
-
-unsigned TensorShape::size() const
-{
-    return mDims.size();
-}
+unsigned TensorShape::size() const { return mDims.size(); }
 
 std::size_t TensorShape::count() const
 {

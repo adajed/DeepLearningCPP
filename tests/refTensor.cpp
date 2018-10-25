@@ -2,17 +2,10 @@
 
 #include <assert.h>
 
-RefTensor::RefTensor()
-    : mValues(0)
-    , mCount(0)
-    , mShape({})
-{
-}
+RefTensor::RefTensor() : mValues(0), mCount(0), mShape({}) {}
 
 RefTensor::RefTensor(const TensorShape& shape)
-    : mValues(shape.count())
-    , mCount(shape.count())
-    , mShape(shape)
+    : mValues(shape.count()), mCount(shape.count()), mShape(shape)
 {
 }
 
@@ -28,7 +21,7 @@ const float& RefTensor::at(std::size_t pos) const
     return mValues[pos];
 }
 
-float& RefTensor::operator [](const std::vector<unsigned int>& point)
+float& RefTensor::operator[](const std::vector<unsigned int>& point)
 {
     assert(mShape.size() == point.size());
 
@@ -42,7 +35,7 @@ float& RefTensor::operator [](const std::vector<unsigned int>& point)
     return at(pos);
 }
 
-const float& RefTensor::operator [](const std::vector<unsigned int>& point) const
+const float& RefTensor::operator[](const std::vector<unsigned int>& point) const
 {
     assert(mShape.size() == point.size());
 
@@ -56,15 +49,9 @@ const float& RefTensor::operator [](const std::vector<unsigned int>& point) cons
     return at(pos);
 }
 
-std::size_t RefTensor::count() const
-{
-    return mCount;
-}
+std::size_t RefTensor::count() const { return mCount; }
 
-TensorShape RefTensor::shape() const
-{
-    return mShape;
-}
+TensorShape RefTensor::shape() const { return mShape; }
 
 void RefTensor::fillRandomly(RandGen& gen)
 {
@@ -79,12 +66,11 @@ HostTensor RefTensor::toHostTensor()
     HostTensor t{nullptr, mCount};
     t.values = new float[mCount];
 
-    for (std::size_t i = 0; i < mCount; ++i)
-        t.values[i] = mValues[i];
+    for (std::size_t i = 0; i < mCount; ++i) t.values[i] = mValues[i];
     return t;
 }
 
-std::ostream& operator <<(std::ostream& stream, const RefTensor& tensor)
+std::ostream& operator<<(std::ostream& stream, const RefTensor& tensor)
 {
     for (std::size_t i = 0; i < tensor.count(); ++i)
         stream << tensor.at(i) << " ";

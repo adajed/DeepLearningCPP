@@ -4,21 +4,15 @@
 
 namespace
 {
-
 using TestCase = std::tuple<TensorShape>;
 
 std::vector<TestCase> testCases = {
-    {{1}},
-    {{1, 1}},
-    {{2}},
-    {{2, 2}},
-    {{2, 2, 2}}
-};
+    {{1}}, {{1, 1}}, {{2}}, {{2, 2}}, {{2, 2, 2}}};
 
 class ElementwiseTest : public LayerTest,
                         public testing::WithParamInterface<TestCase>
 {
-public:
+   public:
     void test(const TestCase& testCase)
     {
         setup(testCase);
@@ -29,10 +23,10 @@ public:
         EXPECT_TRUE(correct);
     }
 
-protected:
+   protected:
     RefTensor mInput1, mInput2, mOutput;
 
-private:
+   private:
     void setup(const TestCase& testCase)
     {
         UniformGen gen(0);
@@ -54,40 +48,37 @@ private:
     virtual float elementwise(float f1, float f2) = 0;
 
     virtual LayerBuilder getBuilder(TestCase testCase) = 0;
-
 };
 
-#define TEST_CLASS(ClassName, op) \
-class ClassName : public ElementwiseTest \
-{ \
-private: \
-    float elementwise(float f1, float f2) override \
-    { \
-        return f1 op f2; \
-    } \
- \
-    LayerBuilder getBuilder(TestCase testCase) override \
-    { \
-        return [testCase](const std::vector<HostTensor>& ins, const std::vector<HostTensor>& outs) \
-        { \
-            dll::ITensorSPtr input1 = dll::createInput("input1", std::get<0>(testCase)); \
-            dll::ITensorSPtr input2 = dll::createInput("input2", std::get<0>(testCase)); \
-            dll::ITensorSPtr output = input1 op input2; \
-            dll::initializeGraph(); \
- \
-            output->eval({{"input1", ins[0]}, {"input2", ins[1]}}, outs[0]); \
-        }; \
-    } \
-}; \
-TEST_P(ClassName, test) { test(GetParam()); } \
-INSTANTIATE_TEST_CASE_P( \
-        ClassName##Instantiation, \
-        ClassName, \
-        testing::ValuesIn(testCases))
+#define TEST_CLASS(ClassName, op)                                           \
+    class ClassName : public ElementwiseTest                                \
+    {                                                                       \
+       private:                                                             \
+        float elementwise(float f1, float f2) override { return f1 op f2; } \
+                                                                            \
+        LayerBuilder getBuilder(TestCase testCase) override                 \
+        {                                                                   \
+            return [testCase](const std::vector<HostTensor>& ins,           \
+                              const std::vector<HostTensor>& outs) {        \
+                dll::ITensorSPtr input1 =                                   \
+                    dll::createInput("input1", std::get<0>(testCase));      \
+                dll::ITensorSPtr input2 =                                   \
+                    dll::createInput("input2", std::get<0>(testCase));      \
+                dll::ITensorSPtr output = input1 op input2;                 \
+                dll::initializeGraph();                                     \
+                                                                            \
+                output->eval({{"input1", ins[0]}, {"input2", ins[1]}},      \
+                             outs[0]);                                      \
+            };                                                              \
+        }                                                                   \
+    };                                                                      \
+    TEST_P(ClassName, test) { test(GetParam()); }                           \
+    INSTANTIATE_TEST_CASE_P(ClassName##Instantiation, ClassName,            \
+                            testing::ValuesIn(testCases))
 
 TEST_CLASS(AddTest, +);
 TEST_CLASS(SubTest, -);
 TEST_CLASS(MulTest, *);
 TEST_CLASS(DivTest, /);
 
-}
+}  // namespace

@@ -1,6 +1,7 @@
 #ifndef DLL_CORE_ELEMENTWISE_OPER_H_
 #define DLL_CORE_ELEMENTWISE_OPER_H_
 
+#include <assert.h>
 #include "oper.h"
 
 namespace dll

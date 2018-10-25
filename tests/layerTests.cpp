@@ -10,7 +10,8 @@ bool compareTensor(const RefTensor& refOutput, const HostTensor& output)
     return true;
 }
 
-bool compareTensors(const std::vector<RefTensor>& refOutputs, const std::vector<HostTensor>& outputs)
+bool compareTensors(const std::vector<RefTensor>& refOutputs,
+                    const std::vector<HostTensor>& outputs)
 {
     EXPECT_EQ(refOutputs.size(), outputs.size());
 
@@ -21,15 +22,13 @@ bool compareTensors(const std::vector<RefTensor>& refOutputs, const std::vector<
     return acc;
 }
 
-bool LayerTest::runTest(
-        const std::vector<RefTensor>& refInputs,
-        const std::vector<RefTensor>& refOutputs,
-        LayerBuilder builder)
+bool LayerTest::runTest(const std::vector<RefTensor>& refInputs,
+                        const std::vector<RefTensor>& refOutputs,
+                        LayerBuilder builder)
 {
     // prepare inputs
     std::vector<HostTensor> inputs;
-    for (RefTensor ref : refInputs)
-        inputs.push_back(ref.toHostTensor());
+    for (RefTensor ref : refInputs) inputs.push_back(ref.toHostTensor());
 
     // prepare outputs
     std::vector<HostTensor> outputs;
@@ -45,10 +44,8 @@ bool LayerTest::runTest(
 
     bool ret = compareTensors(refOutputs, outputs);
 
-    for (HostTensor in : inputs)
-        delete [] in.values;
-    for (HostTensor out : outputs)
-        delete [] out.values;
+    for (HostTensor in : inputs) delete[] in.values;
+    for (HostTensor out : outputs) delete[] out.values;
 
     return ret;
 }
