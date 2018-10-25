@@ -7,10 +7,9 @@ namespace dll
 {
 namespace core
 {
-
 class TensorShape
 {
-public:
+   public:
     using iterator = std::vector<unsigned int>::iterator;
 
     TensorShape(const Shape& shape);
@@ -23,11 +22,11 @@ public:
     iterator begin();
     iterator end();
 
-private:
+   private:
     std::vector<unsigned int> mDims;
 };
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // DLL_CORE_TENSOR_SHAPE_H_
+#endif  // DLL_CORE_TENSOR_SHAPE_H_

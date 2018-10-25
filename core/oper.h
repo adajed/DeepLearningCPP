@@ -9,7 +9,6 @@ namespace dll
 {
 namespace core
 {
-
 class Oper;
 
 //! \class Tensor
@@ -17,21 +16,22 @@ class Oper;
 //!
 class Tensor : public ITensor
 {
-public:
+   public:
     using ID = std::size_t;
     using UPtr = std::unique_ptr<Tensor>;
     using SPtr = std::shared_ptr<Tensor>;
     using WeakPtr = std::weak_ptr<Tensor>;
 
     Tensor(const std::string& name, const TensorShape& shape)
-        : mID(nextID())
-        , mName(name)
-        , mShape(shape)
-        , mOper()
-        , mOutputOps()
-        , mIsEvaluated(false)
-        , mMemory(MemoryType::kHOST_MEMORY, shape.count())
-    {}
+        : mID(nextID()),
+          mName(name),
+          mShape(shape),
+          mOper(),
+          mOutputOps(),
+          mIsEvaluated(false),
+          mMemory(MemoryType::kHOST_MEMORY, shape.count())
+    {
+    }
 
     ID getID() const;
 
@@ -61,7 +61,7 @@ public:
 
     ~Tensor();
 
-private:
+   private:
     static ID nextID()
     {
         static ID idCounter = 0;
@@ -69,8 +69,8 @@ private:
     }
 
     ID mID;
-    std::string mName; //!< Tensor name.
-    TensorShape mShape; //< Tensor shape.
+    std::string mName;   //!< Tensor name.
+    TensorShape mShape;  //< Tensor shape.
 
     std::weak_ptr<Oper> mOper;
     std::vector<std::shared_ptr<Oper>> mOutputOps;
@@ -81,13 +81,14 @@ private:
 
 class Oper
 {
-public:
+   public:
     using ID = std::size_t;
     using UPtr = std::unique_ptr<Oper>;
     using SPtr = std::shared_ptr<Oper>;
     using WeakPtr = std::weak_ptr<Oper>;
 
-    Oper(const std::vector<Tensor::SPtr>& inputs, std::vector<Tensor::SPtr> outputs)
+    Oper(const std::vector<Tensor::SPtr>& inputs,
+         std::vector<Tensor::SPtr> outputs)
         : mID(nextID()), mIsEvaluated(false), mInputs(), mOutputs(outputs)
     {
         for (Tensor::SPtr input : inputs)
@@ -106,7 +107,7 @@ public:
 
     void reset();
 
-private:
+   private:
     virtual void executeOper(const InputDict& inputs) = 0;
 
     static ID nextID()
@@ -118,12 +119,12 @@ private:
     ID mID;
     bool mIsEvaluated;
 
-protected:
+   protected:
     std::vector<Tensor::WeakPtr> mInputs;
     std::vector<Tensor::SPtr> mOutputs;
 };
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // DLL_CORE_OPER_H_
+#endif  // DLL_CORE_OPER_H_

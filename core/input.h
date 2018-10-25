@@ -8,16 +8,17 @@ namespace dll
 {
 namespace core
 {
-
 class InputOper : public Oper
 {
-public:
+   public:
     InputOper(const std::string& name, const Shape& shape)
         : Oper({}, createOutputs(name, shape))
-    {}
+    {
+    }
 
-private:
-    static std::vector<Tensor::SPtr> createOutputs(const std::string& name, const Shape& shape)
+   private:
+    static std::vector<Tensor::SPtr> createOutputs(const std::string& name,
+                                                   const Shape& shape)
     {
         return {std::make_shared<Tensor>(name, shape)};
     }
@@ -34,7 +35,7 @@ private:
     }
 };
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // DLL_CORE_INPUT_H_
+#endif  // DLL_CORE_INPUT_H_

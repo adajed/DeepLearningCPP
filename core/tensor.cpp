@@ -4,56 +4,25 @@ namespace dll
 {
 namespace core
 {
+Tensor::ID Tensor::getID() const { return mID; }
 
-Tensor::ID Tensor::getID() const
-{
-    return mID;
-}
+std::string Tensor::getName() const { return mName; }
 
-std::string Tensor::getName() const
-{
-    return mName;
-}
+void Tensor::setName(const std::string& name) { mName = name; }
 
-void Tensor::setName(const std::string& name)
-{
-    mName = name;
-}
+Shape Tensor::getShape() const { return mShape; }
 
-Shape Tensor::getShape() const
-{
-    return mShape;
-}
+void Tensor::setShape(const Shape& shape) { mShape = shape; }
 
-void Tensor::setShape(const Shape& shape)
-{
-    mShape = shape;
-}
+TensorShape Tensor::shape() const { return mShape; }
 
-Oper::SPtr Tensor::getOper() const
-{
-    return mOper.lock();
-}
+void Tensor::setTensorShape(const TensorShape& shape) { mShape = shape; }
 
-void Tensor::setOper(Oper::SPtr oper)
-{
-    mOper = Oper::WeakPtr(oper);
-}
+Oper::SPtr Tensor::getOper() const { return mOper.lock(); }
 
-TensorShape Tensor::shape() const
-{
-    return mShape;
-}
+void Tensor::setOper(Oper::SPtr oper) { mOper = Oper::WeakPtr(oper); }
 
-void Tensor::setTensorShape(const TensorShape& shape)
-{
-    mShape = shape;
-}
-
-Memory Tensor::getMemory()
-{
-    return mMemory;
-}
+Memory Tensor::getMemory() { return mMemory; }
 
 void Tensor::eval(InputDict const& inputs, HostTensor hostTensor)
 {
@@ -70,27 +39,17 @@ void Tensor::exec(const InputDict& inputs)
     }
 }
 
-bool Tensor::allocateMemory()
-{
-    return mMemory.allocate();
-}
+bool Tensor::allocateMemory() { return mMemory.allocate(); }
 
-void Tensor::freeMemory()
-{
-    mMemory.free();
-}
+void Tensor::freeMemory() { mMemory.free(); }
 
 void Tensor::reset()
 {
     mIsEvaluated = false;
-    for (Oper::SPtr op : mOutputOps)
-        op->reset();
+    for (Oper::SPtr op : mOutputOps) op->reset();
 }
 
-Tensor::~Tensor()
-{
-    mMemory.free();
-}
+Tensor::~Tensor() { mMemory.free(); }
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll

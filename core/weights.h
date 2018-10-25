@@ -9,13 +9,13 @@ namespace dll
 {
 namespace core
 {
-
 class WeightsOper : public Oper
 {
-public:
+   public:
     WeightsOper(const std::string& name, const Shape& shape)
         : Oper({}, createOutputs(name, shape))
-    {}
+    {
+    }
 
     void initialize() override
     {
@@ -29,21 +29,20 @@ public:
             memory[i] = dist(e2);
     }
 
-private:
-    static std::vector<Tensor::SPtr> createOutputs(const std::string& name, const Shape& shape)
+   private:
+    static std::vector<Tensor::SPtr> createOutputs(const std::string& name,
+                                                   const Shape& shape)
     {
         return {std::make_shared<Tensor>(name, shape)};
     }
 
     //! This method does nothing, because weights are already
     //!     in the tensor.
-    void executeOper(const InputDict& inputs) override
-    {
-    }
+    void executeOper(const InputDict& inputs) override {}
 
 };
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // DLL_CORE_WEIGHTS_H_
+#endif  // DLL_CORE_WEIGHTS_H_

@@ -8,16 +8,17 @@ namespace dll
 {
 namespace core
 {
-
 class ElementwiseOper : public GradientOper
 {
-public:
+   public:
     ElementwiseOper(Tensor::SPtr t1, Tensor::SPtr t2)
         : GradientOper({t1, t2}, createOutputs(t1, t2))
-    {}
+    {
+    }
 
-private:
-    static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1, Tensor::SPtr t2)
+   private:
+    static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1,
+                                                   Tensor::SPtr t2)
     {
         return {std::make_shared<Tensor>("", t1->shape())};
     }
@@ -41,7 +42,7 @@ private:
     }
 };
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // DLL_CORE_ELEMENTWISE_OPER_H_
+#endif  // DLL_CORE_ELEMENTWISE_OPER_H_

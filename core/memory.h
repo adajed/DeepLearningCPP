@@ -9,7 +9,6 @@ namespace dll
 {
 namespace core
 {
-
 enum class MemoryType
 {
     kHOST_MEMORY = 0,
@@ -18,7 +17,7 @@ enum class MemoryType
 
 class Memory
 {
-public:
+   public:
     Memory(MemoryType type, size_t count);
 
     bool isAllocated() const;
@@ -26,8 +25,8 @@ public:
     float* getValues();
     const float* getValues() const;
 
-    float& operator [](std::size_t pos);
-    const float& operator [](std::size_t pos) const;
+    float& operator[](std::size_t pos);
+    const float& operator[](std::size_t pos) const;
 
     std::size_t count() const;
 
@@ -37,13 +36,13 @@ public:
 
     void free();
 
-private:
+   private:
     MemoryType mType;
     float* mValues;
     std::size_t mCount;
 };
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // DLL_CORE_MEMORY_H_
+#endif  // DLL_CORE_MEMORY_H_
