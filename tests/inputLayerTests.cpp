@@ -52,6 +52,5 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
 };
 
 TEST_P(InputTest, test) { test(GetParam()); }
-INSTANTIATE_TEST_CASE_P(InputTestInstantiation, InputTest,
-                        testing::ValuesIn(testCases));
+INSTANTIATE_TEST_CASE_P(LayerTest, InputTest, testing::ValuesIn(testCases));
 }  // namespace

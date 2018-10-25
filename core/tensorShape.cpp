@@ -18,6 +18,11 @@ bool TensorShape::operator==(const TensorShape& other) const
     return true;
 }
 
+bool TensorShape::operator!=(const TensorShape& other) const
+{
+    return !operator==(other);
+}
+
 unsigned& TensorShape::operator[](std::size_t pos) { return mDims[pos]; }
 
 const unsigned& TensorShape::operator[](std::size_t pos) const

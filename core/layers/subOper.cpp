@@ -1,4 +1,5 @@
 #include "subOper.h"
+#include "dll_errors.h"
 #include "dll_ops.h"
 
 namespace dll
@@ -55,6 +56,8 @@ std::map<Tensor::SPtr, GradientOper::TensorMap> SubOper::gradients()
 
 Tensor::SPtr sub(Tensor::SPtr t1, Tensor::SPtr t2)
 {
+    if (t1->shape() != t2->shape())
+        throw errors::NotMatchingShapesError();
     Oper::SPtr oper = std::make_shared<SubOper>(t1, t2);
     getDefaultGraph()->insertOperation(oper);
     return oper->getOutputs()[0];

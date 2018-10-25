@@ -20,6 +20,11 @@ class WeightsInitializationError : public std::exception
     }
 };
 
+class NotMatchingShapesError : public std::exception
+{
+    virtual const char* what() const throw() { return "Shapes doesn\'t match"; }
+};
+
 }  // namespace errors
 }  // namespace dll
 
