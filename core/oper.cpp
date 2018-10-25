@@ -9,7 +9,7 @@ Oper::ID Oper::getID() const { return mID; }
 std::vector<Tensor::SPtr> Oper::getInputs()
 {
     std::vector<Tensor::SPtr> inputs;
-    for (Tensor::WeakPtr input : inputs) inputs.push_back(input.lock());
+    for (Tensor::WeakPtr input : mInputs) inputs.push_back(input.lock());
     return inputs;
 }
 

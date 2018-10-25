@@ -14,9 +14,11 @@ Shape Tensor::getShape() const { return mShape; }
 
 void Tensor::setShape(const Shape& shape) { mShape = shape; }
 
-TensorShape Tensor::getTensorShape() const { return mShape; }
+TensorShape Tensor::shape() const { return mShape; }
 
 void Tensor::setTensorShape(const TensorShape& shape) { mShape = shape; }
+
+Oper::SPtr Tensor::getOper() const { return mOper.lock(); }
 
 void Tensor::setOper(Oper::SPtr oper) { mOper = Oper::WeakPtr(oper); }
 

@@ -85,24 +85,28 @@ TEST_F(CoreTest, addInputWithTheSameName)
     EXPECT_EQ(input2, nullptr);
 }
 
-TEST_F(CoreTest, evalInputOper)
+TEST_F(CoreTest, gradients)
 {
-    const int SIZE = 10;
-    dll::ITensorSPtr input = dll::createInput("input", {SIZE});
-
+    dll::ITensorSPtr i = dll::createInput("input", {2});
+    dll::ITensorSPtr w = dll::createWeights("weights", {2});
+    dll::ITensorSPtr output = (dll::constant(1., {2}) / i) * w;
+    dll::ITensorSPtr grad = dll::gradients(output)[w];
     dll::initializeGraph();
 
-    dll::HostTensor in{nullptr, SIZE};
-    dll::HostTensor out{nullptr, SIZE};
+    dll::HostTensor iH{nullptr, 2};
+    dll::HostTensor wH{nullptr, 2};
+    dll::HostTensor gH{nullptr, 2};
+    iH.values = new float[2];
+    wH.values = new float[2];
+    gH.values = new float[2];
+    iH.values[0] = 5.;
+    iH.values[1] = 3.;
 
-    in.values = new float[SIZE];
-    out.values = new float[SIZE];
-    for (int i = 0; i < SIZE; ++i) in.values[i] = i;
+    dll::eval({w, grad}, {{"input", iH}}, {wH, gH});
+    EXPECT_FLOAT_EQ(gH.values[0], 1. / 5.);
+    EXPECT_FLOAT_EQ(gH.values[1], 1. / 3.);
 
-    input->eval({{"input", in}}, out);
-
-    for (int i = 0; i < SIZE; ++i) EXPECT_EQ(in.values[i], out.values[i]);
-
-    delete[] in.values;
-    delete[] out.values;
+    delete[] iH.values;
+    delete[] wH.values;
+    delete[] gH.values;
 }

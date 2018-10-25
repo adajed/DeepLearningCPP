@@ -20,9 +20,9 @@ const float* Memory::getValues() const { return mValues; }
 
 float& Memory::operator[](std::size_t pos) { return mValues[pos]; }
 
-const float& Memory::operator[](std::size_t pos) const { return mValues[pos]; }
+size_t Memory::count() const { return mCount; }
 
-size_t Memory::getCount() const { return mCount; }
+const float& Memory::operator[](std::size_t pos) const { return mValues[pos]; }
 
 bool Memory::allocate()
 {
@@ -59,7 +59,7 @@ void Memory::free()
 void Memory::fill(HostTensor hostTensor) const
 {
     assert(isAllocated());
-    assert(getCount() == hostTensor.count);
+    assert(count() == hostTensor.count);
 
     for (std::size_t i = 0; i < hostTensor.count; ++i)
         hostTensor.values[i] = mValues[i];

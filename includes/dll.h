@@ -132,6 +132,13 @@ void initializeGraph();
 void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs,
           std::vector<HostTensor> hostTensors);
 
+//! \fn gradients
+//! \brief Creates part of graph responsible for calculating gradients.
+//! \param tensor Tensor for which gradients will be calculated (i.e. loss).
+//! \return Map from weights name to tensor representing gradient.
+//!
+std::map<ITensorSPtr, ITensorSPtr> gradients(ITensorSPtr tensor);
+
 }  // namespace dll
 
 #endif  // GRAPH_DL_H_
