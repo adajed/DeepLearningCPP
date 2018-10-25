@@ -1,0 +1,11 @@
+﻿---
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+---
+Language: Cpp
+BreakBeforeBraces: Allman
+DerivePointerAlignment: false
+PointerAlignment: Left
+SpaceBeforeParens: ControlStatements
+...

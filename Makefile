@@ -5,7 +5,7 @@ all: release debug
 release: lib_release test_release
 debug: lib_debug test_debug
 
-.PHONY: lib_release lib_debug test_release test_debug clean
+.PHONY: lib_release lib_debug test_release test_debug clean ctags format
 
 #### LIBRARY
 
@@ -28,3 +28,8 @@ clean:
 
 ctags:
 	ctags -R --tag-relative=yes --exclude=.git $(ROOT_DIR)
+
+format:
+	@$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(ROOT_DIR)/includes/*.h
+	@make -C core format
+	@make -C tests format

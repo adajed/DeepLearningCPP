@@ -19,6 +19,8 @@ COMMON_LFLAGS +=-L$(OUTDIR) -L$(GTEST_LIB_PATH)
 LFLAGS_R=$(COMMON_LFLAGS) -ldll_static -pthread -lgtest -lgtest_main
 LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug -pthread -lgtest -lgtest_main
 
+.PHONY: release debug format
+
 all: release debug
 
 release: $(PROGRAM_R)
@@ -51,3 +53,7 @@ $(OUTDIR_R):
 
 $(OUTDIR_D):
 	@mkdir -p $@
+
+#### clang-format
+format:
+	@$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) *.cpp *h
