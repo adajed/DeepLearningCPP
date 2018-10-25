@@ -7,7 +7,14 @@ namespace
 using TestCase = std::tuple<TensorShape>;
 
 std::vector<TestCase> testCases = {
-    {{1}}, {{1, 1}}, {{2}}, {{2, 2}}, {{2, 2, 2}}};
+    // clang-format off
+    {{1}},
+    {{1, 1}},
+    {{2}},
+    {{2, 2}},
+    {{2, 2, 2}}
+    // clang-format on
+};
 
 class ElementwiseTest : public LayerTest,
                         public testing::WithParamInterface<TestCase>
