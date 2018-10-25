@@ -7,15 +7,14 @@
 #ifndef DLL_DL_H_
 #define DLL_DL_H_
 
-#include <string>
-#include <vector>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 //! \namespace dll
 namespace dll
 {
-
 //! \struct Tensor in host memory
 //! \brief Memory used to provide inputs and to get outputs from graph.
 //!
@@ -40,7 +39,7 @@ using IGraphSPtr = std::shared_ptr<IGraph>;
 //!
 class ITensor
 {
-public:
+   public:
     //! \fn getName
     //! \brief Returns name of the tensor.
     //!
@@ -75,7 +74,7 @@ public:
 //!
 class IGraph
 {
-public:
+   public:
     virtual std::string getName() const = 0;
     virtual void setName(std::string const& name) = 0;
 
@@ -130,8 +129,9 @@ void initializeGraph();
 //! \param tensors Vector of tensors to evaluate.
 //! \param inputs Map of input values.
 //!
-void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs, std::vector<HostTensor> hostTensors);
+void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs,
+          std::vector<HostTensor> hostTensors);
 
-} // namespace dll
+}  // namespace dll
 
-#endif // GRAPH_DL_H_
+#endif  // GRAPH_DL_H_

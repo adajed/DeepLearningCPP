@@ -7,40 +7,22 @@ namespace dll
 {
 namespace core
 {
-
 Memory::Memory(MemoryType type, size_t count)
     : mType(type), mValues(nullptr), mCount(count)
-{}
-
-bool Memory::isAllocated() const
 {
-    return mValues != nullptr;
 }
 
-float* Memory::getValues()
-{
-    return mValues;
-}
+bool Memory::isAllocated() const { return mValues != nullptr; }
 
-const float* Memory::getValues() const
-{
-    return mValues;
-}
+float* Memory::getValues() { return mValues; }
 
-float& Memory::operator [](std::size_t pos)
-{
-    return mValues[pos];
-}
+const float* Memory::getValues() const { return mValues; }
 
-const float& Memory::operator [](std::size_t pos) const
-{
-    return mValues[pos];
-}
+float& Memory::operator[](std::size_t pos) { return mValues[pos]; }
 
-size_t Memory::getCount() const
-{
-    return mCount;
-}
+const float& Memory::operator[](std::size_t pos) const { return mValues[pos]; }
+
+size_t Memory::getCount() const { return mCount; }
 
 bool Memory::allocate()
 {
@@ -50,7 +32,7 @@ bool Memory::allocate()
         mValues = new float[mCount];
         return true;
     }
-    else // mType == MemoryType::kDEVICE_MEMORY
+    else  // mType == MemoryType::kDEVICE_MEMORY
     {
         // TODO: allocate memory on device
         return false;
@@ -62,14 +44,13 @@ bool Memory::allocate()
 
 void Memory::free()
 {
-    if (!isAllocated())
-        return;
+    if (!isAllocated()) return;
 
     if (mType == MemoryType::kHOST_MEMORY)
     {
-        delete [] mValues;
+        delete[] mValues;
     }
-    else // mType == MemoryType::kDEVICE_MEMORY
+    else  // mType == MemoryType::kDEVICE_MEMORY
     {
         // TODO: free memory on device
     }
@@ -84,5 +65,5 @@ void Memory::fill(HostTensor hostTensor) const
         hostTensor.values[i] = mValues[i];
 }
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll

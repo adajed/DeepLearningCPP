@@ -4,24 +4,16 @@ namespace dll
 {
 namespace core
 {
-
-Oper::ID Oper::getID() const
-{
-    return mID;
-}
+Oper::ID Oper::getID() const { return mID; }
 
 std::vector<Tensor::SPtr> Oper::getInputs()
 {
     std::vector<Tensor::SPtr> inputs;
-    for (Tensor::WeakPtr input : inputs)
-        inputs.push_back(input.lock());
+    for (Tensor::WeakPtr input : inputs) inputs.push_back(input.lock());
     return inputs;
 }
 
-std::vector<Tensor::SPtr> Oper::getOutputs()
-{
-    return mOutputs;
-}
+std::vector<Tensor::SPtr> Oper::getOutputs() { return mOutputs; }
 
 void Oper::exec(const InputDict& inputs)
 {
@@ -36,9 +28,8 @@ void Oper::exec(const InputDict& inputs)
 void Oper::reset()
 {
     mIsEvaluated = false;
-    for (Tensor::SPtr output : mOutputs)
-        output->reset();
+    for (Tensor::SPtr output : mOutputs) output->reset();
 }
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll

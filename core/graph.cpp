@@ -8,27 +8,16 @@ namespace dll
 {
 namespace core
 {
-
 const std::string GraphRegister::DEFAULT_GRAPH_NAME = "default_graph";
 
 Graph::Graph(const std::string& name)
-    : mName(name)
-    , mInputOps()
-    , mWeightsOps()
-    , mOps()
-    , mTensors()
-{}
-
-std::string Graph::getName() const
+    : mName(name), mInputOps(), mWeightsOps(), mOps(), mTensors()
 {
-    return mName;
 }
 
-void Graph::setName(const std::string& name)
-{
-    mName = name;
-}
+std::string Graph::getName() const { return mName; }
 
+void Graph::setName(const std::string& name) { mName = name; }
 
 std::map<std::string, ITensorSPtr> Graph::getInputs() const
 {
@@ -48,10 +37,8 @@ std::map<std::string, ITensorSPtr> Graph::getWeights() const
 
 void Graph::reset()
 {
-    for (auto pair : mInputOps)
-        pair.second->reset();
-    for (auto pair : mWeightsOps)
-        pair.second->reset();
+    for (auto pair : mInputOps) pair.second->reset();
+    for (auto pair : mWeightsOps) pair.second->reset();
 }
 
 bool Graph::allocateMemory()
@@ -61,8 +48,7 @@ bool Graph::allocateMemory()
     {
         if (!pair.second->allocateMemory())
         {
-            for (Tensor::SPtr t : allocatedTensors)
-                t->freeMemory();
+            for (Tensor::SPtr t : allocatedTensors) t->freeMemory();
             return false;
         }
         allocatedTensors.push_back(pair.second);
@@ -74,23 +60,19 @@ bool Graph::initializeWeights()
 {
     for (auto pair : mWeightsOps)
     {
-        if (!pair.second->initialize())
-            return false;
+        if (!pair.second->initialize()) return false;
     }
     return true;
 }
 
 void Graph::freeMemory()
 {
-    for (auto pair : mTensors)
-        pair.second->freeMemory();
+    for (auto pair : mTensors) pair.second->freeMemory();
 }
-
 
 Tensor::SPtr Graph::addInput(const std::string& name, const Shape& shape)
 {
-    if (mInputOps.count(name) > 0)
-        return nullptr;
+    if (mInputOps.count(name) > 0) return nullptr;
 
     std::shared_ptr<InputOper> oper = std::make_shared<InputOper>(name, shape);
     mInputOps.insert({name, oper});
@@ -101,8 +83,7 @@ Tensor::SPtr Graph::addInput(const std::string& name, const Shape& shape)
 
 Tensor::SPtr Graph::addWeights(const std::string& name, const Shape& shape)
 {
-    if (mWeightsOps.count(name) > 0)
-        return nullptr;
+    if (mWeightsOps.count(name) > 0) return nullptr;
 
     auto weightsOper = std::make_shared<WeightsOper>(name, shape);
     mWeightsOps.insert({name, weightsOper});
@@ -141,16 +122,12 @@ Graph::SPtr GraphRegister::at(const std::string& name)
 
 bool GraphRegister::insert(Graph::SPtr graph)
 {
-    if (hasKey(graph->getName()))
-        return false;
+    if (hasKey(graph->getName())) return false;
     mGraphDict[graph->getName()] = graph;
     return true;
 }
 
-Graph::SPtr GraphRegister::getDefaultGraph()
-{
-    return mDefaultGraph;
-}
+Graph::SPtr GraphRegister::getDefaultGraph() { return mDefaultGraph; }
 
 void GraphRegister::setDefaultGraph(Graph::SPtr graph)
 {
@@ -160,7 +137,8 @@ void GraphRegister::setDefaultGraph(Graph::SPtr graph)
 void GraphRegister::clear()
 {
     mGraphDict.clear();
-    Graph::SPtr default_graph = std::make_shared<Graph>(GraphRegister::DEFAULT_GRAPH_NAME);
+    Graph::SPtr default_graph =
+        std::make_shared<Graph>(GraphRegister::DEFAULT_GRAPH_NAME);
     mGraphDict[GraphRegister::DEFAULT_GRAPH_NAME] = default_graph;
     mDefaultGraph = default_graph;
 }
@@ -170,14 +148,13 @@ Graph::SPtr getDefaultGraph()
     return GraphRegister::getGlobalGraphRegister().getDefaultGraph();
 }
 
-} // namespace core
+}  // namespace core
 
 #define GLOBAL_REGISTER core::GraphRegister::getGlobalGraphRegister()
 
 IGraphSPtr createGraph(const std::string& name)
 {
-    if (GLOBAL_REGISTER.hasKey(name))
-        return nullptr;
+    if (GLOBAL_REGISTER.hasKey(name)) return nullptr;
 
     core::Graph::SPtr graph = std::make_shared<core::Graph>(name);
     GLOBAL_REGISTER.insert(graph);
@@ -211,8 +188,7 @@ void initializeGraph()
 {
     core::Graph::SPtr graph = core::getDefaultGraph();
     // allocate memory for all tensors
-    if (!graph->allocateMemory())
-        throw errors::MemoryAllocationError();
+    if (!graph->allocateMemory()) throw errors::MemoryAllocationError();
 
     // initialize all the weights
     if (!graph->initializeWeights())
@@ -222,7 +198,8 @@ void initializeGraph()
     }
 }
 
-void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs, std::vector<HostTensor> hostTensors)
+void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs,
+          std::vector<HostTensor> hostTensors)
 {
     assert(tensors.size() == hostTensors.size());
 
@@ -233,5 +210,4 @@ void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs, std:
         tensors[i]->eval(inputs, hostTensors[i]);
 }
 
-} // namespace dll
-
+}  // namespace dll
