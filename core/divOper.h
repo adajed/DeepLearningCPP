@@ -16,17 +16,14 @@ class DivOper : public ElementwiseOper
 
     std::map<Tensor::SPtr, GradientOper::TensorMap> gradients() override;
 
-private:
-    float elementwise(float f1, float f2) override
-    {
-        return f1 / f2;
-    }
+   private:
+    float elementwise(float f1, float f2) override { return f1 / f2; }
 };
 
 Tensor::SPtr div(Tensor::SPtr, Tensor::SPtr);
-Tensor::SPtr operator /(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr operator/(Tensor::SPtr, Tensor::SPtr);
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
 #endif  // DLL_CORE_DIV_OPER_H_

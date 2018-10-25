@@ -232,7 +232,7 @@ TEST_F(CoreTest, gradients)
     EXPECT_FLOAT_EQ(gH.values[0], 1. / 5.);
     EXPECT_FLOAT_EQ(gH.values[1], 1. / 3.);
 
-    delete [] iH.values;
-    delete [] wH.values;
-    delete [] gH.values;
+    delete[] iH.values;
+    delete[] wH.values;
+    delete[] gH.values;
 }

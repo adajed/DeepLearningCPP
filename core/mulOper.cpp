@@ -4,20 +4,20 @@ namespace dll
 {
 namespace core
 {
-
 namespace
 {
 class MulGradientOper : public Oper
 {
-public:
+   public:
     MulGradientOper(Tensor::SPtr in1, Tensor::SPtr in2, Tensor::SPtr out)
         : Oper({in1, in2, out}, createOutputs(in1, in2, out))
     {
     }
 
-private:
-    static std::vector<Tensor::SPtr> createOutputs(
-            Tensor::SPtr in1, Tensor::SPtr in2, Tensor::SPtr out)
+   private:
+    static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr in1,
+                                                   Tensor::SPtr in2,
+                                                   Tensor::SPtr out)
     {
         Tensor::SPtr grad1 = std::make_shared<Tensor>("", in1->shape());
         Tensor::SPtr grad2 = std::make_shared<Tensor>("", in2->shape());
@@ -43,18 +43,17 @@ private:
             gradient2[i] = in1[i];
         }
     }
-
 };
 
-}  // namespace anonymous
+}  // namespace
 
 std::map<Tensor::SPtr, GradientOper::TensorMap> MulOper::gradients()
 {
     std::vector<Tensor::SPtr> inputs = getInputs();
     std::vector<Tensor::SPtr> outputs = getOutputs();
 
-    Oper::SPtr gradOper = std::make_shared<MulGradientOper>(
-            inputs[0], inputs[1], outputs[0]);
+    Oper::SPtr gradOper =
+        std::make_shared<MulGradientOper>(inputs[0], inputs[1], outputs[0]);
     getDefaultGraph()->insertOperation(gradOper);
     std::vector<Tensor::SPtr> grads = gradOper->getOutputs();
 
@@ -68,10 +67,7 @@ Tensor::SPtr mul(Tensor::SPtr t1, Tensor::SPtr t2)
     return oper->getOutputs()[0];
 }
 
-Tensor::SPtr operator *(Tensor::SPtr t1, Tensor::SPtr t2)
-{
-    return mul(t1, t2);
-}
+Tensor::SPtr operator*(Tensor::SPtr t1, Tensor::SPtr t2) { return mul(t1, t2); }
 
 }  // namespace core
 
@@ -82,9 +78,6 @@ ITensorSPtr mul(ITensorSPtr t1, ITensorSPtr t2)
     return ITensorSPtr(core::mul(tensor1, tensor2));
 }
 
-ITensorSPtr operator *(ITensorSPtr t1, ITensorSPtr t2)
-{
-    return mul(t1, t2);
-}
+ITensorSPtr operator*(ITensorSPtr t1, ITensorSPtr t2) { return mul(t1, t2); }
 
 }  // namespace dll

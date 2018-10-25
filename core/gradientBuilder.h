@@ -7,26 +7,24 @@ namespace dll
 {
 namespace core
 {
-
 class GradientBuilder
 {
-public:
+   public:
     using TensorMap = std::map<Tensor::SPtr, Tensor::SPtr>;
 
     GradientBuilder(Tensor::SPtr tensor);
 
     TensorMap createGradients();
 
-private:
+   private:
     TensorMap createGradientsForTensor(Tensor::SPtr tensor);
 
     Tensor::SPtr mTensor;
     std::map<Tensor::SPtr, TensorMap> mTensorGradients;
     std::map<Oper::SPtr, std::map<Tensor::SPtr, TensorMap>> mOperGradients;
-
 };
 
-} // namespace core
-} // namespace dll
+}  // namespace core
+}  // namespace dll
 
-#endif // DLL_CORE_GRADIENT_BUILDER_H_
+#endif  // DLL_CORE_GRADIENT_BUILDER_H_

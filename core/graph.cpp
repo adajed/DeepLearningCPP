@@ -58,8 +58,7 @@ bool Graph::allocateMemory()
 
 void Graph::initializeOpers()
 {
-    for (auto pair : mOps)
-        pair.second->initialize();
+    for (auto pair : mOps) pair.second->initialize();
 }
 
 void Graph::freeMemory()

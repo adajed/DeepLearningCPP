@@ -25,8 +25,7 @@ class WeightsOper : public Oper
         std::mt19937 e2(rd());
         std::uniform_real_distribution<> dist(-1., 1.);
 
-        for (std::size_t i = 0; i < memory.count(); ++i)
-            memory[i] = dist(e2);
+        for (std::size_t i = 0; i < memory.count(); ++i) memory[i] = dist(e2);
     }
 
    private:
@@ -39,7 +38,6 @@ class WeightsOper : public Oper
     //! This method does nothing, because weights are already
     //!     in the tensor.
     void executeOper(const InputDict& inputs) override {}
-
 };
 
 }  // namespace core

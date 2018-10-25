@@ -1,14 +1,13 @@
 #include "gradientBuilder.h"
-#include "gradientOper.h"
 #include "addOper.h"
-#include "mulOper.h"
 #include "constantOper.h"
+#include "gradientOper.h"
+#include "mulOper.h"
 
 namespace dll
 {
 namespace core
 {
-
 GradientBuilder::GradientBuilder(Tensor::SPtr tensor)
     : mTensor(tensor), mTensorGradients(), mOperGradients()
 {
@@ -16,7 +15,6 @@ GradientBuilder::GradientBuilder(Tensor::SPtr tensor)
 
 GradientBuilder::TensorMap GradientBuilder::createGradients()
 {
-
     // create gradients for each weights
     // d(weights)/d(weights) = constant(1., weights.shape)
     mTensorGradients.clear();
@@ -30,10 +28,10 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
     return createGradientsForTensor(mTensor);
 }
 
-GradientBuilder::TensorMap GradientBuilder::createGradientsForTensor(Tensor::SPtr tensor)
+GradientBuilder::TensorMap GradientBuilder::createGradientsForTensor(
+    Tensor::SPtr tensor)
 {
-    if (mTensorGradients.count(tensor) > 0)
-        return mTensorGradients[tensor];
+    if (mTensorGradients.count(tensor) > 0) return mTensorGradients[tensor];
 
     Oper::SPtr oper = tensor->getOper();
     if (!oper->hasGradient())
@@ -50,14 +48,16 @@ GradientBuilder::TensorMap GradientBuilder::createGradientsForTensor(Tensor::SPt
         inputGradients[input] = createGradientsForTensor(input);
 
     // calculate gradients for oper
-    std::shared_ptr<GradientOper> gOper = std::static_pointer_cast<GradientOper>(oper);
+    std::shared_ptr<GradientOper> gOper =
+        std::static_pointer_cast<GradientOper>(oper);
     if (mOperGradients.count(oper) == 0)
         mOperGradients[oper] = gOper->gradients();
     TensorMap operGradients = mOperGradients[oper][tensor];
 
     // combine oper gradients with input gradients
     TensorMap tensorGrads;
-    for (std::pair<std::string, ITensorSPtr> pair : getDefaultGraph()->getWeights())
+    for (std::pair<std::string, ITensorSPtr> pair :
+         getDefaultGraph()->getWeights())
     {
         Tensor::SPtr weights = std::static_pointer_cast<Tensor>(pair.second);
         Tensor::SPtr sum{nullptr};
@@ -67,22 +67,22 @@ GradientBuilder::TensorMap GradientBuilder::createGradientsForTensor(Tensor::SPt
             if (inputGradients[input].count(weights) > 0)
             {
                 if (sum)
-                    sum = sum + inputGradients[input][weights] * operGradients[input];
+                    sum = sum +
+                          inputGradients[input][weights] * operGradients[input];
                 else
                     sum = inputGradients[input][weights] * operGradients[input];
             }
         }
 
         // TODO: is sum is nullptr it should be set to zero
-        if (sum)
-            tensorGrads[weights] = sum;
+        if (sum) tensorGrads[weights] = sum;
     }
 
     mTensorGradients[tensor] = tensorGrads;
     return tensorGrads;
 }
 
-} // namespace core
+}  // namespace core
 
 std::map<ITensorSPtr, ITensorSPtr> gradients(ITensorSPtr tensor)
 {
@@ -99,9 +99,10 @@ std::map<ITensorSPtr, ITensorSPtr> gradients(ITensorSPtr tensor)
         if (grads.count(weights) > 0)
             rGrads[ITensorSPtr(weights)] = ITensorSPtr(grads[weights]);
         else
-            rGrads[ITensorSPtr(weights)] = dll::constant(0., weights->getShape());
+            rGrads[ITensorSPtr(weights)] =
+                dll::constant(0., weights->getShape());
     }
     return rGrads;
 }
 
-} // namespace dll
+}  // namespace dll

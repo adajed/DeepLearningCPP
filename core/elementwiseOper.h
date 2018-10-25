@@ -1,8 +1,8 @@
 #ifndef DLL_CORE_ELEMENTWISE_OPER_H_
 #define DLL_CORE_ELEMENTWISE_OPER_H_
 
-#include "oper.h"
 #include "gradientOper.h"
+#include "oper.h"
 
 namespace dll
 {

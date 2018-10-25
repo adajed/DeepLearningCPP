@@ -6,7 +6,6 @@ namespace dll
 {
 namespace core
 {
-
 Tensor::SPtr constant(float value, const Shape& shape)
 {
     Oper::SPtr oper = std::make_shared<ConstantOper>(value, shape);
