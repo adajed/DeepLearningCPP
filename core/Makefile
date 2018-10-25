@@ -67,4 +67,4 @@ $(OUTDIR_D):
 
 #### clang-format
 format:
-	@$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) *.cpp *h
+	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)

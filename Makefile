@@ -30,6 +30,6 @@ ctags:
 	ctags -R --tag-relative=yes --exclude=.git $(ROOT_DIR)
 
 format:
-	@$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(ROOT_DIR)/includes/*.h
+	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(ROOT_DIR)/includes/*.h
 	@make -C core format
 	@make -C tests format
