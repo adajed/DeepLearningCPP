@@ -8,6 +8,8 @@ namespace dll
 {
 namespace core
 {
+namespace layers
+{
 class AddOper : public ElementwiseOper
 {
    public:
@@ -18,6 +20,21 @@ class AddOper : public ElementwiseOper
    private:
     float elementwise(float f1, float f2) override { return f1 + f2; }
 };
+
+class AddGradientOper : public Oper
+{
+   public:
+    AddGradientOper(Tensor::SPtr t1, Tensor::SPtr t2, Tensor::SPtr out,
+                    Tensor::SPtr outGrad);
+
+   private:
+    static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1,
+                                                   Tensor::SPtr t2);
+
+    void executeOper(const InputDict& inputs) override;
+};
+
+}  // namespace layers
 
 Tensor::SPtr add(Tensor::SPtr, Tensor::SPtr);
 Tensor::SPtr operator+(Tensor::SPtr, Tensor::SPtr);

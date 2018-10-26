@@ -9,6 +9,8 @@ namespace dll
 {
 namespace core
 {
+namespace layers
+{
 class DivOper : public ElementwiseOper
 {
    public:
@@ -19,6 +21,21 @@ class DivOper : public ElementwiseOper
    private:
     float elementwise(float f1, float f2) override { return f1 / f2; }
 };
+
+class DivGradientOper : public Oper
+{
+   public:
+    DivGradientOper(Tensor::SPtr in1, Tensor::SPtr in2, Tensor::SPtr out,
+                    Tensor::SPtr outGrad);
+
+   private:
+    static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr in1,
+                                                   Tensor::SPtr in2);
+
+    void executeOper(const InputDict& inputs) override;
+};
+
+}  // namespace layers
 
 Tensor::SPtr div(Tensor::SPtr, Tensor::SPtr);
 Tensor::SPtr operator/(Tensor::SPtr, Tensor::SPtr);
