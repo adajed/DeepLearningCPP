@@ -1,3 +1,4 @@
+#include "dll_errors.h"
 #include "dll_ops.h"
 #include "layerTests.h"
 namespace
@@ -10,7 +11,17 @@ std::vector<TestCase> testCases = {
     {{2, 2}, {2, 2}},
     {{2, 10}, {10, 3}},
     {{10, 10}, {10, 10}},
-    {{1, 30}, {30, 1}}
+    {{1, 30}, {30, 1}},
+    {{10, 100}, {100, 20}}, // big test
+    // clang-format on
+};
+
+std::vector<TestCase> errorTestCases = {
+    // clang-format off
+    {{1, 1}, {1}},
+    {{2}, {2}},
+    {{2, 2}, {2, 3, 3}},
+    {{10, 1}, {2, 10}}
     // clang-format on
 };
 
@@ -32,6 +43,17 @@ public:
         };
         bool correct = runTest({mInput1, mInput2}, {mOutput}, builder);
         EXPECT_TRUE(correct);
+    }
+
+    void testWrongShapes(const TestCase& testCase)
+    {
+        dll::ITensorSPtr input1 = dll::createInput("i1", std::get<0>(testCase));
+        dll::ITensorSPtr input2 = dll::createInput("i2", std::get<1>(testCase));
+        dll::ITensorSPtr output;
+        EXPECT_THROW({
+                output = dll::matmul(input1, input2);
+            },
+            dll::errors::NotMatchingShapesError);
     }
 
 private:
@@ -67,5 +89,9 @@ private:
 
 TEST_P(MatmulTest, test) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, MatmulTest, testing::ValuesIn(testCases));
+
+class MatmulErrorsTest : public MatmulTest {};
+TEST_P(MatmulErrorsTest, testWrongShapes) { testWrongShapes(GetParam()); }
+INSTANTIATE_TEST_CASE_P(LayerTest, MatmulErrorsTest, testing::ValuesIn(errorTestCases));
 
 }  // namespace anonymoous
