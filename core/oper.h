@@ -79,6 +79,8 @@ class Tensor : public ITensor
     Memory mMemory;
 };
 
+Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape);
+
 class Oper
 {
    public:

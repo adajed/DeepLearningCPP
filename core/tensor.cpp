@@ -51,5 +51,10 @@ void Tensor::reset()
 
 Tensor::~Tensor() { mMemory.free(); }
 
+Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape)
+{
+    return std::make_shared<Tensor>(name, shape);
+}
+
 }  // namespace core
 }  // namespace dll
