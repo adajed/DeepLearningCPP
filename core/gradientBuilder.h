@@ -1,6 +1,7 @@
 #ifndef DLL_CORE_GRADIENT_BUILDER_H_
 #define DLL_CORE_GRADIENT_BUILDER_H_
 
+#include <set>
 #include "oper.h"
 
 namespace dll
@@ -17,11 +18,14 @@ class GradientBuilder
     TensorMap createGradients();
 
    private:
-    TensorMap createGradientsForTensor(Tensor::SPtr tensor);
+    void findTensorOutputs(Tensor::SPtr tensor,
+                           std::set<Tensor::SPtr>& visited);
+    void modifyTensorGradient(Tensor::SPtr tensor, Tensor::SPtr tensorGrad);
+    void calculateGradientsForTensor(Tensor::SPtr tensor);
 
     Tensor::SPtr mTensor;
-    std::map<Tensor::SPtr, TensorMap> mTensorGradients;
-    std::map<Oper::SPtr, std::map<Tensor::SPtr, TensorMap>> mOperGradients;
+    std::map<Tensor::SPtr, Tensor::SPtr> mTensorGradients;
+    std::map<Tensor::SPtr, std::set<Tensor::SPtr>> mGradientsToCalc;
 };
 
 }  // namespace core

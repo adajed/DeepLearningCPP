@@ -25,6 +25,14 @@ class NotMatchingShapesError : public std::exception
     virtual const char* what() const throw() { return "Shapes doesn\'t match"; }
 };
 
+class NotScalarGradientsCalculation : public std::exception
+{
+    virtual const char* what() const throw()
+    {
+        return "Can\'t calucate gradients for tensor that is not a scalar";
+    }
+};
+
 }  // namespace errors
 }  // namespace dll
 

@@ -19,9 +19,10 @@ class GradientOper : public Oper
     }
 
     //! \fn gradients
-    virtual std::map<Tensor::SPtr, TensorMap> gradients() = 0;
+    virtual TensorMap gradients(Tensor::SPtr output,
+                                Tensor::SPtr outputGrad) = 0;
 
-    bool hasGradient() const override { return true; }
+    bool hasGradient() const override final { return true; }
 };
 
 }  // namespace core

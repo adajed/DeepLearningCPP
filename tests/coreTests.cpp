@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "dll.h"
+#include "dll_errors.h"
 #include "dll_ops.h"
 #include "graph.h"
 
@@ -87,26 +88,34 @@ TEST_F(CoreTest, addInputWithTheSameName)
 
 TEST_F(CoreTest, gradients)
 {
-    dll::ITensorSPtr i = dll::createInput("input", {2});
-    dll::ITensorSPtr w = dll::createWeights("weights", {2});
-    dll::ITensorSPtr output = (dll::constant(1., {2}) / i) * w;
+    dll::ITensorSPtr i = dll::createInput("input", {1});
+    dll::ITensorSPtr w = dll::createWeights("weights", {1});
+    dll::ITensorSPtr output = (dll::constant(1., {1}) / i) * w;
     dll::ITensorSPtr grad = dll::gradients(output)[w];
     dll::initializeGraph();
 
-    dll::HostTensor iH{nullptr, 2};
-    dll::HostTensor wH{nullptr, 2};
-    dll::HostTensor gH{nullptr, 2};
-    iH.values = new float[2];
-    wH.values = new float[2];
-    gH.values = new float[2];
+    dll::HostTensor iH{nullptr, 1};
+    dll::HostTensor wH{nullptr, 1};
+    dll::HostTensor gH{nullptr, 1};
+    iH.values = new float[1];
+    wH.values = new float[1];
+    gH.values = new float[1];
     iH.values[0] = 5.;
-    iH.values[1] = 3.;
 
     dll::eval({w, grad}, {{"input", iH}}, {wH, gH});
     EXPECT_FLOAT_EQ(gH.values[0], 1. / 5.);
-    EXPECT_FLOAT_EQ(gH.values[1], 1. / 3.);
 
     delete[] iH.values;
     delete[] wH.values;
     delete[] gH.values;
+}
+
+TEST_F(CoreTest, nonScalarGradientException)
+{
+    dll::ITensorSPtr i = dll::createInput("input", {2, 2});
+    dll::ITensorSPtr w = dll::createWeights("weights", {2, 2});
+    dll::ITensorSPtr o = i * w;
+    dll::ITensorSPtr grad;
+    EXPECT_THROW({ grad = dll::gradients(o)[w]; },
+                 dll::errors::NotScalarGradientsCalculation);
 }

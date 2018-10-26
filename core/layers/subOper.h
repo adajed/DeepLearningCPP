@@ -14,7 +14,7 @@ class SubOper : public ElementwiseOper
    public:
     SubOper(Tensor::SPtr t1, Tensor::SPtr t2) : ElementwiseOper(t1, t2) {}
 
-    std::map<Tensor::SPtr, GradientOper::TensorMap> gradients() override;
+    TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
    private:
     float elementwise(float f1, float f2) override { return f1 - f2; }

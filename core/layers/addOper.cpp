@@ -13,24 +13,14 @@ class AddGradientOper : public Oper
 {
    public:
     AddGradientOper(Tensor::SPtr input1, Tensor::SPtr input2,
-                    Tensor::SPtr output)
-        : Oper({input1, input2, output}, createOutputs(input1, input2, output))
+                    Tensor::SPtr output, Tensor::SPtr outputGrad)
+        : Oper({input1, input2, output, outputGrad}, createOutputs(input1, input2))
     {
-    }
-
-    void initialize() override
-    {
-        Memory gradient1 = mOutputs[0]->getMemory();
-        Memory gradient2 = mOutputs[1]->getMemory();
-
-        for (std::size_t i = 0; i < gradient1.count(); ++i) gradient1[i] = 1.;
-        for (std::size_t i = 0; i < gradient2.count(); ++i) gradient2[i] = 1.;
     }
 
    private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr i1,
-                                                   Tensor::SPtr i2,
-                                                   Tensor::SPtr out)
+                                                   Tensor::SPtr i2)
     {
         /* assert(i1->shape() == i2->shape() && */
         /*        i1->shape() == out->shape()); */
@@ -40,22 +30,34 @@ class AddGradientOper : public Oper
     }
 
     //! Gradients are already calculated in initialize
-    void executeOper(const InputDict& inputs) override {}
+    void executeOper(const InputDict& inputs) override
+    {
+        Tensor::SPtr outputGrad = mInputs[3].lock();
+        outputGrad->exec(inputs);
+
+        Memory outGrad = outputGrad->getMemory();
+        Memory in1Grad = mOutputs[0]->getMemory();
+        Memory in2Grad = mOutputs[1]->getMemory();
+
+        for (std::size_t i = 0; i < outGrad.count(); ++i)
+            in1Grad[i] = in2Grad[i] = outGrad[i];
+    }
 };
 
 }  // namespace
 
-std::map<Tensor::SPtr, GradientOper::TensorMap> AddOper::gradients()
+GradientOper::TensorMap AddOper::gradients(Tensor::SPtr output, Tensor::SPtr outputGrad)
 {
+    assert(output == mOutputs[0]);
+
     std::vector<Tensor::SPtr> inputs = getInputs();
-    std::vector<Tensor::SPtr> outputs = getOutputs();
 
     Oper::SPtr gradOper = Oper::SPtr(
-        std::make_shared<AddGradientOper>(inputs[0], inputs[1], outputs[0]));
+        std::make_shared<AddGradientOper>(inputs[0], inputs[1], output, outputGrad));
     getDefaultGraph()->insertOperation(gradOper);
     std::vector<Tensor::SPtr> grads = gradOper->getOutputs();
 
-    return {{outputs[0], {{inputs[0], grads[0]}, {inputs[1], grads[1]}}}};
+    return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
 }
 
 Tensor::SPtr add(Tensor::SPtr t1, Tensor::SPtr t2)
