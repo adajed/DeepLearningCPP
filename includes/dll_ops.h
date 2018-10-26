@@ -19,6 +19,8 @@ ITensorSPtr operator/(ITensorSPtr t1, ITensorSPtr t2);
 
 ITensorSPtr constant(float value, const Shape& shape);
 
+ITensorSPtr matmul(ITensorSPtr m1, ITensorSPtr m2);
+
 }  // namespace dll
 
 #endif  // DLL_OPS_H_

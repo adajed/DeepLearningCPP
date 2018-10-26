@@ -12,7 +12,8 @@ global:
         dll::add*;
         dll::sub*;
         dll::mul*;
-        dll::div*
+        dll::div*;
+        dll::matmul*
     };
 local: *;
 };
