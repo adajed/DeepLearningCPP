@@ -18,6 +18,8 @@ class TensorShape
     TensorShape(const TensorShape& other);
     TensorShape(std::initializer_list<unsigned> list);
 
+    TensorShape& operator=(const TensorShape& other);
+
     bool operator==(const TensorShape& other) const;
     bool operator!=(const TensorShape& other) const;
 
