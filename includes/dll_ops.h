@@ -21,6 +21,15 @@ ITensorSPtr constant(float value, const Shape& shape);
 
 ITensorSPtr matmul(ITensorSPtr m1, ITensorSPtr m2);
 
+ITensorSPtr relu(ITensorSPtr t);
+ITensorSPtr sigmoid(ITensorSPtr t);
+ITensorSPtr tanh(ITensorSPtr t);
+ITensorSPtr square(ITensorSPtr t);
+ITensorSPtr sqrt(ITensorSPtr t);
+ITensorSPtr abs(ITensorSPtr t);
+ITensorSPtr neg(ITensorSPtr t);
+ITensorSPtr reciprocal(ITensorSPtr t);
+
 }  // namespace dll
 
 #endif  // DLL_OPS_H_
