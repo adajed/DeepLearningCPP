@@ -20,7 +20,8 @@ global:
         dll::square*;
         dll::abs*;
         dll::neg*;
-        dll::reciprocal*
+        dll::reciprocal*;
+        dll::assign*
     };
 local: *;
 };

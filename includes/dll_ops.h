@@ -29,6 +29,8 @@ ITensorSPtr abs(ITensorSPtr t);
 ITensorSPtr neg(ITensorSPtr t);
 ITensorSPtr reciprocal(ITensorSPtr t);
 
+ITensorSPtr assign(ITensorSPtr dest, ITensorSPtr src);
+
 }  // namespace dll
 
 #endif  // DLL_OPS_H_
