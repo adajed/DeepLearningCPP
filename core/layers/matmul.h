@@ -21,6 +21,16 @@ private:
 
 };
 
+class MatmulGradientOper : public Oper
+{
+   public:
+    MatmulGradientOper(Tensor::SPtr m1, Tensor::SPtr m2, Tensor::SPtr out, Tensor::SPtr outGrad);
+
+   private:
+    void executeOper(const InputDict&) override;
+
+};
+
 }  // namespace layers
 
 Tensor::SPtr matmul(Tensor::SPtr, Tensor::SPtr);
