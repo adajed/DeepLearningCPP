@@ -10,6 +10,12 @@ TensorShape::TensorShape(const TensorShape& other) : mDims(other.mDims) {}
 
 TensorShape::TensorShape(std::initializer_list<unsigned> list) : mDims(list) {}
 
+TensorShape& TensorShape::operator=(const TensorShape& other)
+{
+    mDims = other.mDims;
+    return *this;
+}
+
 bool TensorShape::operator==(const TensorShape& other) const
 {
     if (mDims.size() != other.mDims.size()) return false;

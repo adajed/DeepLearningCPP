@@ -10,7 +10,7 @@ namespace core
 {
 namespace layers
 {
-enum class Elementwise
+enum class Elementwise : int
 {
     kADD = 0,
     kSUB = 1,
