@@ -1,10 +1,10 @@
 #include "gradientBuilder.h"
-#include "addOper.h"
 #include "constantOper.h"
 #include "dll_errors.h"
+#include "dll_ops.h"
+#include "elementwiseOper.h"
 #include "gradientOper.h"
 #include "graph.h"
-#include "mulOper.h"
 
 namespace dll
 {

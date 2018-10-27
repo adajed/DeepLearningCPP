@@ -1,49 +1,72 @@
-#ifndef DLL_CORE_ELEMENTWISE_OPER_H_
-#define DLL_CORE_ELEMENTWISE_OPER_H_
+#ifndef DLL_CORE_LAYERS_ELEMENTWISE_OPER_H_
+#define DLL_CORE_LAYERS_ELEMENTWISE_OPER_H_
 
-#include <assert.h>
+#include <functional>
 #include "gradientOper.h"
 
 namespace dll
 {
 namespace core
 {
+namespace layers
+{
+enum class Elementwise
+{
+    kADD = 0,
+    kSUB = 1,
+    kMUL = 2,
+    kDIV = 3
+};
+
+using ElementwiseFun = std::function<float(float, float)>;
+
 class ElementwiseOper : public GradientOper
 {
    public:
-    ElementwiseOper(Tensor::SPtr t1, Tensor::SPtr t2)
-        : GradientOper({t1, t2}, createOutputs(t1, t2))
-    {
-    }
+    ElementwiseOper(Tensor::SPtr t1, Tensor::SPtr t2, Elementwise op);
+
+    TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
    private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1,
-                                                   Tensor::SPtr t2)
-    {
-        assert(t1->shape() == t2->shape());
-        return {std::make_shared<Tensor>("", t1->shape())};
-    }
+                                                   Tensor::SPtr t2);
 
-    virtual float elementwise(float f1, float f2) = 0;
+    void executeOper(const InputDict& inputs) override;
 
-    void executeOper(const InputDict& inputs) override
-    {
-        Tensor::SPtr i0 = mInputs[0].lock();
-        Tensor::SPtr i1 = mInputs[1].lock();
-
-        i0->exec(inputs);
-        i1->exec(inputs);
-
-        Memory input0 = i0->getMemory();
-        Memory input1 = i1->getMemory();
-        Memory output = mOutputs[0]->getMemory();
-
-        for (std::size_t i = 0; i < output.count(); ++i)
-            output[i] = elementwise(input0[i], input1[i]);
-    }
+    Elementwise mOp;
+    ElementwiseFun mFun;
 };
+
+class ElementwiseGradientOper : public Oper
+{
+   public:
+    ElementwiseGradientOper(Tensor::SPtr t1, Tensor::SPtr t2, Tensor::SPtr out,
+                            Tensor::SPtr outGrad, Elementwise op);
+
+   private:
+    static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr, Tensor::SPtr);
+
+    void executeOper(const InputDict&) override;
+
+    Elementwise mOp;
+    ElementwiseFun mFun1, mFun2;
+};
+
+}  // namespace layers
+
+Tensor::SPtr add(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr operator+(Tensor::SPtr, Tensor::SPtr);
+
+Tensor::SPtr sub(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr operator-(Tensor::SPtr, Tensor::SPtr);
+
+Tensor::SPtr mul(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr operator*(Tensor::SPtr, Tensor::SPtr);
+
+Tensor::SPtr div(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr operator/(Tensor::SPtr, Tensor::SPtr);
 
 }  // namespace core
 }  // namespace dll
 
-#endif  // DLL_CORE_ELEMENTWISE_OPER_H_
+#endif  // DLL_CORE_LAYERS_ELEMENTWISE_OPER_H_
