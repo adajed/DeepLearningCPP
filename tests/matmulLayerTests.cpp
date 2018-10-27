@@ -6,7 +6,6 @@
 namespace
 {
 using namespace dll::core::layers;
-using Vec = std::vector<unsigned>;
 using TestCase = std::tuple<Vec, Vec>;
 
 std::vector<TestCase> SHAPES = {

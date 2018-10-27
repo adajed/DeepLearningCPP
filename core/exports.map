@@ -13,7 +13,14 @@ global:
         dll::sub*;
         dll::mul*;
         dll::div*;
-        dll::matmul*
+        dll::matmul*;
+        dll::relu*;
+        dll::sigmoid*;
+        dll::tanh*;
+        dll::square*;
+        dll::abs*;
+        dll::neg*;
+        dll::reciprocal*
     };
 local: *;
 };

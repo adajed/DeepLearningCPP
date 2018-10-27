@@ -32,9 +32,6 @@ ActivationOper::ActivationOper(Tensor::SPtr t, Activation op)
         case Activation::kSQUARE:
             mFun = [](float x) { return x * x; };
             break;
-        case Activation::kSQRT:
-            mFun = [](float x) { return std::sqrt(x); };
-            break;
         case Activation::kABS:
             mFun = [](float x) { return std::abs(x); };
             break;
@@ -56,7 +53,7 @@ void ActivationOper::executeOper(const InputDict& inputs)
     Memory output = mOutputs[0]->getMemory();
 
     for (std::size_t pos = 0; pos < input.count(); ++pos)
-        output[pos] = mFun(output[pos]);
+        output[pos] = mFun(input[pos]);
 }
 
 GradientOper::TensorMap ActivationOper::gradients(Tensor::SPtr out,
@@ -100,9 +97,6 @@ ActivationGradientOper::ActivationGradientOper(Tensor::SPtr in,
             break;
         case Activation::kSQUARE:
             mFun = [](float x, float o) { return 2 * x; };
-            break;
-        case Activation::kSQRT:
-            mFun = [](float x, float o) { return 1. / (2 * o); };
             break;
         case Activation::kABS:
             mFun = [](float x, float o) { return x > 0 ? 1. : -1.; };
@@ -159,10 +153,6 @@ Tensor::SPtr square(Tensor::SPtr t)
 {
     return createActivation(t, layers::Activation::kSQUARE);
 }
-Tensor::SPtr sqrt(Tensor::SPtr t)
-{
-    return createActivation(t, layers::Activation::kSQRT);
-}
 Tensor::SPtr abs(Tensor::SPtr t)
 {
     return createActivation(t, layers::Activation::kABS);
@@ -200,12 +190,6 @@ ITensorSPtr square(ITensorSPtr t)
 {
     core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
     return ITensorSPtr(core::square(tensor));
-}
-
-ITensorSPtr sqrt(ITensorSPtr t)
-{
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::sqrt(tensor));
 }
 
 ITensorSPtr abs(ITensorSPtr t)

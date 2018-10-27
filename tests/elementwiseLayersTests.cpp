@@ -9,7 +9,6 @@ namespace
 using namespace dll::core::layers;
 
 using Elementwise = dll::core::layers::Elementwise;
-using Vec = std::vector<unsigned>;
 using TestCase = std::tuple<Vec, Elementwise>;
 using ErrorTestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise>;
 

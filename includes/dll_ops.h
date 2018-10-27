@@ -25,7 +25,6 @@ ITensorSPtr relu(ITensorSPtr t);
 ITensorSPtr sigmoid(ITensorSPtr t);
 ITensorSPtr tanh(ITensorSPtr t);
 ITensorSPtr square(ITensorSPtr t);
-ITensorSPtr sqrt(ITensorSPtr t);
 ITensorSPtr abs(ITensorSPtr t);
 ITensorSPtr neg(ITensorSPtr t);
 ITensorSPtr reciprocal(ITensorSPtr t);

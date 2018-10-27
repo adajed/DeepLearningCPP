@@ -16,10 +16,9 @@ enum class Activation
     kSIGMOID = 1,
     kTANH = 2,
     kSQUARE = 3,
-    kSQRT = 4,
-    kABS = 5,
-    kNEG = 6,
-    kRECIPROCAL = 7
+    kABS = 4,
+    kNEG = 5,
+    kRECIPROCAL = 6
 };
 
 class ActivationOper : public GradientOper
@@ -57,7 +56,6 @@ Tensor::SPtr relu(Tensor::SPtr);
 Tensor::SPtr sigmoid(Tensor::SPtr);
 Tensor::SPtr tanh(Tensor::SPtr);
 Tensor::SPtr square(Tensor::SPtr);
-Tensor::SPtr sqrt(Tensor::SPtr);
 Tensor::SPtr abs(Tensor::SPtr);
 Tensor::SPtr neg(Tensor::SPtr);
 Tensor::SPtr reciprocal(Tensor::SPtr);

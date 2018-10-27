@@ -14,6 +14,8 @@ using namespace dll::core;
 using testing::Combine;
 using testing::ValuesIn;
 
+using Vec = std::vector<unsigned>;
+
 class LayerTest : public testing::Test
 {
    protected:
