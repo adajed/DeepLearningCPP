@@ -52,6 +52,8 @@ class ElementwiseGradientOper : public Oper
     ElementwiseFun mFun1, mFun2;
 };
 
+Tensor::SPtr createElementwise(Tensor::SPtr, Tensor::SPtr, Elementwise);
+
 }  // namespace layers
 
 Tensor::SPtr add(Tensor::SPtr, Tensor::SPtr);

@@ -9,6 +9,10 @@
 #include "refTensor.h"
 
 using namespace dll;
+using namespace dll::core;
+
+using testing::Combine;
+using testing::ValuesIn;
 
 class LayerTest : public testing::Test
 {
