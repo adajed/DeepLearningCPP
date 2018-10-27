@@ -29,8 +29,8 @@ class LayerTest : public testing::Test
                                             const std::vector<HostTensor>&)>;
 
     bool runTest(const std::vector<RefTensor>& refInputs,
-                 const std::vector<RefTensor>& refOutputs,
-                 LayerBuilder builder);
+                 const std::vector<RefTensor>& refOutputs, LayerBuilder builder,
+                 float eps = 10e-6);
 };
 
 #endif  // TESTS_LAYER_TESTS_H_

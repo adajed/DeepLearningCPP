@@ -50,6 +50,15 @@ class ActivationTest : public LayerTest,
         EXPECT_TRUE(correct);
     };
 
+    void testGradient(const TestCase& testCase)
+    {
+        setupGradient(testCase);
+        LayerBuilder builder = getGradientBuilder(testCase);
+        bool correct =
+            runTest({mInput, mOutputGrad}, {mGradient}, builder, 10e-4);
+        EXPECT_TRUE(correct);
+    };
+
    private:
     void setup(const TestCase& testCase)
     {
@@ -98,6 +107,58 @@ class ActivationTest : public LayerTest,
             mOutput.at(pos) = fun(mInput.at(pos));
     }
 
+    void setupGradient(const TestCase& testCase)
+    {
+        UniformGen gen(0);
+        mInput = RefTensor(std::get<0>(testCase));
+        mOutputGrad = RefTensor(std::get<0>(testCase));
+        mGradient = RefTensor(std::get<0>(testCase));
+        mInput.fillRandomly(gen);
+        mOutputGrad.fillRandomly(gen);
+
+        std::function<float(float)> fun;
+        switch (std::get<1>(testCase))
+        {
+            case Activation::kRELU:
+                fun = [](float x) {
+                    if (x > 0.)
+                        return 1.;
+                    else
+                        return 0.;
+                };
+                break;
+            case Activation::kSIGMOID:
+                fun = [](float x) {
+                    return std::exp(-x) /
+                           ((1. + std::exp(-x)) * (1. + std::exp(-x)));
+                };
+                break;
+            case Activation::kTANH:
+                fun = [](float x) { return 1 - std::tanh(x) * std::tanh(x); };
+                break;
+            case Activation::kSQUARE:
+                fun = [](float x) { return 2 * x; };
+                break;
+            case Activation::kABS:
+                fun = [](float x) {
+                    if (x > 0.)
+                        return 1.;
+                    else
+                        return -1.;
+                };
+                break;
+            case Activation::kNEG:
+                fun = [](float x) { return -1; };
+                break;
+            case Activation::kRECIPROCAL:
+                fun = [](float x) { return -1 / (x * x); };
+                break;
+        }
+
+        for (std::size_t pos = 0; pos < mInput.count(); ++pos)
+            mGradient.at(pos) = mOutputGrad.at(pos) * fun(mInput.at(pos));
+    }
+
     LayerBuilder getBuilder(const TestCase& testCase)
     {
         return [&testCase](const std::vector<HostTensor>& ins,
@@ -134,10 +195,35 @@ class ActivationTest : public LayerTest,
         };
     }
 
+    LayerBuilder getGradientBuilder(const TestCase& testCase)
+    {
+        return [&testCase](const std::vector<HostTensor>& ins,
+                           const std::vector<HostTensor>& outs) {
+            Tensor::SPtr in =
+                core::getDefaultGraph()->addInput("in", std::get<0>(testCase));
+            Tensor::SPtr outG = core::getDefaultGraph()->addInput(
+                "outG", std::get<0>(testCase));
+            Tensor::SPtr out = createActivation(in, std::get<1>(testCase));
+            Oper::SPtr oper = std::make_shared<ActivationGradientOper>(
+                in, out, outG, std::get<1>(testCase));
+            core::getDefaultGraph()->insertOperation(oper);
+            ITensorSPtr grad = ITensorSPtr(oper->getOutputs()[0]);
+            initializeGraph();
+            grad->eval({{"in", ins[0]}, {"outG", ins[1]}}, outs[0]);
+        };
+    }
+
     RefTensor mInput, mOutput, mOutputGrad, mGradient;
 };
 
 TEST_P(ActivationTest, testAPI) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, ActivationTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
+
+class ActivationGradientTest : public ActivationTest
+{
+};
+TEST_P(ActivationGradientTest, testAPI) { testGradient(GetParam()); }
+INSTANTIATE_TEST_CASE_P(LayerTest, ActivationGradientTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
 }  // namespace
