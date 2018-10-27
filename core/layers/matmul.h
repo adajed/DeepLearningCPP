@@ -11,24 +11,24 @@ namespace layers
 {
 class MatmulOper : public GradientOper
 {
-public:
+   public:
     MatmulOper(Tensor::SPtr m1, Tensor::SPtr m2);
 
     GradientOper::TensorMap gradients(Tensor::SPtr output,
                                       Tensor::SPtr outputGrad) override;
-private:
-    void executeOper(const InputDict& inputs) override;
 
+   private:
+    void executeOper(const InputDict& inputs) override;
 };
 
 class MatmulGradientOper : public Oper
 {
    public:
-    MatmulGradientOper(Tensor::SPtr m1, Tensor::SPtr m2, Tensor::SPtr out, Tensor::SPtr outGrad);
+    MatmulGradientOper(Tensor::SPtr m1, Tensor::SPtr m2, Tensor::SPtr out,
+                       Tensor::SPtr outGrad);
 
    private:
     void executeOper(const InputDict&) override;
-
 };
 
 }  // namespace layers

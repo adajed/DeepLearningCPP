@@ -10,24 +10,22 @@ namespace core
 {
 namespace layers
 {
-std::vector<Tensor::SPtr> createOutputGrad(
-        Tensor::SPtr m1, Tensor::SPtr m2)
+std::vector<Tensor::SPtr> createOutputGrad(Tensor::SPtr m1, Tensor::SPtr m2)
 {
     return {createTensor("", m1->shape()), createTensor("", m2->shape())};
 }
 
 MatmulGradientOper::MatmulGradientOper(Tensor::SPtr m1, Tensor::SPtr m2,
-                   Tensor::SPtr out, Tensor::SPtr outGrad)
+                                       Tensor::SPtr out, Tensor::SPtr outGrad)
     : Oper({m1, m2, out, outGrad}, createOutputGrad(m1, m2))
 {
     assert(m1->shape().size() == 2);
     assert(m2->shape().size() == 2);
     assert(m1->shape()[1] == m2->shape()[0]);
-    assert(out->shape()[0] = m1->shape()[0] &&
-           out->shape()[1] == m2->shape()[1]);
+    assert(out->shape()[0] =
+               m1->shape()[0] && out->shape()[1] == m2->shape()[1]);
     assert(out->shape() == outGrad->shape());
 }
-
 
 void MatmulGradientOper::executeOper(const InputDict& inputs)
 {
@@ -55,7 +53,7 @@ void MatmulGradientOper::executeOper(const InputDict& inputs)
 
         grad1[pos] = 0.;
         for (int i = 0; i < k; ++i)
-            grad1[pos] += outG[k * x + i] * in2[m * y + i];
+            grad1[pos] += in2[k * y + i] * outG[k * x + i];
     }
     for (std::size_t pos = 0; pos < grad2.count(); ++pos)
     {
@@ -68,8 +66,7 @@ void MatmulGradientOper::executeOper(const InputDict& inputs)
     }
 }
 
-std::vector<Tensor::SPtr> createOutput(
-        Tensor::SPtr m1, Tensor::SPtr m2)
+std::vector<Tensor::SPtr> createOutput(Tensor::SPtr m1, Tensor::SPtr m2)
 {
     TensorShape newShape({m1->shape()[0], m2->shape()[1]});
     return {createTensor("", newShape)};
@@ -103,19 +100,18 @@ void MatmulOper::executeOper(const InputDict& inputs)
         int y = pos % k;
 
         out[pos] = 0.;
-        for (int i = 0; i < m; ++i)
-            out[pos] += in1[m * x + i] * in2[k * i + y];
+        for (int i = 0; i < m; ++i) out[pos] += in1[m * x + i] * in2[k * i + y];
     }
 }
 
-GradientOper::TensorMap MatmulOper::gradients(
-        Tensor::SPtr output, Tensor::SPtr outputGrad)
+GradientOper::TensorMap MatmulOper::gradients(Tensor::SPtr output,
+                                              Tensor::SPtr outputGrad)
 {
     assert(output == mOutputs[0]);
 
     std::vector<Tensor::SPtr> inputs = getInputs();
-    Oper::SPtr oper = std::make_shared<MatmulGradientOper>(
-            inputs[0], inputs[1], output, outputGrad);
+    Oper::SPtr oper = std::make_shared<MatmulGradientOper>(inputs[0], inputs[1],
+                                                           output, outputGrad);
     getDefaultGraph()->insertOperation(oper);
 
     std::vector<Tensor::SPtr> grads = oper->getOutputs();
@@ -126,8 +122,7 @@ GradientOper::TensorMap MatmulOper::gradients(
 
 Tensor::SPtr matmul(Tensor::SPtr m1, Tensor::SPtr m2)
 {
-    if (m1->shape().size() != 2 ||
-        m2->shape().size() != 2)
+    if (m1->shape().size() != 2 || m2->shape().size() != 2)
         throw errors::NotMatchingShapesError();
     else if (m1->shape()[1] != m2->shape()[0])
         throw errors::NotMatchingShapesError();
