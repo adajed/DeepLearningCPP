@@ -31,10 +31,10 @@ debug: layers_debug $(SHARED_D) $(STATIC_D)
 
 #### LAYERS
 layers_release:
-	@make -C layers release
+	@+make -C layers release
 
 layers_debug:
-	@make -C layers debug
+	@+make -C layers debug
 
 #### LINKING
 
@@ -75,4 +75,4 @@ $(OUTDIR_D):
 #### clang-format
 format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)
-	@make -C layers format
+	@+make -C layers format

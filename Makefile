@@ -10,18 +10,18 @@ debug: lib_debug test_debug
 #### LIBRARY
 
 lib_release:
-	@make -C core release
+	@+make -C core release
 
 lib_debug:
-	@make -C core debug
+	@+make -C core debug
 
 #### TESTS
 
 test_release: lib_release
-	@make -C tests release
+	@+make -C tests release
 
 test_debug: lib_debug
-	@make -C tests debug
+	@+make -C tests debug
 
 clean:
 	rm -r $(OUTDIR)
@@ -31,5 +31,5 @@ ctags:
 
 format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(ROOT_DIR)/includes/*.h
-	@make -C core format
-	@make -C tests format
+	@+make -C core format
+	@+make -C tests format
