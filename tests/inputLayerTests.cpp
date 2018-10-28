@@ -21,8 +21,8 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
     {
         setup(testCase);
 
-        LayerBuilder builder = [testCase](const std::vector<HostTensor>& ins,
-                                          const std::vector<HostTensor>& outs) {
+        LayerBuilder builder = [testCase](const HostVec& ins,
+                                          const HostVec& outs) {
             dll::ITensorSPtr input =
                 dll::createInput("input", std::get<0>(testCase));
             dll::initializeGraph();

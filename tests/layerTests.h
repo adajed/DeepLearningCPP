@@ -15,6 +15,7 @@ using testing::Combine;
 using testing::ValuesIn;
 
 using Vec = std::vector<unsigned>;
+using HostVec = std::vector<HostTensor>;
 
 class LayerTest : public testing::Test
 {
@@ -25,8 +26,8 @@ class LayerTest : public testing::Test
         testing::Test::TearDown();
     }
 
-    using LayerBuilder = std::function<void(const std::vector<HostTensor>&,
-                                            const std::vector<HostTensor>&)>;
+    using LayerBuilder = std::function<void(const HostVec&,
+                                            const HostVec&)>;
 
     bool runTest(const std::vector<RefTensor>& refInputs,
                  const std::vector<RefTensor>& refOutputs, LayerBuilder builder,

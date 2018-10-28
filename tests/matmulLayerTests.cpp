@@ -37,8 +37,8 @@ class MatmulTest : public LayerTest,
         setup(testCase);
 
         LayerBuilder builder = [&testCase](
-                                   const std::vector<HostTensor>& ins,
-                                   const std::vector<HostTensor>& outs) {
+                                   const HostVec& ins,
+                                   const HostVec& outs) {
             dll::ITensorSPtr input1 =
                 dll::createInput("i1", std::get<0>(testCase));
             dll::ITensorSPtr input2 =
@@ -58,8 +58,8 @@ class MatmulTest : public LayerTest,
         unsigned n = std::get<0>(testCase)[0];
         unsigned m = std::get<0>(testCase)[1];
         unsigned k = std::get<1>(testCase)[1];
-        LayerBuilder builder = [n, m, k](const std::vector<HostTensor>& ins,
-                                         const std::vector<HostTensor>& outs) {
+        LayerBuilder builder = [n, m, k](const HostVec& ins,
+                                         const HostVec& outs) {
             Tensor::SPtr i1 = core::getDefaultGraph()->addInput("i1", {n, m});
             Tensor::SPtr i2 = core::getDefaultGraph()->addInput("i2", {m, k});
             Tensor::SPtr outG =

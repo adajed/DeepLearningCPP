@@ -161,8 +161,8 @@ class ElementwiseTest : public LayerTest,
 
     LayerBuilder getBuilder(const TestCase& testCase)
     {
-        return [testCase](const std::vector<HostTensor>& ins,
-                          const std::vector<HostTensor>& outs) {
+        return [testCase](const HostVec& ins,
+                          const HostVec& outs) {
             dll::ITensorSPtr input1 =
                 dll::createInput("input1", std::get<0>(testCase));
             dll::ITensorSPtr input2 =
@@ -190,8 +190,8 @@ class ElementwiseTest : public LayerTest,
 
     LayerBuilder getGradientBuilder(const TestCase& testCase)
     {
-        return [&testCase](const std::vector<HostTensor>& ins,
-                           const std::vector<HostTensor>& outs) {
+        return [&testCase](const HostVec& ins,
+                           const HostVec& outs) {
             Tensor::SPtr in1 =
                 core::getDefaultGraph()->addInput("in1", shape(testCase));
             Tensor::SPtr in2 =
