@@ -43,10 +43,7 @@ bool Tensor::allocateMemory() { return mMemory.allocate(); }
 
 void Tensor::freeMemory() { mMemory.free(); }
 
-void Tensor::reset()
-{
-    mIsEvaluated = false;
-}
+void Tensor::reset() { mIsEvaluated = false; }
 
 Tensor::~Tensor() { mMemory.free(); }
 

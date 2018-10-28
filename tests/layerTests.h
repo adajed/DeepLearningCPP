@@ -26,8 +26,7 @@ class LayerTest : public testing::Test
         testing::Test::TearDown();
     }
 
-    using LayerBuilder = std::function<void(const HostVec&,
-                                            const HostVec&)>;
+    using LayerBuilder = std::function<void(const HostVec&, const HostVec&)>;
 
     bool runTest(const std::vector<RefTensor>& refInputs,
                  const std::vector<RefTensor>& refOutputs, LayerBuilder builder,

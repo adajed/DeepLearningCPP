@@ -36,9 +36,8 @@ class MatmulTest : public LayerTest,
     {
         setup(testCase);
 
-        LayerBuilder builder = [&testCase](
-                                   const HostVec& ins,
-                                   const HostVec& outs) {
+        LayerBuilder builder = [&testCase](const HostVec& ins,
+                                           const HostVec& outs) {
             dll::ITensorSPtr input1 =
                 dll::createInput("i1", std::get<0>(testCase));
             dll::ITensorSPtr input2 =

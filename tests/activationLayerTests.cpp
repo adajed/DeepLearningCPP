@@ -161,8 +161,7 @@ class ActivationTest : public LayerTest,
 
     LayerBuilder getBuilder(const TestCase& testCase)
     {
-        return [&testCase](const HostVec& ins,
-                           const HostVec& outs) {
+        return [&testCase](const HostVec& ins, const HostVec& outs) {
             ITensorSPtr in = createInput("in", std::get<0>(testCase));
             ITensorSPtr out;
             switch (std::get<1>(testCase))
@@ -197,8 +196,7 @@ class ActivationTest : public LayerTest,
 
     LayerBuilder getGradientBuilder(const TestCase& testCase)
     {
-        return [&testCase](const HostVec& ins,
-                           const HostVec& outs) {
+        return [&testCase](const HostVec& ins, const HostVec& outs) {
             Tensor::SPtr in =
                 core::getDefaultGraph()->addInput("in", std::get<0>(testCase));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
