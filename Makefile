@@ -6,11 +6,13 @@ release:
 	@+make -C core release
 	@+make -C tests release
 	@+make -C samples/toySample release
+	@+make -C samples/mnist release
 
 debug:
 	@+make -C core debug
 	@+make -C tests debug
 	@+make -C samples/toySample debug
+	@+make -C samples/mnist debug
 
 .PHONY: clean ctags format
 
@@ -25,3 +27,4 @@ format:
 	@+make -C core format
 	@+make -C tests format
 	@+make -C samples/toySample format
+	@+make -C samples/mnist format
