@@ -14,21 +14,21 @@ class AddNOper : public GradientOper
    public:
     AddNOper(std::vector<Tensor::SPtr> tensors);
 
-    GradientOper::TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
+    GradientOper::TensorMap gradients(Tensor::SPtr out,
+                                      Tensor::SPtr outGrad) override;
 
    private:
     void executeOper(const InputDict& inputs) override;
-
 };
 
 class AddNGradientOper : public Oper
 {
    public:
-    AddNGradientOper(std::vector<Tensor::SPtr> ins, Tensor::SPtr out, Tensor::SPtr outGrad);
+    AddNGradientOper(std::vector<Tensor::SPtr> ins, Tensor::SPtr out,
+                     Tensor::SPtr outGrad);
 
    private:
     void executeOper(const InputDict& inputs) override;
-
 };
 
 }  // namespace layers

@@ -2,7 +2,6 @@
 #include "dll_ops.h"
 #include "graph.h"
 
-
 namespace dll
 {
 namespace core
@@ -41,7 +40,8 @@ void AddNOper::executeOper(const InputDict& inputs)
     }
 }
 
-GradientOper::TensorMap AddNOper::gradients(Tensor::SPtr out, Tensor::SPtr outGrad)
+GradientOper::TensorMap AddNOper::gradients(Tensor::SPtr out,
+                                            Tensor::SPtr outGrad)
 {
     assert(out == mOutputs[0]);
 
@@ -56,8 +56,9 @@ GradientOper::TensorMap AddNOper::gradients(Tensor::SPtr out, Tensor::SPtr outGr
     return gradMap;
 }
 
-std::vector<Tensor::SPtr> createGradientInputs(
-        std::vector<Tensor::SPtr> ins, Tensor::SPtr out, Tensor::SPtr outGrad)
+std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
+                                               Tensor::SPtr out,
+                                               Tensor::SPtr outGrad)
 {
     ins.push_back(out);
     ins.push_back(outGrad);
@@ -71,13 +72,12 @@ std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
         assert(ins[0]->shape() == ins[i]->shape());
 
     std::vector<Tensor::SPtr> outs;
-    for (Tensor::SPtr i : ins)
-        outs.push_back(createTensor("", i->shape()));
+    for (Tensor::SPtr i : ins) outs.push_back(createTensor("", i->shape()));
     return outs;
 }
 
-AddNGradientOper::AddNGradientOper(
-        std::vector<Tensor::SPtr> ins, Tensor::SPtr out, Tensor::SPtr outGrad)
+AddNGradientOper::AddNGradientOper(std::vector<Tensor::SPtr> ins,
+                                   Tensor::SPtr out, Tensor::SPtr outGrad)
     : Oper(createGradientInputs(ins, out, outGrad), createGradientOutputs(ins))
 {
 }
@@ -94,8 +94,7 @@ void AddNGradientOper::executeOper(const InputDict& inputs)
 
     for (std::size_t pos = 0; pos < outG.count(); ++pos)
     {
-        for (unsigned i = 0; i < inG.size(); ++i)
-            inG[i][pos] = outG[pos];
+        for (unsigned i = 0; i < inG.size(); ++i) inG[i][pos] = outG[pos];
     }
 }
 
