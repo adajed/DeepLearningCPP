@@ -33,6 +33,8 @@ ITensorSPtr assign(ITensorSPtr dest, ITensorSPtr src);
 
 ITensorSPtr reduceSum(ITensorSPtr tensor);
 
+ITensorSPtr addN(std::vector<ITensorSPtr> tensors);
+
 }  // namespace dll
 
 #endif  // DLL_OPS_H_
