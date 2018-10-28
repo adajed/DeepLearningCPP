@@ -102,9 +102,14 @@ void AddNGradientOper::executeOper(const InputDict& inputs)
 
 Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors)
 {
-    assert(tensors.size() > 0);
+    if (tensors.size() == 0)
+        throw std::invalid_argument("List of input tensors cannot be empty");
     for (unsigned i = 1; i < tensors.size(); ++i)
-        assert(tensors[0]->shape() == tensors[i]->shape());
+    {
+        if (tensors[0]->shape() != tensors[i]->shape())
+            throw std::invalid_argument(
+                "Shapes of inputs tensors don\'t match");
+    }
 
     Oper::SPtr oper = std::make_shared<layers::AddNOper>(tensors);
     core::getDefaultGraph()->insertOperation(oper);

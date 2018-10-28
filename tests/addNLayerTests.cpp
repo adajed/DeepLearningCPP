@@ -6,6 +6,7 @@ namespace
 {
 using namespace dll::core::layers;
 using TestCase = std::tuple<int, Vec>;
+using ErrorTestCase = std::vector<Vec>;
 
 std::vector<Vec> SHAPES = {
     // clang-format off
@@ -21,6 +22,18 @@ std::vector<Vec> SHAPES = {
     {10},
     {1, 10},
     {5, 13}
+    // clang-format on
+};
+
+std::vector<std::vector<Vec>> ERROR_SHAPES = {
+    // clang-format off
+    {},
+    {{}, {1}},
+    {{}, {}, {1}},
+    {{1}, {1, 1}},
+    {{2}, {4}},
+    {{2, 2}, {4}},
+    {{5}, {5}, {5}, {5}, {4}, {5}, {5}}
     // clang-format on
 };
 
@@ -64,8 +77,28 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
     }
 };
 
+class AddNErrorTest : public LayerTest,
+                      public testing::WithParamInterface<ErrorTestCase>
+{
+   public:
+    void test(const ErrorTestCase& testCase)
+    {
+        std::vector<ITensorSPtr> inputs;
+        for (unsigned i = 0; i < testCase.size(); ++i)
+        {
+            std::string name = "i" + std::to_string(i);
+            inputs.push_back(createInput(name, testCase[i]));
+        }
+        ITensorSPtr output;
+        EXPECT_THROW({ output = addN(inputs); }, std::invalid_argument);
+    }
+};
+
 TEST_P(AddNTest, testAPI) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, AddNTest,
                         Combine(Range(1, 11), ValuesIn(SHAPES)));
+
+TEST_P(AddNErrorTest, test) { test(GetParam()); }
+INSTANTIATE_TEST_CASE_P(LayerErrorTest, AddNErrorTest, ValuesIn(ERROR_SHAPES));
 
 }  // namespace
