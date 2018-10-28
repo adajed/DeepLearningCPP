@@ -1,14 +1,24 @@
 #include "dll.h"
 #include "dll_ops.h"
+#include "readMNIST.h"
 
 #include <iostream>
 #include <random>
 
 const int BATCH_SIZE = 64;
+const int NUM_EPOCHS = 1;
 
 using namespace dll;
 
-int main()
+struct Network
+{
+    std::map<std::string, ITensorSPtr> inputs;
+    std::vector<ITensorSPtr> weights;
+    std::vector<ITensorSPtr> modifiers;
+    ITensorSPtr output, loss;
+};
+
+Network buildNetwork()
 {
     ITensorSPtr X = createInput("X", {BATCH_SIZE, 28 * 28});
     ITensorSPtr Y = createInput("Y", {BATCH_SIZE, 10});
@@ -24,14 +34,28 @@ int main()
     ITensorSPtr loss = reduceSum(square(a3 - Y));
 
     std::map<ITensorSPtr, ITensorSPtr> grads = gradients(loss);
-    std::vector<ITensorSPtr> calc;
+    std::vector<ITensorSPtr> modifiers;
     for (auto pair : grads)
     {
         ITensorSPtr s = constant(0.1, pair.first->getShape());
-        calc.push_back(assign(pair.first, pair.first - s * pair.second));
+        modifiers.push_back(assign(pair.first, pair.first - s * pair.second));
     }
-    calc.push_back(loss);
 
+    Network net;
+    net.inputs = {{"X", X}, {"Y", Y}};
+    net.weights = {W1, W2, W3};
+    net.output = a3;
+    net.loss = loss;
+    net.modifiers = modifiers;
+    return net;
+}
+
+int main()
+{
+    std::cout << "Reading MNIST dataset..." << std::endl;
+    MnistDataset mnist(BATCH_SIZE);
+    std::cout << "Building network..." << std::endl;
+    Network net = buildNetwork();
     initializeGraph();
 
     HostTensor inputX{nullptr, BATCH_SIZE * 28 * 28};
@@ -42,21 +66,20 @@ int main()
     inputY.values = new float[inputY.count];
     lossT.values = new float[lossT.count];
 
-    std::vector<HostTensor> outs({output, output, output, lossT});
-
-    std::random_device rd;
-    std::mt19937 e2(rd());
-    std::uniform_real_distribution<> dist(-1., 1.);
-    for (std::size_t pos = 0; pos < inputX.count; ++pos)
-        inputX.values[pos] = dist(e2);
-    for (std::size_t pos = 0; pos < inputY.count; ++pos)
-        inputY.values[pos] = dist(e2);
-
-    for (int i = 0; i < 100; ++i)
+    for (int e = 0; e < NUM_EPOCHS; ++e)
     {
-        eval(calc, {{"X", inputX}, {"Y", inputY}}, outs);
-        std::cout << "step " << i << " : loss " << outs[3].values[0]
-                  << std::endl;
+        std::cout << "Epoch " << e << std::endl;
+        std::cout << "Number of batches " << mnist.getNumBatches() << std::endl;
+        for (int i = 0; i < mnist.getNumBatches(); ++i)
+        {
+            mnist.getNextBatch(inputX.values, inputY.values);
+            eval({net.loss}, {{"X", inputX}, {"Y", inputY}}, {lossT});
+            eval(net.modifiers, {{"X", inputX}, {"Y", inputY}},
+                 {output, output, output});
+            if (i % 100 == 0)
+                std::cout << "Loss " << lossT.values[0] << std::endl;
+        }
+        mnist.reset();
     }
 
     return 0;
