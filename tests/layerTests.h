@@ -12,6 +12,7 @@ using namespace dll;
 using namespace dll::core;
 
 using testing::Combine;
+using testing::Range;
 using testing::ValuesIn;
 
 using Vec = std::vector<unsigned>;

@@ -1,4 +1,5 @@
 #include "gradientBuilder.h"
+#include "addN.h"
 #include "constantOper.h"
 #include "dll_errors.h"
 #include "dll_ops.h"
@@ -11,7 +12,10 @@ namespace dll
 namespace core
 {
 GradientBuilder::GradientBuilder(Tensor::SPtr tensor)
-    : mTensor(tensor), mTensorGradients(), mGradientsToCalc()
+    : mTensor(tensor),
+      mTensorGradients(),
+      mGradientsToCalc(),
+      mCalculatedTensors()
 {
     if (tensor->shape().count() != 1)
         throw errors::NotScalarGradientsCalculation();
@@ -43,8 +47,9 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
     findTensorOutputs(mTensor, visited);
 
     mTensorGradients.clear();
+    mCalculatedTensors.clear();
     //! d(mTensor)/d(mTensor) = 1.
-    mTensorGradients.insert({mTensor, constant(1., mTensor->shape())});
+    mCalculatedTensors.insert({mTensor, constant(1., mTensor->shape())});
 
     calculateGradientsForTensor(mTensor);
 
@@ -52,9 +57,10 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
     for (auto pair : getDefaultGraph()->getWeights())
     {
         Tensor::SPtr weights = std::static_pointer_cast<Tensor>(pair.second);
-        if (mTensorGradients.count(weights) == 0)
-            mTensorGradients.insert({weights, constant(0., weights->shape())});
-        gradients.insert({weights, mTensorGradients[weights]});
+        if (mCalculatedTensors.count(weights) == 0)
+            mCalculatedTensors.insert(
+                {weights, constant(0., weights->shape())});
+        gradients.insert({weights, mCalculatedTensors[weights]});
     }
     return gradients;
 }
@@ -63,15 +69,17 @@ void GradientBuilder::modifyTensorGradient(Tensor::SPtr tensor,
                                            Tensor::SPtr tensorGrad)
 {
     if (mTensorGradients.count(tensor) == 0)
-        mTensorGradients.insert({tensor, tensorGrad});
-    else
-        mTensorGradients[tensor] = mTensorGradients[tensor] + tensorGrad;
+        mTensorGradients.insert({tensor, {}});
+    mTensorGradients[tensor].push_back(tensorGrad);
+
+    if (mGradientsToCalc[tensor].empty())
+        mCalculatedTensors[tensor] = core::addN(mTensorGradients[tensor]);
 }
 
 void GradientBuilder::calculateGradientsForTensor(Tensor::SPtr tensor)
 {
     if (!mGradientsToCalc[tensor].empty()) return;
-    Tensor::SPtr tensorGrad = mTensorGradients[tensor];
+    Tensor::SPtr tensorGrad = mCalculatedTensors[tensor];
 
     Oper::SPtr oper = tensor->getOper();
     if (oper->hasGradient())

@@ -24,8 +24,9 @@ class GradientBuilder
     void calculateGradientsForTensor(Tensor::SPtr tensor);
 
     Tensor::SPtr mTensor;
-    std::map<Tensor::SPtr, Tensor::SPtr> mTensorGradients;
+    std::map<Tensor::SPtr, std::vector<Tensor::SPtr>> mTensorGradients;
     std::map<Tensor::SPtr, std::set<Tensor::SPtr>> mGradientsToCalc;
+    std::map<Tensor::SPtr, Tensor::SPtr> mCalculatedTensors;
 };
 
 }  // namespace core

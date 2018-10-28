@@ -24,7 +24,8 @@ global:
         dll::neg*;
         dll::reciprocal*;
         dll::assign*;
-        dll::reduceSum*
+        dll::reduceSum*;
+        dll::addN*
     };
 local: *;
 };
