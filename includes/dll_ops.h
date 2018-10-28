@@ -31,6 +31,8 @@ ITensorSPtr reciprocal(ITensorSPtr t);
 
 ITensorSPtr assign(ITensorSPtr dest, ITensorSPtr src);
 
+ITensorSPtr reduceSum(ITensorSPtr tensor);
+
 }  // namespace dll
 
 #endif  // DLL_OPS_H_

@@ -70,7 +70,7 @@ Tensor::SPtr reduceSum(Tensor::SPtr t)
 
 ITensorSPtr reduceSum(ITensorSPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_case<core::Tensor>(t);
+    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
     return ITensorSPtr(core::reduceSum(tensor));
 }
 
