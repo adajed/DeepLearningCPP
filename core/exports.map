@@ -9,7 +9,9 @@ global:
         dll::createWeights*;
         dll::eval*;
         dll::gradients*;
+        dll::constant*;
         dll::add*;
+        dll::operator*;
         dll::sub*;
         dll::mul*;
         dll::div*;

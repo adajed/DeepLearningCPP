@@ -46,7 +46,6 @@ void Tensor::freeMemory() { mMemory.free(); }
 void Tensor::reset()
 {
     mIsEvaluated = false;
-    for (Oper::SPtr op : mOutputOps) op->reset();
 }
 
 Tensor::~Tensor() { mMemory.free(); }

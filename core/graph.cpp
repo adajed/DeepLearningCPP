@@ -37,8 +37,7 @@ std::map<std::string, ITensorSPtr> Graph::getWeights() const
 
 void Graph::reset()
 {
-    for (auto pair : mInputOps) pair.second->reset();
-    for (auto pair : mWeightsOps) pair.second->reset();
+    for (auto pair : mOps) pair.second->reset();
 }
 
 bool Graph::allocateMemory()

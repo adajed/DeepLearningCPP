@@ -2,26 +2,17 @@ include ./makes/defines.inc
 
 all: release debug
 
-release: lib_release test_release
-debug: lib_debug test_debug
-
-.PHONY: lib_release lib_debug test_release test_debug clean ctags format
-
-#### LIBRARY
-
-lib_release:
+release:
 	@+make -C core release
-
-lib_debug:
-	@+make -C core debug
-
-#### TESTS
-
-test_release: lib_release
 	@+make -C tests release
+	@+make -C samples/toySample release
 
-test_debug: lib_debug
+debug:
+	@+make -C core debug
 	@+make -C tests debug
+	@+make -C samples/toySample debug
+
+.PHONY: clean ctags format
 
 clean:
 	rm -r $(OUTDIR)
@@ -33,3 +24,4 @@ format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(ROOT_DIR)/includes/*.h
 	@+make -C core format
 	@+make -C tests format
+	@+make -C samples/toySample format
