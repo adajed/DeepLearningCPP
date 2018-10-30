@@ -7,7 +7,6 @@ namespace graphdl
 {
 namespace errors
 {
-
 }  // namespace errors
 }  // namespace graphdl
 
