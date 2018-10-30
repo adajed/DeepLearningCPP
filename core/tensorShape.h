@@ -1,11 +1,11 @@
-#ifndef DLL_CORE_TENSOR_SHAPE_H_
-#define DLL_CORE_TENSOR_SHAPE_H_
+#ifndef GRAPHDL_CORE_TENSOR_SHAPE_H_
+#define GRAPHDL_CORE_TENSOR_SHAPE_H_
 
 #include <initializer_list>
 
-#include "dll.h"
+#include "graphdl.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
@@ -28,7 +28,7 @@ class TensorShape
 
     unsigned size() const;
 
-    size_t count() const;
+    size_t getCount() const;
 
     operator Shape() const;
 
@@ -40,6 +40,6 @@ class TensorShape
 };
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_TENSOR_SHAPE_H_
+#endif  // GRAPHDL_CORE_TENSOR_SHAPE_H_

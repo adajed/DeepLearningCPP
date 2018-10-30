@@ -1,56 +1,53 @@
 #ifndef GRAPHDL_CORE_GRAPH_H_
 #define GRAPHDL_CORE_GRAPH_H_
 
-#include "dll.h"
 #include "input.h"
-#include "oper.h"
+#include "layer.h"
 #include "weights.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
-class Graph;
-
 //! \class Graph
-//! \brief Implementation of IGraph interface.
+//! \brief Class representing computation graph.
 //!
-class Graph : public IGraph
+class Graph
 {
    public:
     using UPtr = std::shared_ptr<Graph>;
     using SPtr = std::shared_ptr<Graph>;
     using WeakPtr = std::weak_ptr<Graph>;
 
-    Graph(std::string const& name);
+    Graph(const std::string& name);
 
-    std::string getName() const override;
-    void setName(std::string const& name) override;
+    std::string getName() const;
+    void setName(const std::string& name);
 
     //! \fn getInputs
     //! \brief Returns all the inputs to the graph.
     //!
-    std::map<std::string, ITensorSPtr> getInputs() const override;
+    std::map<std::string, Tensor::SPtr> getInputs() const;
 
     //! \fn getWeights
     //! \brief Returns all the weights in the graph.
     //!
-    std::map<std::string, ITensorSPtr> getWeights() const override;
+    std::map<std::string, Tensor::SPtr> getWeights() const;
 
-    //! \fn reset
+    //! \fn prepareForNextComputation
     //! \brief Prepares graph for next computation.
     //!
-    void reset();
+    void prepareForNextComputation();
 
     //! \fn allocateMemory
     //! \brief Allocates memory for all tensors in the graph.
     //!
     bool allocateMemory();
 
-    //! \fn initializeOpers
+    //! \fn initializeLayers
     //! \brief Initializes all operations in the graph.
     //!
-    void initializeOpers();
+    void initializeLayers();
 
     //! \fn freeMemory
     //! \brief Frees memory for all tensors in te graph.
@@ -73,22 +70,18 @@ class Graph : public IGraph
     //! \return Pointer to tensor representing new weights.
     Tensor::SPtr addWeights(const std::string& name, const Shape& shape);
 
-    //! \fn insertOperation
-    //! \brief Adds operation and all its tensors to the graph.
-    //! \param oper Shared pointer to oper that will be added to the graph.
+    //! \fn insertLayer
+    //! \brief Adds layer and all its tensors to the graph.
+    //! \param layer Shared pointer to layer that will be added to the graph.
     //!
-    void insertOperation(Oper::SPtr oper);
+    void insertLayer(Layer::SPtr layer);
 
    private:
     std::string mName;  //!< Name of the graph.
-    std::map<std::string, std::shared_ptr<InputOper>>
-        mInputOps;  //!< Map of input ops.
-    std::map<std::string, std::shared_ptr<WeightsOper>>
-        mWeightsOps;  //!< Map of weights ops.
-
-    std::map<Oper::ID, Oper::SPtr> mOps;  //!< Map of all ops inside the graph.
-    std::map<Tensor::ID, Tensor::SPtr>
-        mTensors;  //!< MAp of all tensors inside the graph.
+    std::vector<std::shared_ptr<InputLayer>> mInputLayers;
+    std::vector<std::shared_ptr<WeightLayer>> mWeightLayers;
+    std::map<Layer::ID, Layer::SPtr> mLayers;
+    std::map<Tensor::ID, Tensor::SPtr> mTensors;
 };
 
 //! \class GraphRegister
@@ -120,12 +113,12 @@ class GraphRegister
     //! \fn hasKey
     //! \brief Checks whether graph with given name already exists.
     //!
-    bool hasKey(std::string const& name) const;
+    bool hasKey(const std::string& name) const;
 
     //! \fn at
     //! \brief Returns graph with given name.
     //!
-    Graph::SPtr at(std::string const& name);
+    Graph::SPtr at(const std::string& name);
 
     //! \fn insert
     //! \brief Registers new graph.
@@ -153,9 +146,22 @@ class GraphRegister
     Graph::SPtr mDefaultGraph;
 };
 
+GraphRegister& getGraphRegister();
+
 Graph::SPtr getDefaultGraph();
 
+template <typename LayerType, typename... Args>
+Layer::SPtr createLayer(Args... args)
+{
+    core::Graph::SPtr graph = core::getDefaultGraph();
+    Layer::SPtr layer = std::make_shared<LayerType>(graph, args...);
+    for (Tensor::SPtr tensor : layer->getOutputs())
+        tensor->setLayer(layer);
+    core::getDefaultGraph()->insertLayer(layer);
+    return layer;
+}
+
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
 #endif  // GRAPHDL_CORE_GRAPH_H_

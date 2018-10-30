@@ -3,16 +3,16 @@
 
 #include "memory.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
 Memory::Memory(MemoryType type, size_t count)
-    : mType(type), mValues(nullptr), mCount(count)
+    : mType(type)
+    , mValues(nullptr)
+    , mCount(count)
 {
 }
-
-bool Memory::isAllocated() const { return mValues != nullptr; }
 
 float* Memory::getValues() { return mValues; }
 
@@ -20,9 +20,17 @@ const float* Memory::getValues() const { return mValues; }
 
 float& Memory::operator[](std::size_t pos) { return mValues[pos]; }
 
-size_t Memory::count() const { return mCount; }
-
 const float& Memory::operator[](std::size_t pos) const { return mValues[pos]; }
+
+size_t Memory::getCount() const { return mCount; }
+
+void Memory::fill(float* memory) const
+{
+    assert(isAllocated());
+    std::memcpy(memory, mValues, count() * sizeof(float));
+}
+
+bool Memory::isAllocated() const { return mValues != nullptr; }
 
 bool Memory::allocate()
 {
@@ -35,7 +43,7 @@ bool Memory::allocate()
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
         // TODO: allocate memory on device
-        return false;
+        throw std::exception("GPU support not implemented, please use CPU");
     }
 
     // you shouldn't be here
@@ -53,17 +61,9 @@ void Memory::free()
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
         // TODO: free memory on device
+        throw std::exception("GPU support not implemented, please use CPU");
     }
 }
 
-void Memory::fill(HostTensor hostTensor) const
-{
-    assert(isAllocated());
-    assert(count() == hostTensor.count);
-
-    for (std::size_t i = 0; i < hostTensor.count; ++i)
-        hostTensor.values[i] = mValues[i];
-}
-
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl

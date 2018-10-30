@@ -1,4 +1,5 @@
 #include "abstractTensor.h"
+#include <assert.h>
 
 namespace graphdl
 {
@@ -17,8 +18,9 @@ Shape AbstractTensor::getShape() const { return mTensor->getShape(); }
 
 void AbstractTensor::eval(const InputDict& inputs, HostTensor hostTensor)
 {
+    assert(mTensor->getMemory().getCount() >= hostTensor.size());
     mTensor->eval(inputs);
-    mTensor->getMemory().fill(hostTensor);
+    mTensor->getMemory().fill(hostTensor.data());
 }
 
 AbstractTensor::Ptr makeAbstract(Tensor::SPtr tensor)

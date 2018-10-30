@@ -1,41 +1,23 @@
-#ifndef DLL_CORE_INPUT_H_
-#define DLL_CORE_INPUT_H_
+#ifndef GRAPHDL_CORE_INPUT_H_
+#define GRAPHDL_CORE_INPUT_H_
 
-#include <assert.h>
-#include "oper.h"
+#include "graph.h"
+#include "layer.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
-class InputOper : public Oper
+class InputLayer : public Layer
 {
    public:
-    InputOper(const std::string& name, const Shape& shape)
-        : Oper({}, createOutputs(name, shape))
-    {
-    }
+    InputLayer(Graph::SPtr, graph, const std::string& name, const Shape& shape);
 
    private:
-    static std::vector<Tensor::SPtr> createOutputs(const std::string& name,
-                                                   const Shape& shape)
-    {
-        return {std::make_shared<Tensor>(name, shape)};
-    }
-
-    void executeOper(const InputDict& inputs) override
-    {
-        std::string name = mOutputs[0]->getName();
-        HostTensor input = inputs.at(name);
-        Memory output = mOutputs[0]->getMemory();
-
-        assert(output.isAllocated());
-        for (std::size_t i = 0; i < input.count; ++i)
-            output.getValues()[i] = input.values[i];
-    }
+    void execute(const InputDict& inputs) override;
 };
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_INPUT_H_
+#endif  // GRAPHDL_CORE_INPUT_H_
