@@ -1,38 +1,29 @@
-//! \file dll.h
-//! \brief Main header file of dll library.
+//! \file graphdl.h
+//! \brief Main header file of GraphDL library.
 //!
 //! \author Adam Jedrych adam.jedrych25@gmail.com
 //!
 
-#ifndef DLL_DL_H_
-#define DLL_DL_H_
+#ifndef GRAPHDL_H_
+#define GRAPHDL_H_
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-//! \namespace dll
-namespace dll
+//! \namespace graphdl
+namespace graphdl
 {
-//! \struct Tensor in host memory
-//! \brief Memory used to provide inputs and to get outputs from graph.
-//!
-struct HostTensor
-{
-    float* values;
-    size_t count;
-};
-
-typedef std::map<std::string, HostTensor> InputDict;
-
-typedef std::vector<unsigned int> Shape;
+using HostTensor = std::vector<float>;
+using InputDict = std::map<std::string, HostTensor>;
+using Shape = std::vector<unsigned int>;
 
 class ITensor;
-using ITensorSPtr = std::shared_ptr<ITensor>;
+using ITensorPtr = std::unique_ptr<ITensor>;
 
 class IGraph;
-using IGraphSPtr = std::shared_ptr<IGraph>;
+using IGraphPtr = std::unique_ptr<IGraph>;
 
 //! \class ITensor
 //! \brief Interface representing tensor.
@@ -48,23 +39,18 @@ class ITensor
     //! \fn setName
     //! \brief Sets new name for the tensor.
     //!
-    virtual void setName(std::string const& name) = 0;
+    virtual void setName(const std::string& name) = 0;
 
     //! \fn getShape
     //! \brief Returns shape of the tensor.
     //!
     virtual Shape getShape() const = 0;
 
-    //! \fn setShape
-    //! \brief Sets new shape for the tensor, works only for input tensors.
-    //!
-    virtual void setShape(Shape const& shape) = 0;
-
     //! \fn eval
     //! \brief Evaulates tensor.
     //! \param inputs Map from names of input tensors to values.
     //!
-    virtual void eval(InputDict const& inputs, HostTensor hostTensor) = 0;
+    virtual void eval(const InputDict& inputs, HostTensor hostTensor) = 0;
 
     virtual ~ITensor() {}
 };
@@ -75,11 +61,25 @@ class ITensor
 class IGraph
 {
    public:
+    //! \fn getName
+    //! \brief Returns name of the graph.
+    //!
     virtual std::string getName() const = 0;
-    virtual void setName(std::string const& name) = 0;
 
-    virtual std::map<std::string, ITensorSPtr> getInputs() const = 0;
-    virtual std::map<std::string, ITensorSPtr> getWeights() const = 0;
+    //! \fn setName
+    //! \brief Sets new name for the graph.
+    //!
+    virtual void setName(const std::string& name) = 0;
+
+    //! \fn getInputs
+    //! \brief Returns map of all inputs to the graph
+    //!
+    virtual std::map<std::string, ITensorPtr> getInputs() const = 0;
+
+    //! \fn getWeights
+    //! \brief Returns map of all weights in the graph
+    //!
+    virtual std::map<std::string, ITensorPtr> getWeights() const = 0;
 
     virtual ~IGraph() {}
 };
@@ -90,33 +90,33 @@ class IGraph
 //! If graph with the same name already exists,
 //!   this will return nullptr.
 //!
-IGraphSPtr createGraph(std::string const& name);
+IGraphPtr createGraph(const std::string& name);
 
 //! \fn setDefaultGraph
 //! \bried This function sets graph as a default graph.
 //! \param graph Graph to be set as the default.
 //! Later all new operations will be added to this graph.
 //!
-void setDefaultGraph(IGraphSPtr graph);
+void setDefaultGraph(IGraphPtr graph);
 
 //! \fn getDefaultGraph
 //! \brief This function returns current default graph.
 //!
-IGraphSPtr getDefaultGraph();
+IGraphPtr getDefaultGraph();
 
 //! \fn createInput
 //! \brief This function creates new input in the default graph.
 //! \param name Name of the input.
 //! \param shape Dimensions of the input.
 //!
-ITensorSPtr createInput(std::string const& name, Shape const& shape);
+ITensorPtr createInput(const std::string& name, const Shape& shape);
 
 //! \fn createWeights
 //! \brief This function creates new weights in current graph.
 //! \param name Name og the weights.
 //! \param shape Dimensions of the weights.
 //!
-ITensorSPtr createWeights(std::string const& name, Shape const& shape);
+ITensorPtr createWeights(const std::string& name, const Shape& shape);
 
 //! \fn
 //! \brief Initializes graph (i.e. initializes all weights).
@@ -129,7 +129,7 @@ void initializeGraph();
 //! \param tensors Vector of tensors to evaluate.
 //! \param inputs Map of input values.
 //!
-void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs,
+void eval(const std::vector<ITensorPtr>& tensors, const InputDict& inputs,
           std::vector<HostTensor> hostTensors);
 
 //! \fn gradients
@@ -137,8 +137,8 @@ void eval(std::vector<ITensorSPtr> const& tensors, InputDict const& inputs,
 //! \param tensor Tensor for which gradients will be calculated (i.e. loss).
 //! \return Map from weights name to tensor representing gradient.
 //!
-std::map<ITensorSPtr, ITensorSPtr> gradients(ITensorSPtr tensor);
+std::map<ITensorPtr, ITensorPtr> gradients(ITensorPtr tensor);
 
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // GRAPH_DL_H_
+#endif  // GRAPHDL_H_
