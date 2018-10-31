@@ -21,12 +21,11 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
     {
         setup(testCase);
 
-        LayerBuilder builder = [testCase](const HostVec& ins,
-                                          const HostVec& outs) {
+        LayerBuilder builder = [testCase](const HostVec& ins) {
             ITensorPtr input = createInput("input", std::get<0>(testCase));
             initializeGraph();
 
-            input->eval({{"input", ins[0]}}, outs[0]);
+            return HostVec({input->eval({{"input", ins[0]}})});
         };
         bool correct = runTest({mInput}, {mOutput}, builder);
         EXPECT_TRUE(correct);
@@ -45,7 +44,7 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
         mInput.fillRandomly(gen);
 
         // calculate reference output
-        for (std::size_t i = 0; i < mInput.count(); ++i)
+        for (std::size_t i = 0; i < mInput.getCount(); ++i)
             mOutput.at(i) = mInput.at(i);
     }
 };
