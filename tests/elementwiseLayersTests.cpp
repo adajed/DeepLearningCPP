@@ -1,8 +1,7 @@
-#include "elementwiseOper.h"
+#include "abstractTensor.h"
+#include "elementwise.h"
+#include "graphdl_ops.h"
 #include "layerTests.h"
-
-#include "dll_errors.h"
-#include "dll_ops.h"
 
 namespace
 {
@@ -109,7 +108,7 @@ class ElementwiseTest : public LayerTest,
                 break;
         }
         // calculate reference output
-        for (std::size_t i = 0; i < mInput1.count(); ++i)
+        for (std::size_t i = 0; i < mInput1.getCount(); ++i)
             mOutput.at(i) = f(mInput1.at(i), mInput2.at(i));
     }
 
@@ -149,7 +148,7 @@ class ElementwiseTest : public LayerTest,
                 break;
         }
 
-        for (std::size_t i = 0; i < mInput1.count(); ++i)
+        for (std::size_t i = 0; i < mInput1.getCount(); ++i)
         {
             mGradient1.at(i) =
                 mOutputGrad.at(i) * fun1(mInput1.at(i), mInput2.at(i));
@@ -160,11 +159,9 @@ class ElementwiseTest : public LayerTest,
 
     LayerBuilder getBuilder(const TestCase& testCase)
     {
-        return [testCase](const HostVec& ins, const HostVec& outs) {
-            ITensorPtr input1 =
-                createInput("input1", std::get<0>(testCase));
-            ITensorPtr input2 =
-                createInput("input2", shape(testCase));
+        return [testCase](const HostVec& ins) {
+            ITensorPtr input1 = createInput("input1", std::get<0>(testCase));
+            ITensorPtr input2 = createInput("input2", shape(testCase));
             ITensorPtr output;
             switch (op(testCase))
             {
@@ -182,30 +179,30 @@ class ElementwiseTest : public LayerTest,
                     break;
             }
             initializeGraph();
-            output->eval({{"input1", ins[0]}, {"input2", ins[1]}}, outs[0]);
+            return HostVec(
+                {output->eval({{"input1", ins[0]}, {"input2", ins[1]}})});
         };
     }
 
     LayerBuilder getGradientBuilder(const TestCase& testCase)
     {
-        return [&testCase](const HostVec& ins, const HostVec& outs) {
-            Tensor::SPtr in1 =
-                core::getDefaultGraph()->addInput("in1", shape(testCase));
-            Tensor::SPtr in2 =
-                core::getDefaultGraph()->addInput("in2", shape(testCase));
-            Tensor::SPtr outG =
-                core::getDefaultGraph()->addInput("outG", shape(testCase));
+        return [&testCase](const HostVec& ins) {
+            Tensor::SPtr in1 = core::getDefaultGraph()->addInput(
+                "in1", createLayer<InputLayer>("in1", shape(testCase)));
+            Tensor::SPtr in2 = core::getDefaultGraph()->addInput(
+                "in2", createLayer<InputLayer>("in2", shape(testCase)));
+            Tensor::SPtr outG = core::getDefaultGraph()->addInput(
+                "outG", createLayer<InputLayer>("outG", shape(testCase)));
             Tensor::SPtr output = createElementwise(in1, in2, op(testCase));
-            Oper::SPtr oper = std::make_shared<ElementwiseGradientOper>(
+            Layer::SPtr layer = createLayer<ElementwiseGradientLayer>(
                 in1, in2, output, outG, op(testCase));
-            core::getDefaultGraph()->insertOperation(oper);
             initializeGraph();
-            std::vector<Tensor::SPtr> grads = oper->getOutputs();
+            std::vector<Tensor::SPtr> grads = layer->getOutputs();
 
-            std::vector<ITensorPtr> igrads = {ITensorPtr(grads[0]),
-                                               ITensorPtr(grads[1])};
-            eval(igrads, {{"in1", ins[0]}, {"in2", ins[1]}, {"outG", ins[2]}},
-                 outs);
+            std::vector<ITensorPtr> igrads = {makeAbstractTensor(grads[0]),
+                                              makeAbstractTensor(grads[1])};
+            return eval(igrads,
+                        {{"in1", ins[0]}, {"in2", ins[1]}, {"outG", ins[2]}});
         };
     }
 };
@@ -221,10 +218,8 @@ class ElementwiseErrorTest : public LayerTest,
     void test(const ErrorTestCase& testCase)
     {
         std::tuple<Vec, Vec> shapes = std::get<0>(testCase);
-        ITensorPtr input1 =
-            createInput("input1", std::get<0>(shapes));
-        ITensorPtr input2 =
-            createInput("input2", std::get<1>(shapes));
+        ITensorPtr input1 = createInput("input1", std::get<0>(shapes));
+        ITensorPtr input2 = createInput("input2", std::get<1>(shapes));
         ITensorPtr output;
         EXPECT_THROW(
             {
@@ -244,7 +239,7 @@ class ElementwiseErrorTest : public LayerTest,
                         break;
                 }
             },
-            errors::NotMatchingShapesError);
+            std::runtime_error);
     }
 };
 
