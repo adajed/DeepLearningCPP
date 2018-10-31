@@ -10,6 +10,26 @@ namespace core
 {
 namespace layers
 {
+namespace
+{
+std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
+                                               Tensor::SPtr out,
+                                               Tensor::SPtr outGrad)
+{
+    ins.push_back(out);
+    ins.push_back(outGrad);
+    return ins;
+}
+
+std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
+{
+    std::vector<Tensor::SPtr> outs;
+    for (Tensor::SPtr i : ins) outs.push_back(createTensor("", i->getShape()));
+    return outs;
+}
+
+}  // namespace anonymous
+
 AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
     : DifferentiableLayer(id, tensors,
                           {createTensor("", tensors[0]->getShape())})
@@ -47,22 +67,6 @@ Layer::TensorMap AddNLayer::gradients(Tensor::SPtr out, Tensor::SPtr outGrad)
     for (unsigned i = 0; i < inputs.size(); ++i)
         gradMap.insert({inputs[i], grads[i]});
     return gradMap;
-}
-
-std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
-                                               Tensor::SPtr out,
-                                               Tensor::SPtr outGrad)
-{
-    ins.push_back(out);
-    ins.push_back(outGrad);
-    return ins;
-}
-
-std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
-{
-    std::vector<Tensor::SPtr> outs;
-    for (Tensor::SPtr i : ins) outs.push_back(createTensor("", i->getShape()));
-    return outs;
 }
 
 AddNGradientLayer::AddNGradientLayer(ID id, std::vector<Tensor::SPtr> ins,

@@ -10,10 +10,20 @@ namespace core
 {
 namespace layers
 {
+namespace
+{
 std::vector<Tensor::SPtr> createOutput(Tensor::SPtr m1, Tensor::SPtr m2)
 {
     return {createTensor("", {m1->getShape()[0], m2->getShape()[1]})};
 }
+
+std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr m1,
+                                                Tensor::SPtr m2)
+{
+    return {createTensor("", m1->getShape()), createTensor("", m2->getShape())};
+}
+
+}  // namespace anonymous
 
 MatmulLayer::MatmulLayer(ID id, Tensor::SPtr m1, Tensor::SPtr m2)
     : DifferentiableLayer(id, {m1, m2}, createOutput(m1, m2))
@@ -58,12 +68,6 @@ Layer::TensorMap MatmulLayer::gradients(Tensor::SPtr output,
 
     std::vector<Tensor::SPtr> grads = layer->getOutputs();
     return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
-}
-
-std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr m1,
-                                                Tensor::SPtr m2)
-{
-    return {createTensor("", m1->getShape()), createTensor("", m2->getShape())};
 }
 
 MatmulGradientLayer::MatmulGradientLayer(ID id, Tensor::SPtr m1,

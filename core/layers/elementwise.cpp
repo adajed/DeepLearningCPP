@@ -10,10 +10,21 @@ namespace core
 {
 namespace layers
 {
+namespace
+{
 std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1, Tensor::SPtr t2)
 {
     return {createTensor("", t1->getShape())};
 }
+
+std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr t1,
+                                                Tensor::SPtr t2)
+{
+    return {createTensor("", t1->getShape()),
+            createTensor("", t2->getShape())};
+}
+
+}  // namespace anonymous
 
 ElementwiseLayer::ElementwiseLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
                                    Elementwise op)
@@ -64,12 +75,6 @@ Layer::TensorMap ElementwiseLayer::gradients(Tensor::SPtr output,
 
     std::vector<Tensor::SPtr> grads = layer->getOutputs();
     return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
-}
-
-std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr t1,
-                                                Tensor::SPtr t2)
-{
-    return {createTensor("", t1->getShape()), createTensor("", t2->getShape())};
 }
 
 ElementwiseGradientLayer::ElementwiseGradientLayer(ID id, Tensor::SPtr t1,
