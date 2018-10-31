@@ -1,21 +1,21 @@
-#ifndef DLL_CORE_LAYERS_ASSIGN_OPER_H_
-#define DLL_CORE_LAYERS_ASSIGN_OPER_H_
+#ifndef GRAPHDL_CORE_LAYERS_ASSIGN_H_
+#define GRAPHDL_CORE_LAYERS_ASSIGN_H_
 
-#include "oper.h"
+#include "layer.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
 namespace layers
 {
-class AssignOper : public Oper
+class AssignLayer : public Layer
 {
    public:
-    AssignOper(Tensor::SPtr dest, Tensor::SPtr src);
+    AssignLayer(ID id, Tensor::SPtr dest, Tensor::SPtr src);
 
    private:
-    void executeOper(const InputDict& inputs) override;
+    void execute(const InputDict& inputs) override;
 
     Tensor::WeakPtr mDest;
 };
@@ -25,6 +25,6 @@ class AssignOper : public Oper
 Tensor::SPtr assign(Tensor::SPtr dest, Tensor::SPtr src);
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_LAYERS_ASSIGN_OPER_H_
+#endif  // GRAPHDL_CORE_LAYERS_ASSIGN_H_

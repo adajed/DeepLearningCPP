@@ -10,7 +10,7 @@ class MnistDataset
 
     int getNumBatches() const;
 
-    void getNextBatch(float* x, float* y);
+    std::vector<std::vector<float>> getNextBatch();
 
     void reset();
 

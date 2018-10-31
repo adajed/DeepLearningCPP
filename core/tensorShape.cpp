@@ -1,6 +1,6 @@
 #include "tensorShape.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
@@ -38,7 +38,7 @@ const unsigned& TensorShape::operator[](std::size_t pos) const
 
 unsigned TensorShape::size() const { return mDims.size(); }
 
-std::size_t TensorShape::count() const
+std::size_t TensorShape::getCount() const
 {
     std::size_t count = 1;
     for (std::size_t dim : mDims) count *= dim;
@@ -52,4 +52,4 @@ TensorShape::iterator TensorShape::begin() { return mDims.begin(); }
 TensorShape::iterator TensorShape::end() { return mDims.end(); }
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl

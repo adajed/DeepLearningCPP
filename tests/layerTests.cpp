@@ -3,10 +3,10 @@
 bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
                    float eps)
 {
-    EXPECT_EQ(refOutput.count(), output.count);
+    EXPECT_EQ(refOutput.getCount(), output.size());
 
-    for (std::size_t i = 0; i < output.count; ++i)
-        EXPECT_NEAR(refOutput.at(i), output.values[i], eps) << "pos=" << i;
+    for (std::size_t i = 0; i < output.size(); ++i)
+        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "pos=" << i;
 
     return true;
 }
@@ -31,22 +31,10 @@ bool LayerTest::runTest(const std::vector<RefTensor>& refInputs,
     std::vector<HostTensor> inputs;
     for (RefTensor ref : refInputs) inputs.push_back(ref.toHostTensor());
 
-    // prepare outputs
-    std::vector<HostTensor> outputs;
-    for (RefTensor ref : refOutputs)
-    {
-        HostTensor output{nullptr, ref.count()};
-        output.values = new float[output.count];
-        outputs.push_back(output);
-    }
-
     // run graph
-    builder(inputs, outputs);
+    std::vector<HostTensor> outputs = builder(inputs);
 
     bool ret = compareTensors(refOutputs, outputs, eps);
-
-    for (HostTensor in : inputs) delete[] in.values;
-    for (HostTensor out : outputs) delete[] out.values;
 
     return ret;
 }

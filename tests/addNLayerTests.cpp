@@ -1,11 +1,12 @@
+#include "abstractTensor.h"
 #include "addN.h"
-#include "dll_ops.h"
 #include "graph.h"
+#include "graphdl_ops.h"
 #include "layerTests.h"
 
 namespace
 {
-using namespace dll::core::layers;
+using namespace graphdl::core::layers;
 using TestCase = std::tuple<int, Vec>;
 using ErrorTestCase = std::vector<Vec>;
 
@@ -52,16 +53,15 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
             inputs[i].fillRandomly(gen);
         }
 
-        for (std::size_t pos = 0; pos < output.count(); ++pos)
+        for (std::size_t pos = 0; pos < output.getCount(); ++pos)
         {
             output.at(pos) = 0.;
             for (int i = 0; i < std::get<0>(testCase); ++i)
                 output.at(pos) += inputs[i].at(pos);
         }
 
-        LayerBuilder builder = [&testCase](const HostVec& ins,
-                                           const HostVec& outs) {
-            std::vector<ITensorSPtr> inputs;
+        LayerBuilder builder = [&testCase](const HostVec& ins) {
+            std::vector<ITensorPtr> inputs;
             std::map<std::string, HostTensor> inMap;
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {
@@ -69,9 +69,9 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
                 inputs.push_back(createInput(name, std::get<1>(testCase)));
                 inMap.insert({name, ins[i]});
             }
-            ITensorSPtr output = addN(inputs);
+            ITensorPtr output = addN(inputs);
             initializeGraph();
-            output->eval(inMap, outs[0]);
+            return HostVec({output->eval(inMap)});
         };
         bool correct = runTest(inputs, {output}, builder);
         EXPECT_TRUE(correct);
@@ -91,38 +91,40 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
         RefTensor outputGrad(std::get<1>(testCase));
         outputGrad.fillRandomly(gen);
 
-        for (std::size_t pos = 0; pos < outputGrad.count(); ++pos)
+        for (std::size_t pos = 0; pos < outputGrad.getCount(); ++pos)
         {
             for (int i = 0; i < std::get<0>(testCase); ++i)
                 inputGrads[i].at(pos) = outputGrad.at(pos);
         }
         inputs.push_back(outputGrad);
 
-        LayerBuilder builder = [&testCase](const HostVec& ins,
-                                           const HostVec& outs) {
+        LayerBuilder builder = [&testCase](const HostVec& ins) {
             std::vector<Tensor::SPtr> inputs;
             std::map<std::string, HostTensor> inMap;
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {
                 std::string name = "i" + std::to_string(i);
-                inputs.push_back(core::getDefaultGraph()->addInput(
-                    name, std::get<1>(testCase)));
+                Layer::SPtr inputLayer =
+                    createLayer<InputLayer>(name, std::get<1>(testCase));
+                inputs.push_back(
+                    core::getDefaultGraph()->addInput(name, inputLayer));
                 inMap.insert({name, ins[i]});
             }
-            Tensor::SPtr outputGrad = core::getDefaultGraph()->addInput(
-                "outG", std::get<1>(testCase));
+            Layer::SPtr outputGradLayer =
+                createLayer<InputLayer>("outG", std::get<1>(testCase));
+            Tensor::SPtr outputGrad =
+                core::getDefaultGraph()->addInput("outG", outputGradLayer);
             inMap.insert({"outG", ins.back()});
             Tensor::SPtr output = core::addN(inputs);
-            Oper::SPtr oper =
-                std::make_shared<AddNGradientOper>(inputs, output, outputGrad);
-            core::getDefaultGraph()->insertOperation(oper);
-            std::vector<Tensor::SPtr> inputGrads = oper->getOutputs();
-            std::vector<ITensorSPtr> calcTensors;
+            Layer::SPtr gradLayer =
+                createLayer<AddNGradientLayer>(inputs, output, outputGrad);
+            std::vector<Tensor::SPtr> inputGrads = gradLayer->getOutputs();
+            std::vector<ITensorPtr> calcTensors;
             for (Tensor::SPtr t : inputGrads)
-                calcTensors.push_back(ITensorSPtr(t));
+                calcTensors.push_back(makeAbstractTensor(t));
             initializeGraph();
 
-            eval(calcTensors, inMap, outs);
+            return eval(calcTensors, inMap);
         };
         bool correct = runTest(inputs, inputGrads, builder);
         EXPECT_TRUE(correct);
@@ -135,14 +137,14 @@ class AddNErrorTest : public LayerTest,
    public:
     void test(const ErrorTestCase& testCase)
     {
-        std::vector<ITensorSPtr> inputs;
+        std::vector<ITensorPtr> inputs;
         for (unsigned i = 0; i < testCase.size(); ++i)
         {
             std::string name = "i" + std::to_string(i);
             inputs.push_back(createInput(name, testCase[i]));
         }
-        ITensorSPtr output;
-        EXPECT_THROW({ output = addN(inputs); }, std::invalid_argument);
+        ITensorPtr output;
+        EXPECT_THROW({ output = addN(inputs); }, std::runtime_error);
     }
 };
 

@@ -1,34 +1,34 @@
-#ifndef DLL_CORE_LAYERS_ADD_N_H_
-#define DLL_CORE_LAYERS_ADD_N_H_
+#ifndef GRAPHDL_CORE_LAYERS_ADDN_LAYER_H_
+#define GRAPHDL_CORE_LAYERS_ADDN_LAYER_H_
 
-#include "gradientOper.h"
+#include "differentiableLayer.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
 namespace layers
 {
-class AddNOper : public GradientOper
+class AddNLayer : public DifferentiableLayer
 {
    public:
-    AddNOper(std::vector<Tensor::SPtr> tensors);
+    AddNLayer(ID id, std::vector<Tensor::SPtr> tensors);
 
-    GradientOper::TensorMap gradients(Tensor::SPtr out,
-                                      Tensor::SPtr outGrad) override;
+    DifferentiableLayer::TensorMap gradients(Tensor::SPtr out,
+                                             Tensor::SPtr outGrad) override;
 
    private:
-    void executeOper(const InputDict& inputs) override;
+    void execute(const InputDict& inputs) override;
 };
 
-class AddNGradientOper : public Oper
+class AddNGradientLayer : public Layer
 {
    public:
-    AddNGradientOper(std::vector<Tensor::SPtr> ins, Tensor::SPtr out,
-                     Tensor::SPtr outGrad);
+    AddNGradientLayer(ID id, std::vector<Tensor::SPtr> ins, Tensor::SPtr out,
+                      Tensor::SPtr outGrad);
 
    private:
-    void executeOper(const InputDict& inputs) override;
+    void execute(const InputDict& inputs) override;
 };
 
 }  // namespace layers
@@ -36,6 +36,6 @@ class AddNGradientOper : public Oper
 Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors);
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_LAYERS_ADD_N_H_
+#endif  // GRAPHDL_CORE_LAYERS_ADDN_LAYER_H_

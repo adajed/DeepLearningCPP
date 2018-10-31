@@ -1,11 +1,9 @@
-#ifndef DLL_CORE_MEMORY_H_
-#define DLL_CORE_MEMORY_H_
+#ifndef GRAPHDL_CORE_MEMORY_H_
+#define GRAPHDL_CORE_MEMORY_H_
 
 #include <cstddef>
 
-#include "dll.h"
-
-namespace dll
+namespace graphdl
 {
 namespace core
 {
@@ -18,9 +16,7 @@ enum class MemoryType
 class Memory
 {
    public:
-    Memory(MemoryType type, size_t count);
-
-    bool isAllocated() const;
+    Memory(MemoryType type, std::size_t count);
 
     float* getValues();
     const float* getValues() const;
@@ -28,9 +24,15 @@ class Memory
     float& operator[](std::size_t pos);
     const float& operator[](std::size_t pos) const;
 
-    std::size_t count() const;
+    std::size_t getCount() const;
 
-    void fill(HostTensor hostTensor) const;
+    //! \fn fill
+    //! \brief Copies values to given pointer.
+    //! Assumes that array can store all values.
+    //!
+    void fill(float* memory) const;
+
+    bool isAllocated() const;
 
     bool allocate();
 
@@ -43,6 +45,6 @@ class Memory
 };
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_MEMORY_H_
+#endif  // GRAPHDL_CORE_MEMORY_H_

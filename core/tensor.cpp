@@ -1,47 +1,49 @@
-#include "oper.h"
+#include "graph.h"
+#include "layer.h"
+#include "memory.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
+Tensor::Tensor(ID id, const std::string& name, const TensorShape& shape)
+    : mID(id),
+      mName(name),
+      mShape(shape),
+      mIsEvaluated(false),
+      mLayer(),
+      mMemory(MemoryType::kHOST_MEMORY, shape.getCount())
+{
+}
+
 Tensor::ID Tensor::getID() const { return mID; }
 
 std::string Tensor::getName() const { return mName; }
 
 void Tensor::setName(const std::string& name) { mName = name; }
 
-Shape Tensor::getShape() const { return mShape; }
+TensorShape Tensor::getShape() const { return mShape; }
 
-void Tensor::setShape(const Shape& shape) { mShape = shape; }
+Layer::SPtr Tensor::getLayer() const { return mLayer.lock(); }
 
-TensorShape Tensor::shape() const { return mShape; }
+void Tensor::setLayer(Layer::SPtr layer) { mLayer = Layer::WeakPtr(layer); }
 
-void Tensor::setTensorShape(const TensorShape& shape) { mShape = shape; }
-
-Oper::SPtr Tensor::getOper() const { return mOper.lock(); }
-
-void Tensor::setOper(Oper::SPtr oper) { mOper = Oper::WeakPtr(oper); }
+Graph::SPtr Tensor::getGraph() const { return mLayer.lock()->getGraph(); }
 
 Memory Tensor::getMemory() { return mMemory; }
-
-void Tensor::eval(InputDict const& inputs, HostTensor hostTensor)
-{
-    exec(inputs);
-    mMemory.fill(hostTensor);
-}
-
-void Tensor::exec(const InputDict& inputs)
-{
-    if (!mIsEvaluated)
-    {
-        mOper.lock()->exec(inputs);
-        mIsEvaluated = true;
-    }
-}
 
 bool Tensor::allocateMemory() { return mMemory.allocate(); }
 
 void Tensor::freeMemory() { mMemory.free(); }
+
+void Tensor::eval(const InputDict& inputs)
+{
+    if (!mIsEvaluated)
+    {
+        mLayer.lock()->eval(inputs);
+        mIsEvaluated = true;
+    }
+}
 
 void Tensor::reset() { mIsEvaluated = false; }
 
@@ -49,8 +51,9 @@ Tensor::~Tensor() { mMemory.free(); }
 
 Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape)
 {
-    return std::make_shared<Tensor>(name, shape);
+    Graph::SPtr graph = core::getDefaultGraph();
+    return std::make_shared<Tensor>(graph->nextTensorID(), name, shape);
 }
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl

@@ -1,10 +1,10 @@
-#ifndef DLL_CORE_GRADIENT_BUILDER_H_
-#define DLL_CORE_GRADIENT_BUILDER_H_
+#ifndef GRAPHDL_CORE_GRADIENT_BUILDER_H_
+#define GRAPHDL_CORE_GRADIENT_BUILDER_H_
 
 #include <set>
-#include "oper.h"
+#include "layer.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
@@ -30,6 +30,6 @@ class GradientBuilder
 };
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_GRADIENT_BUILDER_H_
+#endif  // GRAPHDL_CORE_GRADIENT_BUILDER_H_

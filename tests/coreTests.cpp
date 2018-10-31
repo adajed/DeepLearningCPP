@@ -1,12 +1,9 @@
 #include <gtest/gtest.h>
-#include "dll.h"
-#include "dll_errors.h"
-#include "dll_ops.h"
 #include "graph.h"
+#include "graphdl.h"
+#include "graphdl_ops.h"
 
 #include <random>
-
-#define COMMA ,
 
 std::random_device rd;
 std::mt19937 e2(rd());
@@ -19,7 +16,7 @@ class CoreTest : public testing::Test
 
     void TearDown() override
     {
-        dll::core::GraphRegister::getGlobalGraphRegister().clear();
+        graphdl::core::GraphRegister::getGlobalGraphRegister().clear();
         testing::Test::TearDown();
     }
 };
@@ -28,94 +25,84 @@ const std::string SAMPLE_NAME = "sample_name";
 
 TEST_F(CoreTest, simple)
 {
-    dll::IGraphSPtr g = dll::createGraph(SAMPLE_NAME);
+    graphdl::IGraphPtr g = graphdl::createGraph(SAMPLE_NAME);
     EXPECT_NE(g, nullptr);
 }
 
 TEST_F(CoreTest, graphWithGivenNameAlreadyExists)
 {
-    dll::IGraphSPtr g = dll::createGraph(SAMPLE_NAME);
+    graphdl::IGraphPtr g = graphdl::createGraph(SAMPLE_NAME);
     EXPECT_NE(g.get(), nullptr);
-    g = dll::createGraph(SAMPLE_NAME);
-    EXPECT_EQ(g.get(), nullptr);
+    EXPECT_THROW({ g = graphdl::createGraph(SAMPLE_NAME); },
+                 std::runtime_error);
 }
 
 TEST_F(CoreTest, setDefaultGraph)
 {
-    dll::IGraphSPtr g = dll::createGraph(SAMPLE_NAME);
-    dll::setDefaultGraph(g);
-    dll::IGraphSPtr g2 = dll::getDefaultGraph();
-    EXPECT_EQ(g, g2);
+    graphdl::IGraphPtr g = graphdl::createGraph(SAMPLE_NAME);
+    graphdl::setDefaultGraph(g);
+    graphdl::IGraphPtr g2 = graphdl::getDefaultGraph();
+    EXPECT_EQ(g->getName(), g2->getName());
 }
 
 TEST_F(CoreTest, emptyInput)
 {
-    auto inputs = dll::getDefaultGraph()->getInputs();
+    auto inputs = graphdl::getDefaultGraph()->getInputs();
     EXPECT_EQ(inputs.size(), 0);
 }
 
 TEST_F(CoreTest, addInput)
 {
     const std::string INPUT_NAME = "input1";
-    dll::ITensorSPtr input = dll::createInput(INPUT_NAME, {3, 224, 224});
-    auto inputs = dll::getDefaultGraph()->getInputs();
-    std::map<std::string, dll::ITensorSPtr> testMap = {{INPUT_NAME, input}};
-    EXPECT_EQ(inputs, testMap);
+    graphdl::ITensorPtr input = graphdl::createInput(INPUT_NAME, {3, 224, 224});
+    auto inputs = graphdl::getDefaultGraph()->getInputs();
+    EXPECT_EQ(inputs.size(), 1);
+    EXPECT_EQ(inputs.count(INPUT_NAME), 1);
 }
 
 TEST_F(CoreTest, emptyWeights)
 {
-    auto weights = dll::getDefaultGraph()->getWeights();
+    auto weights = graphdl::getDefaultGraph()->getWeights();
     EXPECT_EQ(weights.size(), 0);
 }
 
 TEST_F(CoreTest, addWeights)
 {
     const std::string WEIGHTS_NAME = "weights";
-    dll::ITensorSPtr w = dll::createWeights(WEIGHTS_NAME, {100, 100});
-    auto weights = dll::getDefaultGraph()->getWeights();
-    std::map<std::string, dll::ITensorSPtr> testMap = {{WEIGHTS_NAME, w}};
-    EXPECT_EQ(weights, testMap);
+    graphdl::ITensorPtr w = graphdl::createWeights(WEIGHTS_NAME, {100, 100});
+    auto weights = graphdl::getDefaultGraph()->getWeights();
+    EXPECT_EQ(weights.size(), 1);
+    EXPECT_EQ(weights.count(WEIGHTS_NAME), 1);
 }
 
 TEST_F(CoreTest, addInputWithTheSameName)
 {
-    dll::ITensorSPtr input1 = dll::createInput("input1", {3, 224, 224});
+    graphdl::ITensorPtr input1 = graphdl::createInput("input1", {3, 224, 224});
     EXPECT_NE(input1, nullptr);
-    dll::ITensorSPtr input2 = dll::createInput("input1", {3, 224, 224});
-    EXPECT_EQ(input2, nullptr);
+    EXPECT_THROW(
+        { graphdl::ITensorPtr t = graphdl::createInput("input1", {}); },
+        std::runtime_error);
 }
 
 TEST_F(CoreTest, gradients)
 {
-    dll::ITensorSPtr i = dll::createInput("input", {1});
-    dll::ITensorSPtr w = dll::createWeights("weights", {1});
-    dll::ITensorSPtr output = (dll::constant(1., {1}) / i) * w;
-    dll::ITensorSPtr grad = dll::gradients(output)[w];
-    dll::initializeGraph();
+    graphdl::ITensorPtr i = graphdl::createInput("input", {1});
+    graphdl::ITensorPtr w = graphdl::createWeights("weights", {1});
+    graphdl::ITensorPtr output = (graphdl::constant(1., {1}) / i) * w;
+    graphdl::ITensorPtr grad = graphdl::gradients(output)[w];
+    graphdl::initializeGraph();
 
-    dll::HostTensor iH{nullptr, 1};
-    dll::HostTensor wH{nullptr, 1};
-    dll::HostTensor gH{nullptr, 1};
-    iH.values = new float[1];
-    wH.values = new float[1];
-    gH.values = new float[1];
-    iH.values[0] = 5.;
+    graphdl::HostTensor iH({5.});
 
-    dll::eval({w, grad}, {{"input", iH}}, {wH, gH});
-    EXPECT_FLOAT_EQ(gH.values[0], 1. / 5.);
-
-    delete[] iH.values;
-    delete[] wH.values;
-    delete[] gH.values;
+    auto outputs = graphdl::eval({w, grad}, {{"input", iH}});
+    EXPECT_FLOAT_EQ(outputs[1][0], 1. / 5.);
 }
 
 TEST_F(CoreTest, nonScalarGradientException)
 {
-    dll::ITensorSPtr i = dll::createInput("input", {2, 2});
-    dll::ITensorSPtr w = dll::createWeights("weights", {2, 2});
-    dll::ITensorSPtr o = i * w;
-    dll::ITensorSPtr grad;
-    EXPECT_THROW({ grad = dll::gradients(o)[w]; },
-                 dll::errors::NotScalarGradientsCalculation);
+    graphdl::ITensorPtr i = graphdl::createInput("input", {2, 2});
+    graphdl::ITensorPtr w = graphdl::createWeights("weights", {2, 2});
+    graphdl::ITensorPtr o = i * w;
+    graphdl::ITensorPtr grad;
+    EXPECT_THROW({ grad = graphdl::gradients(o)[w]; }, std::runtime_error);
 }

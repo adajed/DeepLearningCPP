@@ -1,13 +1,13 @@
 #include "gradientBuilder.h"
+#include "abstractTensor.h"
 #include "addN.h"
-#include "constantOper.h"
-#include "dll_errors.h"
-#include "dll_ops.h"
-#include "elementwiseOper.h"
-#include "gradientOper.h"
+#include "constant.h"
+#include "differentiableLayer.h"
+#include "elementwise.h"
 #include "graph.h"
+#include "graphdl_ops.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
@@ -17,8 +17,8 @@ GradientBuilder::GradientBuilder(Tensor::SPtr tensor)
       mGradientsToCalc(),
       mCalculatedTensors()
 {
-    if (tensor->shape().count() != 1)
-        throw errors::NotScalarGradientsCalculation();
+    if (tensor->getShape().getCount() != 1)
+        throw std::runtime_error("Not scalar gradient calculation");
 }
 
 void GradientBuilder::findTensorOutputs(Tensor::SPtr tensor,
@@ -27,10 +27,10 @@ void GradientBuilder::findTensorOutputs(Tensor::SPtr tensor,
     if (visited.count(tensor) > 0) return;
     visited.insert(tensor);
 
-    Oper::SPtr oper = tensor->getOper();
-    if (oper->hasGradient())
+    Layer::SPtr layer = tensor->getLayer();
+    if (layer->hasGradient())
     {
-        std::vector<Tensor::SPtr> inputs = oper->getInputs();
+        std::vector<Tensor::SPtr> inputs = layer->getInputs();
         for (Tensor::SPtr in : inputs)
         {
             if (mGradientsToCalc.count(in) == 0)
@@ -49,17 +49,17 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
     mTensorGradients.clear();
     mCalculatedTensors.clear();
     //! d(mTensor)/d(mTensor) = 1.
-    mCalculatedTensors.insert({mTensor, constant(1., mTensor->shape())});
+    mCalculatedTensors.insert({mTensor, constant(1., mTensor->getShape())});
 
     calculateGradientsForTensor(mTensor);
 
     TensorMap gradients;
     for (auto pair : getDefaultGraph()->getWeights())
     {
-        Tensor::SPtr weights = std::static_pointer_cast<Tensor>(pair.second);
+        Tensor::SPtr weights = pair.second;
         if (mCalculatedTensors.count(weights) == 0)
             mCalculatedTensors.insert(
-                {weights, constant(0., weights->shape())});
+                {weights, constant(0., weights->getShape())});
         gradients.insert({weights, mCalculatedTensors[weights]});
     }
     return gradients;
@@ -81,15 +81,12 @@ void GradientBuilder::calculateGradientsForTensor(Tensor::SPtr tensor)
     if (!mGradientsToCalc[tensor].empty()) return;
     Tensor::SPtr tensorGrad = mCalculatedTensors[tensor];
 
-    Oper::SPtr oper = tensor->getOper();
-    if (oper->hasGradient())
+    Layer::SPtr layer = tensor->getLayer();
+    if (layer->hasGradient())
     {
-        std::shared_ptr<GradientOper> g_oper =
-            std::static_pointer_cast<GradientOper>(oper);
-
-        std::vector<Tensor::SPtr> inputs = g_oper->getInputs();
+        std::vector<Tensor::SPtr> inputs = layer->getInputs();
         std::map<Tensor::SPtr, Tensor::SPtr> inputGrads =
-            g_oper->gradients(tensor, tensorGrad);
+            layer->gradients(tensor, tensorGrad);
 
         for (Tensor::SPtr in : inputs)
         {
@@ -102,25 +99,23 @@ void GradientBuilder::calculateGradientsForTensor(Tensor::SPtr tensor)
 
 }  // namespace core
 
-std::map<ITensorSPtr, ITensorSPtr> gradients(ITensorSPtr tensor)
+std::map<ITensorPtr, ITensorPtr> gradients(ITensorPtr iTensor)
 {
     using namespace core;
-    Tensor::SPtr t = std::static_pointer_cast<Tensor>(tensor);
-    GradientBuilder builder(t);
+    AbstractTensor::Ptr aTensor = castITensorPtr(iTensor);
+    GradientBuilder builder(aTensor->get());
     GradientBuilder::TensorMap grads = builder.createGradients();
 
-    // cast all Tensor::SPtr to ITensorSPtr
-    std::map<ITensorSPtr, ITensorSPtr> rGrads;
+    // cast all Tensor::SPtr to ITensorPtr
+    std::map<ITensorPtr, ITensorPtr> rGrads;
     for (auto pair : core::getDefaultGraph()->getWeights())
     {
-        Tensor::SPtr weights = std::static_pointer_cast<Tensor>(pair.second);
-        if (grads.count(weights) > 0)
-            rGrads[ITensorSPtr(weights)] = ITensorSPtr(grads[weights]);
-        else
-            rGrads[ITensorSPtr(weights)] =
-                dll::constant(0., weights->getShape());
+        Tensor::SPtr w = pair.second;
+        ITensorPtr aWeights = makeAbstractTensor(w);
+        if (grads.count(w) == 0) grads[w] = constant(0., w->getShape());
+        rGrads[aWeights] = makeAbstractTensor(grads[w]);
     }
     return rGrads;
 }
 
-}  // namespace dll
+}  // namespace graphdl

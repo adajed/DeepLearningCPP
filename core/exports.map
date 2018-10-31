@@ -1,31 +1,32 @@
 {
 global:
     extern "C++" {
-        dll::createGraph*;
-        dll::setDefaultGraph*;
-        dll::getDefaultGraph*;
-        dll::initializeGraph*;
-        dll::createInput*;
-        dll::createWeights*;
-        dll::eval*;
-        dll::gradients*;
-        dll::constant*;
-        dll::add*;
-        dll::operator*;
-        dll::sub*;
-        dll::mul*;
-        dll::div*;
-        dll::matmul*;
-        dll::relu*;
-        dll::sigmoid*;
-        dll::tanh*;
-        dll::square*;
-        dll::abs*;
-        dll::neg*;
-        dll::reciprocal*;
-        dll::assign*;
-        dll::reduceSum*;
-        dll::addN*
+        graphdl::createGraph*;
+        graphdl::setDefaultGraph*;
+        graphdl::getDefaultGraph*;
+        graphdl::initializeGraph*;
+        graphdl::createInput*;
+        graphdl::createWeights*;
+        graphdl::eval*;
+        graphdl::gradients*;
+        graphdl::constant*;
+        graphdl::add*;
+        graphdl::operator*;
+        graphdl::sub*;
+        graphdl::mul*;
+        graphdl::div*;
+        graphdl::matmul*;
+        graphdl::relu*;
+        graphdl::sigmoid*;
+        graphdl::tanh*;
+        graphdl::square*;
+        graphdl::abs*;
+        graphdl::neg*;
+        graphdl::reciprocal*;
+        graphdl::log*;
+        graphdl::assign*;
+        graphdl::reduceSum*;
+        graphdl::addN*
     };
 local: *;
 };

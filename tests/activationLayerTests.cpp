@@ -1,10 +1,11 @@
+#include "abstractTensor.h"
 #include "activation.h"
-#include "dll_ops.h"
+#include "graphdl_ops.h"
 #include "layerTests.h"
 
 namespace
 {
-using namespace dll::core::layers;
+using namespace graphdl::core::layers;
 using TestCase = std::tuple<Vec, Activation>;
 
 std::vector<Vec> SHAPES = {
@@ -34,7 +35,8 @@ std::vector<Activation> OPS = {
     Activation::kSQUARE,
     Activation::kABS,
     Activation::kNEG,
-    Activation::kRECIPROCAL
+    Activation::kRECIPROCAL,
+    Activation::kLOG
     // clang-format on
 };
 
@@ -101,9 +103,12 @@ class ActivationTest : public LayerTest,
             case Activation::kRECIPROCAL:
                 fun = [](float x) { return 1. / x; };
                 break;
+            case Activation::kLOG:
+                fun = [](float x) { return std::log(std::abs(x)); };
+                break;
         }
 
-        for (std::size_t pos = 0; pos < mInput.count(); ++pos)
+        for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
             mOutput.at(pos) = fun(mInput.at(pos));
     }
 
@@ -153,17 +158,20 @@ class ActivationTest : public LayerTest,
             case Activation::kRECIPROCAL:
                 fun = [](float x) { return -1 / (x * x); };
                 break;
+            case Activation::kLOG:
+                fun = [](float x) { return 1 / std::abs(x); };
+                break;
         }
 
-        for (std::size_t pos = 0; pos < mInput.count(); ++pos)
+        for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
             mGradient.at(pos) = mOutputGrad.at(pos) * fun(mInput.at(pos));
     }
 
     LayerBuilder getBuilder(const TestCase& testCase)
     {
-        return [&testCase](const HostVec& ins, const HostVec& outs) {
-            ITensorSPtr in = createInput("in", std::get<0>(testCase));
-            ITensorSPtr out;
+        return [&testCase](const HostVec& ins) {
+            ITensorPtr in = createInput("in", std::get<0>(testCase));
+            ITensorPtr out;
             switch (std::get<1>(testCase))
             {
                 case Activation::kRELU:
@@ -187,27 +195,32 @@ class ActivationTest : public LayerTest,
                 case Activation::kRECIPROCAL:
                     out = reciprocal(in);
                     break;
+                case Activation::kLOG:
+                    out = log(abs(in));
             }
             initializeGraph();
 
-            out->eval({{"in", ins[0]}}, outs[0]);
+            return HostVec({out->eval({{"in", ins[0]}})});
         };
     }
 
     LayerBuilder getGradientBuilder(const TestCase& testCase)
     {
-        return [&testCase](const HostVec& ins, const HostVec& outs) {
-            Tensor::SPtr in =
-                core::getDefaultGraph()->addInput("in", std::get<0>(testCase));
+        return [&testCase](const HostVec& ins) {
+            Tensor::SPtr in = core::getDefaultGraph()->addInput(
+                "in", createLayer<InputLayer>("in", std::get<0>(testCase)));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", std::get<0>(testCase));
+                "outG", createLayer<InputLayer>("outG", std::get<0>(testCase)));
+
+            // make sure that input to log is positive
+            if (std::get<1>(testCase) == Activation::kLOG) in = abs(in);
+
             Tensor::SPtr out = createActivation(in, std::get<1>(testCase));
-            Oper::SPtr oper = std::make_shared<ActivationGradientOper>(
+            Layer::SPtr layer = createLayer<ActivationGradientLayer>(
                 in, out, outG, std::get<1>(testCase));
-            core::getDefaultGraph()->insertOperation(oper);
-            ITensorSPtr grad = ITensorSPtr(oper->getOutputs()[0]);
+            ITensorPtr grad = makeAbstractTensor(layer->getOutputs()[0]);
             initializeGraph();
-            grad->eval({{"in", ins[0]}, {"outG", ins[1]}}, outs[0]);
+            return HostVec({grad->eval({{"in", ins[0]}, {"outG", ins[1]}})});
         };
     }
 

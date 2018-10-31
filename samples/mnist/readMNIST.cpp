@@ -82,18 +82,17 @@ MnistDataset::MnistDataset(int batchSize)
 
 int MnistDataset::getNumBatches() const { return mX.size() / mBatchSize; }
 
-void MnistDataset::getNextBatch(float* X, float* Y)
+std::vector<std::vector<float>> MnistDataset::getNextBatch()
 {
-    /* assert(mPos + mBatchSize <= getNumBatches()); */
-
-    std::size_t cntX = 0, cntY = 0;
+    std::vector<float> batchX, batchY;
     for (int n = 0; n < mBatchSize; ++n)
     {
-        for (float f : mX[mPos + n]) X[cntX++] = f;
-        for (float f : mY[mPos + n]) Y[cntY++] = f;
+        for (float f : mX[mPos + n]) batchX.push_back(f);
+        for (float f : mY[mPos + n]) batchY.push_back(f);
     }
 
     mPos += mBatchSize;
+    return {batchX, batchY};
 }
 
 void MnistDataset::reset() { mPos = 0; }

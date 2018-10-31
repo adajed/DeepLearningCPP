@@ -1,22 +1,18 @@
 #include "activation.h"
 #include <assert.h>
 #include <cmath>
-#include "dll_ops.h"
+#include "abstractTensor.h"
 #include "graph.h"
+#include "graphdl_ops.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
 namespace layers
 {
-std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t)
-{
-    return {createTensor("", t->shape())};
-}
-
-ActivationOper::ActivationOper(Tensor::SPtr t, Activation op)
-    : GradientOper({t}, createOutputs(t)), mOp(op)
+ActivationLayer::ActivationLayer(ID id, Tensor::SPtr t, Activation op)
+    : DifferentiableLayer(id, {t}, {createTensor("", t->getShape())}), mOp(op)
 {
     switch (op)
     {
@@ -41,48 +37,45 @@ ActivationOper::ActivationOper(Tensor::SPtr t, Activation op)
         case Activation::kRECIPROCAL:
             mFun = [](float x) { return 1. / x; };
             break;
+        case Activation::kLOG:
+            mFun = [](float x) { return std::log(x); };
+            break;
     }
 }
 
-void ActivationOper::executeOper(const InputDict& inputs)
+void ActivationLayer::execute(const InputDict& inputs)
 {
     Tensor::SPtr in = mInputs[0].lock();
-    in->exec(inputs);
+    in->eval(inputs);
 
     Memory input = in->getMemory();
     Memory output = mOutputs[0]->getMemory();
 
-    for (std::size_t pos = 0; pos < input.count(); ++pos)
+    for (std::size_t pos = 0; pos < input.getCount(); ++pos)
         output[pos] = mFun(input[pos]);
 }
 
-GradientOper::TensorMap ActivationOper::gradients(Tensor::SPtr out,
-                                                  Tensor::SPtr outGrad)
+Layer::TensorMap ActivationLayer::gradients(Tensor::SPtr out,
+                                            Tensor::SPtr outGrad)
 {
     assert(out == mOutputs[0]);
 
     std::vector<Tensor::SPtr> inputs = getInputs();
-    Oper::SPtr oper =
-        std::make_shared<ActivationGradientOper>(inputs[0], out, outGrad, mOp);
-    core::getDefaultGraph()->insertOperation(oper);
-    std::vector<Tensor::SPtr> grads = oper->getOutputs();
+    Layer::SPtr layer =
+        createLayer<ActivationGradientLayer>(inputs[0], out, outGrad, mOp);
 
+    std::vector<Tensor::SPtr> grads = layer->getOutputs();
     return {{inputs[0], grads[0]}};
 }
 
-std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr t)
+ActivationGradientLayer::ActivationGradientLayer(ID id, Tensor::SPtr in,
+                                                 Tensor::SPtr out,
+                                                 Tensor::SPtr outGrad,
+                                                 Activation op)
+    : Layer(id, {in, out, outGrad}, {createTensor("", in->getShape())})
 {
-    return {createTensor("", t->shape())};
-}
-
-ActivationGradientOper::ActivationGradientOper(Tensor::SPtr in,
-                                               Tensor::SPtr out,
-                                               Tensor::SPtr outGrad,
-                                               Activation op)
-    : Oper({in, out, outGrad}, createGradientOutputs(in))
-{
-    assert(in->shape() == out->shape());
-    assert(out->shape() == outGrad->shape());
+    assert(in->getShape() == out->getShape());
+    assert(out->getShape() == outGrad->getShape());
 
     switch (op)
     {
@@ -107,35 +100,37 @@ ActivationGradientOper::ActivationGradientOper(Tensor::SPtr in,
         case Activation::kRECIPROCAL:
             mFun = [](float x, float o) { return -1. * o * o; };
             break;
+        case Activation::kLOG:
+            mFun = [](float x, float o) { return 1. / x; };
+            break;
     }
 }
 
-void ActivationGradientOper::executeOper(const InputDict& inputs)
+void ActivationGradientLayer::execute(const InputDict& inputs)
 {
     Tensor::SPtr in = mInputs[0].lock();
     Tensor::SPtr out = mInputs[1].lock();
     Tensor::SPtr outGrad = mInputs[2].lock();
-    in->exec(inputs);
-    out->exec(inputs);
-    outGrad->exec(inputs);
+    in->eval(inputs);
+    out->eval(inputs);
+    outGrad->eval(inputs);
 
     Memory input = in->getMemory();
     Memory output = out->getMemory();
     Memory outputGrad = outGrad->getMemory();
     Memory gradient = mOutputs[0]->getMemory();
 
-    for (std::size_t pos = 0; pos < input.count(); ++pos)
+    for (std::size_t pos = 0; pos < input.getCount(); ++pos)
         gradient[pos] = outputGrad[pos] * mFun(input[pos], output[pos]);
 }
 
-Tensor::SPtr createActivation(Tensor::SPtr t, Activation op)
-{
-    Oper::SPtr oper = std::make_shared<ActivationOper>(t, op);
-    core::getDefaultGraph()->insertOperation(oper);
-    return oper->getOutputs()[0];
-}
-
 }  // namespace layers
+
+Tensor::SPtr createActivation(Tensor::SPtr t, layers::Activation op)
+{
+    Layer::SPtr layer = createLayer<layers::ActivationLayer>(t, op);
+    return layer->getOutputs()[0];
+}
 
 Tensor::SPtr relu(Tensor::SPtr t)
 {
@@ -165,49 +160,59 @@ Tensor::SPtr reciprocal(Tensor::SPtr t)
 {
     return createActivation(t, layers::Activation::kRECIPROCAL);
 }
+Tensor::SPtr log(Tensor::SPtr t)
+{
+    return createActivation(t, layers::Activation::kLOG);
+}
 
 }  // namespace core
 
-ITensorSPtr relu(ITensorSPtr t)
+ITensorPtr relu(ITensorPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::relu(tensor));
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::relu(tensor->get()));
 }
 
-ITensorSPtr sigmoid(ITensorSPtr t)
+ITensorPtr sigmoid(ITensorPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::sigmoid(tensor));
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::sigmoid(tensor->get()));
 }
 
-ITensorSPtr tanh(ITensorSPtr t)
+ITensorPtr tanh(ITensorPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::tanh(tensor));
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::tanh(tensor->get()));
 }
 
-ITensorSPtr square(ITensorSPtr t)
+ITensorPtr square(ITensorPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::square(tensor));
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::square(tensor->get()));
 }
 
-ITensorSPtr abs(ITensorSPtr t)
+ITensorPtr abs(ITensorPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::abs(tensor));
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::abs(tensor->get()));
 }
 
-ITensorSPtr neg(ITensorSPtr t)
+ITensorPtr neg(ITensorPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::neg(tensor));
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::neg(tensor->get()));
 }
 
-ITensorSPtr reciprocal(ITensorSPtr t)
+ITensorPtr reciprocal(ITensorPtr t)
 {
-    core::Tensor::SPtr tensor = std::static_pointer_cast<core::Tensor>(t);
-    return ITensorSPtr(core::reciprocal(tensor));
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::reciprocal(tensor->get()));
 }
 
-}  // namespace dll
+ITensorPtr log(ITensorPtr t)
+{
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::log(tensor->get()));
+}
+
+}  // namespace graphdl
