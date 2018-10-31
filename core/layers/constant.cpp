@@ -1,4 +1,5 @@
-#include "constantLayer.h"
+#include "constant.h"
+#include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
 
@@ -9,7 +10,7 @@ namespace core
 namespace layers
 {
 ConstantLayer::ConstantLayer(ID id, float value, const TensorShape& shape)
-    : Layer(id, {}, {createTensor{"", shape}}), mValue(value)
+    : Layer(id, {}, {createTensor("", shape)}), mValue(value)
 {
 }
 
