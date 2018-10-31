@@ -1,34 +1,33 @@
-#ifndef DLL_CORE_LAYERS_REDUCE_SUM_H_
-#define DLL_CORE_LAYERS_REDUCE_SUM_H_
+#ifndef GRAPHDL_CORE_LAYERS_REDUCE_SUM_H_
+#define GRAPHDL_CORE_LAYERS_REDUCE_SUM_H_
 
-#include "gradientOper.h"
+#include "differentiableLayer.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
 namespace layers
 {
-class ReduceSumOper : public GradientOper
+class ReduceSumLayer : public DifferentiableLayer
 {
    public:
-    ReduceSumOper(Tensor::SPtr tensor);
+    ReduceSumLayer(ID id, Tensor::SPtr tensor);
 
-    GradientOper::TensorMap gradients(Tensor::SPtr out,
-                                      Tensor::SPtr outGrad) override;
+    TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
    private:
-    void executeOper(const InputDict& inputs) override;
+    void execute(const InputDict& inputs) override;
 };
 
-class ReduceSumGradientOper : public Oper
+class ReduceSumGradientLayer : public Layer
 {
    public:
-    ReduceSumGradientOper(Tensor::SPtr in, Tensor::SPtr out,
-                          Tensor::SPtr outGrad);
+    ReduceSumGradientLayer(ID id, Tensor::SPtr in, Tensor::SPtr out,
+                           Tensor::SPtr outGrad);
 
    private:
-    void executeOper(const InputDict& inputs) override;
+    void execute(const InputDict& inputs) override;
 };
 
 }  // namespace layers
@@ -37,6 +36,6 @@ Tensor::SPtr reduceSum(Tensor::SPtr tensor);
 
 }  // namespace core
 
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_LAYERS_REDUCE_SUM_H_
+#endif  // GRAPHDL_CORE_LAYERS_REDUCE_SUM_H_
