@@ -18,7 +18,8 @@ enum class Activation
     kSQUARE = 3,
     kABS = 4,
     kNEG = 5,
-    kRECIPROCAL = 6
+    kRECIPROCAL = 6,
+    kLOG = 7
 };
 
 class ActivationLayer : public DifferentiableLayer

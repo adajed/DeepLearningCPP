@@ -28,6 +28,7 @@ ITensorPtr square(ITensorPtr t);
 ITensorPtr abs(ITensorPtr t);
 ITensorPtr neg(ITensorPtr t);
 ITensorPtr reciprocal(ITensorPtr t);
+ITensorPtr log(ITensorPtr t);
 
 ITensorPtr assign(ITensorPtr dest, ITensorPtr src);
 

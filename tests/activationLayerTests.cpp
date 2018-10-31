@@ -35,7 +35,8 @@ std::vector<Activation> OPS = {
     Activation::kSQUARE,
     Activation::kABS,
     Activation::kNEG,
-    Activation::kRECIPROCAL
+    Activation::kRECIPROCAL,
+    Activation::kLOG
     // clang-format on
 };
 
@@ -102,6 +103,9 @@ class ActivationTest : public LayerTest,
             case Activation::kRECIPROCAL:
                 fun = [](float x) { return 1. / x; };
                 break;
+            case Activation::kLOG:
+                fun = [](float x) { return std::log(std::abs(x)); };
+                break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -154,6 +158,9 @@ class ActivationTest : public LayerTest,
             case Activation::kRECIPROCAL:
                 fun = [](float x) { return -1 / (x * x); };
                 break;
+            case Activation::kLOG:
+                fun = [](float x) { return 1 / std::abs(x); };
+                break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -188,6 +195,8 @@ class ActivationTest : public LayerTest,
                 case Activation::kRECIPROCAL:
                     out = reciprocal(in);
                     break;
+                case Activation::kLOG:
+                    out = log(abs(in));
             }
             initializeGraph();
 
@@ -202,6 +211,10 @@ class ActivationTest : public LayerTest,
                 "in", createLayer<InputLayer>("in", std::get<0>(testCase)));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
                 "outG", createLayer<InputLayer>("outG", std::get<0>(testCase)));
+
+            // make sure that input to log is positive
+            if (std::get<1>(testCase) == Activation::kLOG) in = abs(in);
+
             Tensor::SPtr out = createActivation(in, std::get<1>(testCase));
             Layer::SPtr layer = createLayer<ActivationGradientLayer>(
                 in, out, outG, std::get<1>(testCase));

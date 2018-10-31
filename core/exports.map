@@ -23,6 +23,7 @@ global:
         graphdl::abs*;
         graphdl::neg*;
         graphdl::reciprocal*;
+        graphdl::log*;
         graphdl::assign*;
         graphdl::reduceSum*;
         graphdl::addN*

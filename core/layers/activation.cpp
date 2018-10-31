@@ -37,6 +37,9 @@ ActivationLayer::ActivationLayer(ID id, Tensor::SPtr t, Activation op)
         case Activation::kRECIPROCAL:
             mFun = [](float x) { return 1. / x; };
             break;
+        case Activation::kLOG:
+            mFun = [](float x) { return std::log(x); };
+            break;
     }
 }
 
@@ -97,6 +100,9 @@ ActivationGradientLayer::ActivationGradientLayer(ID id, Tensor::SPtr in,
         case Activation::kRECIPROCAL:
             mFun = [](float x, float o) { return -1. * o * o; };
             break;
+        case Activation::kLOG:
+            mFun = [](float x, float o) { return 1. / x; };
+            break;
     }
 }
 
@@ -154,6 +160,10 @@ Tensor::SPtr reciprocal(Tensor::SPtr t)
 {
     return createActivation(t, layers::Activation::kRECIPROCAL);
 }
+Tensor::SPtr log(Tensor::SPtr t)
+{
+    return createActivation(t, layers::Activation::kLOG);
+}
 
 }  // namespace core
 
@@ -197,6 +207,12 @@ ITensorPtr reciprocal(ITensorPtr t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::reciprocal(tensor->get()));
+}
+
+ITensorPtr log(ITensorPtr t)
+{
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::log(tensor->get()));
 }
 
 }  // namespace graphdl
