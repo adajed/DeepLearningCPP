@@ -36,3 +36,7 @@ build
 
 # ctags
 tags
+
+# mnist sample data
+samples/mnist/train-images-idx3-ubyte
+samples/mnist/train-labels-idx1-ubyte

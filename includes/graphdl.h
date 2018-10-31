@@ -130,7 +130,7 @@ void initializeGraph();
 //! \param inputs Map of input values.
 //!
 void eval(const std::vector<ITensorPtr>& tensors, const InputDict& inputs,
-          std::vector<HostTensor> hostTensors);
+          const std::vector<HostTensor>& hostTensors);
 
 //! \fn gradients
 //! \brief Creates part of graph responsible for calculating gradients.
