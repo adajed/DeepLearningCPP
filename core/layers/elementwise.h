@@ -37,8 +37,9 @@ class ElementwiseLayer : public DifferentiableLayer
 class ElementwiseGradientLayer : public Layer
 {
    public:
-    ElementwiseGradientLayer(Tensor::SPtr t1, Tensor::SPtr t2, Tensor::SPtr out,
-                             Tensor::SPtr outGrad, Elementwise op);
+    ElementwiseGradientLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
+                             Tensor::SPtr out, Tensor::SPtr outGrad,
+                             Elementwise op);
 
    private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr, Tensor::SPtr);
