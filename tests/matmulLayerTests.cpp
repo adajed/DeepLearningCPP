@@ -1,5 +1,5 @@
-#include "dll_errors.h"
-#include "dll_ops.h"
+#include "abstractTensor.h"
+#include "graphdl_ops.h"
 #include "layerTests.h"
 #include "matmul.h"
 
@@ -36,15 +36,12 @@ class MatmulTest : public LayerTest,
     {
         setup(testCase);
 
-        LayerBuilder builder = [&testCase](const HostVec& ins,
-                                           const HostVec& outs) {
-            ITensorPtr input1 =
-                createInput("i1", std::get<0>(testCase));
-            ITensorPtr input2 =
-                createInput("i2", std::get<1>(testCase));
+        LayerBuilder builder = [&testCase](const HostVec& ins) {
+            ITensorPtr input1 = createInput("i1", std::get<0>(testCase));
+            ITensorPtr input2 = createInput("i2", std::get<1>(testCase));
             ITensorPtr output = matmul(input1, input2);
             initializeGraph();
-            output->eval({{"i1", ins[0]}, {"i2", ins[1]}}, outs[0]);
+            return HostVec({output->eval({{"i1", ins[0]}, {"i2", ins[1]}})});
         };
         bool correct = runTest({mInput1, mInput2}, {mOutput}, builder);
         EXPECT_TRUE(correct);
@@ -57,24 +54,24 @@ class MatmulTest : public LayerTest,
         unsigned n = std::get<0>(testCase)[0];
         unsigned m = std::get<0>(testCase)[1];
         unsigned k = std::get<1>(testCase)[1];
-        LayerBuilder builder = [n, m, k](const HostVec& ins,
-                                         const HostVec& outs) {
-            Tensor::SPtr i1 = core::getDefaultGraph()->addInput("i1", {n, m});
-            Tensor::SPtr i2 = core::getDefaultGraph()->addInput("i2", {m, k});
-            Tensor::SPtr outG =
-                core::getDefaultGraph()->addInput("outG", {n, k});
+        LayerBuilder builder = [n, m, k](const HostVec& ins) {
+            Tensor::SPtr i1 = core::getDefaultGraph()->addInput(
+                "i1", createLayer<InputLayer>("i1", Shape({n, m})));
+            Tensor::SPtr i2 = core::getDefaultGraph()->addInput(
+                "i2", createLayer<InputLayer>("i2", Shape({m, k})));
+            Tensor::SPtr outG = core::getDefaultGraph()->addInput(
+                "outG", createLayer<InputLayer>("outG", Shape({n, k})));
             Tensor::SPtr out = matmul(i1, i2);
-            Oper::SPtr oper =
-                std::make_shared<MatmulGradientOper>(i1, i2, out, outG);
-            core::getDefaultGraph()->insertOperation(oper);
+            Layer::SPtr layer =
+                createLayer<MatmulGradientLayer>(i1, i2, out, outG);
             initializeGraph();
 
-            std::vector<Tensor::SPtr> grads = oper->getOutputs();
-            std::vector<ITensorPtr> igrads = {ITensorPtr(grads[0]),
-                                               ITensorPtr(grads[1])};
+            std::vector<Tensor::SPtr> grads = layer->getOutputs();
+            std::vector<ITensorPtr> igrads = {makeAbstractTensor(grads[0]),
+                                              makeAbstractTensor(grads[1])};
 
-            eval(igrads, {{"i1", ins[0]}, {"i2", ins[1]}, {"outG", ins[2]}},
-                 outs);
+            return eval(igrads,
+                        {{"i1", ins[0]}, {"i2", ins[1]}, {"outG", ins[2]}});
         };
         bool correct = runTest({mInput1, mInput2, mOutputGrad},
                                {mGradient1, mGradient2}, builder);
@@ -86,8 +83,7 @@ class MatmulTest : public LayerTest,
         ITensorPtr input1 = createInput("i1", std::get<0>(testCase));
         ITensorPtr input2 = createInput("i2", std::get<1>(testCase));
         ITensorPtr output;
-        EXPECT_THROW({ output = matmul(input1, input2); },
-                     errors::NotMatchingShapesError);
+        EXPECT_THROW({ output = matmul(input1, input2); }, std::runtime_error);
     }
 
    private:
