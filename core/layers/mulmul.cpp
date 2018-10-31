@@ -23,7 +23,7 @@ std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr m1,
     return {createTensor("", m1->getShape()), createTensor("", m2->getShape())};
 }
 
-}  // namespace anonymous
+}  // namespace
 
 MatmulLayer::MatmulLayer(ID id, Tensor::SPtr m1, Tensor::SPtr m2)
     : DifferentiableLayer(id, {m1, m2}, createOutput(m1, m2))

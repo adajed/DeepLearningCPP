@@ -28,7 +28,7 @@ std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
     return outs;
 }
 
-}  // namespace anonymous
+}  // namespace
 
 AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
     : DifferentiableLayer(id, tensors,

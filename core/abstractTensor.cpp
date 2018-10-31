@@ -27,7 +27,12 @@ Tensor::SPtr AbstractTensor::get() const { return mTensor; }
 
 AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor)
 {
-    return std::make_shared<AbstractTensor>(tensor);
+    static std::map<Tensor::SPtr, AbstractTensor::Ptr> sMap;
+
+    if (sMap.count(tensor) == 0)
+        sMap[tensor] = std::make_shared<AbstractTensor>(tensor);
+
+    return sMap[tensor];
 }
 
 AbstractTensor::Ptr castITensorPtr(ITensorPtr itensor)

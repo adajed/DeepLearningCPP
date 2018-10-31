@@ -20,11 +20,10 @@ std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1, Tensor::SPtr t2)
 std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr t1,
                                                 Tensor::SPtr t2)
 {
-    return {createTensor("", t1->getShape()),
-            createTensor("", t2->getShape())};
+    return {createTensor("", t1->getShape()), createTensor("", t2->getShape())};
 }
 
-}  // namespace anonymous
+}  // namespace
 
 ElementwiseLayer::ElementwiseLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
                                    Elementwise op)

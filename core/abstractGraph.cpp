@@ -37,7 +37,12 @@ Graph::SPtr AbstractGraph::get() const { return mGraph; }
 
 AbstractGraph::Ptr makeAbstractGraph(Graph::SPtr graph)
 {
-    return std::make_unique<AbstractGraph>(graph);
+    static std::map<Graph::SPtr, AbstractGraph::Ptr> sMap;
+
+    if (sMap.count(graph) == 0)
+        sMap[graph] = std::make_shared<AbstractGraph>(graph);
+
+    return sMap[graph];
 }
 
 AbstractGraph::Ptr castIGraphPtr(IGraphPtr igraph)

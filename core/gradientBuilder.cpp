@@ -18,7 +18,7 @@ GradientBuilder::GradientBuilder(Tensor::SPtr tensor)
       mCalculatedTensors()
 {
     if (tensor->getShape().getCount() != 1)
-        throw std::runtime_error("Not scalat gradient calculation");
+        throw std::runtime_error("Not scalar gradient calculation");
 }
 
 void GradientBuilder::findTensorOutputs(Tensor::SPtr tensor,
@@ -27,10 +27,10 @@ void GradientBuilder::findTensorOutputs(Tensor::SPtr tensor,
     if (visited.count(tensor) > 0) return;
     visited.insert(tensor);
 
-    Layer::SPtr oper = tensor->getLayer();
-    if (oper->hasGradient())
+    Layer::SPtr layer = tensor->getLayer();
+    if (layer->hasGradient())
     {
-        std::vector<Tensor::SPtr> inputs = oper->getInputs();
+        std::vector<Tensor::SPtr> inputs = layer->getInputs();
         for (Tensor::SPtr in : inputs)
         {
             if (mGradientsToCalc.count(in) == 0)
@@ -56,7 +56,7 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
     TensorMap gradients;
     for (auto pair : getDefaultGraph()->getWeights())
     {
-        Tensor::SPtr weights = std::static_pointer_cast<Tensor>(pair.second);
+        Tensor::SPtr weights = pair.second;
         if (mCalculatedTensors.count(weights) == 0)
             mCalculatedTensors.insert(
                 {weights, constant(0., weights->getShape())});
@@ -81,12 +81,12 @@ void GradientBuilder::calculateGradientsForTensor(Tensor::SPtr tensor)
     if (!mGradientsToCalc[tensor].empty()) return;
     Tensor::SPtr tensorGrad = mCalculatedTensors[tensor];
 
-    Layer::SPtr oper = tensor->getLayer();
-    if (oper->hasGradient())
+    Layer::SPtr layer = tensor->getLayer();
+    if (layer->hasGradient())
     {
-        std::vector<Tensor::SPtr> inputs = oper->getInputs();
+        std::vector<Tensor::SPtr> inputs = layer->getInputs();
         std::map<Tensor::SPtr, Tensor::SPtr> inputGrads =
-            oper->gradients(tensor, tensorGrad);
+            layer->gradients(tensor, tensorGrad);
 
         for (Tensor::SPtr in : inputs)
         {
