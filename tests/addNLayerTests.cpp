@@ -5,7 +5,7 @@
 
 namespace
 {
-using namespace dll::core::layers;
+using namespace graphdl::core::layers;
 using TestCase = std::tuple<int, Vec>;
 using ErrorTestCase = std::vector<Vec>;
 
@@ -61,7 +61,7 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
 
         LayerBuilder builder = [&testCase](const HostVec& ins,
                                            const HostVec& outs) {
-            std::vector<ITensorSPtr> inputs;
+            std::vector<ITensorPtr> inputs;
             std::map<std::string, HostTensor> inMap;
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {
@@ -69,7 +69,7 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
                 inputs.push_back(createInput(name, std::get<1>(testCase)));
                 inMap.insert({name, ins[i]});
             }
-            ITensorSPtr output = addN(inputs);
+            ITensorPtr output = addN(inputs);
             initializeGraph();
             output->eval(inMap, outs[0]);
         };
@@ -117,9 +117,9 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
                 std::make_shared<AddNGradientOper>(inputs, output, outputGrad);
             core::getDefaultGraph()->insertOperation(oper);
             std::vector<Tensor::SPtr> inputGrads = oper->getOutputs();
-            std::vector<ITensorSPtr> calcTensors;
+            std::vector<ITensorPtr> calcTensors;
             for (Tensor::SPtr t : inputGrads)
-                calcTensors.push_back(ITensorSPtr(t));
+                calcTensors.push_back(ITensorPtr(t));
             initializeGraph();
 
             eval(calcTensors, inMap, outs);
@@ -135,13 +135,13 @@ class AddNErrorTest : public LayerTest,
    public:
     void test(const ErrorTestCase& testCase)
     {
-        std::vector<ITensorSPtr> inputs;
+        std::vector<ITensorPtr> inputs;
         for (unsigned i = 0; i < testCase.size(); ++i)
         {
             std::string name = "i" + std::to_string(i);
             inputs.push_back(createInput(name, testCase[i]));
         }
-        ITensorSPtr output;
+        ITensorPtr output;
         EXPECT_THROW({ output = addN(inputs); }, std::invalid_argument);
     }
 };

@@ -6,9 +6,8 @@
 
 namespace
 {
-using namespace dll::core::layers;
+using namespace graphdl::core::layers;
 
-using Elementwise = dll::core::layers::Elementwise;
 using TestCase = std::tuple<Vec, Elementwise>;
 using ErrorTestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise>;
 
@@ -162,11 +161,11 @@ class ElementwiseTest : public LayerTest,
     LayerBuilder getBuilder(const TestCase& testCase)
     {
         return [testCase](const HostVec& ins, const HostVec& outs) {
-            dll::ITensorSPtr input1 =
-                dll::createInput("input1", std::get<0>(testCase));
-            dll::ITensorSPtr input2 =
-                dll::createInput("input2", shape(testCase));
-            dll::ITensorSPtr output;
+            ITensorPtr input1 =
+                createInput("input1", std::get<0>(testCase));
+            ITensorPtr input2 =
+                createInput("input2", shape(testCase));
+            ITensorPtr output;
             switch (op(testCase))
             {
                 case Elementwise::kADD:
@@ -182,7 +181,7 @@ class ElementwiseTest : public LayerTest,
                     output = input1 / input2;
                     break;
             }
-            dll::initializeGraph();
+            initializeGraph();
             output->eval({{"input1", ins[0]}, {"input2", ins[1]}}, outs[0]);
         };
     }
@@ -200,11 +199,11 @@ class ElementwiseTest : public LayerTest,
             Oper::SPtr oper = std::make_shared<ElementwiseGradientOper>(
                 in1, in2, output, outG, op(testCase));
             core::getDefaultGraph()->insertOperation(oper);
-            dll::initializeGraph();
+            initializeGraph();
             std::vector<Tensor::SPtr> grads = oper->getOutputs();
 
-            std::vector<ITensorSPtr> igrads = {ITensorSPtr(grads[0]),
-                                               ITensorSPtr(grads[1])};
+            std::vector<ITensorPtr> igrads = {ITensorPtr(grads[0]),
+                                               ITensorPtr(grads[1])};
             eval(igrads, {{"in1", ins[0]}, {"in2", ins[1]}, {"outG", ins[2]}},
                  outs);
         };
@@ -222,11 +221,11 @@ class ElementwiseErrorTest : public LayerTest,
     void test(const ErrorTestCase& testCase)
     {
         std::tuple<Vec, Vec> shapes = std::get<0>(testCase);
-        dll::ITensorSPtr input1 =
-            dll::createInput("input1", std::get<0>(shapes));
-        dll::ITensorSPtr input2 =
-            dll::createInput("input2", std::get<1>(shapes));
-        dll::ITensorSPtr output;
+        ITensorPtr input1 =
+            createInput("input1", std::get<0>(shapes));
+        ITensorPtr input2 =
+            createInput("input2", std::get<1>(shapes));
+        ITensorPtr output;
         EXPECT_THROW(
             {
                 switch (std::get<1>(testCase))
@@ -245,7 +244,7 @@ class ElementwiseErrorTest : public LayerTest,
                         break;
                 }
             },
-            dll::errors::NotMatchingShapesError);
+            errors::NotMatchingShapesError);
     }
 };
 

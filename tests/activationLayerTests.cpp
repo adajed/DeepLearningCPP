@@ -4,7 +4,7 @@
 
 namespace
 {
-using namespace dll::core::layers;
+using namespace graphdl::core::layers;
 using TestCase = std::tuple<Vec, Activation>;
 
 std::vector<Vec> SHAPES = {
@@ -162,8 +162,8 @@ class ActivationTest : public LayerTest,
     LayerBuilder getBuilder(const TestCase& testCase)
     {
         return [&testCase](const HostVec& ins, const HostVec& outs) {
-            ITensorSPtr in = createInput("in", std::get<0>(testCase));
-            ITensorSPtr out;
+            ITensorPtr in = createInput("in", std::get<0>(testCase));
+            ITensorPtr out;
             switch (std::get<1>(testCase))
             {
                 case Activation::kRELU:
@@ -205,7 +205,7 @@ class ActivationTest : public LayerTest,
             Oper::SPtr oper = std::make_shared<ActivationGradientOper>(
                 in, out, outG, std::get<1>(testCase));
             core::getDefaultGraph()->insertOperation(oper);
-            ITensorSPtr grad = ITensorSPtr(oper->getOutputs()[0]);
+            ITensorPtr grad = ITensorPtr(oper->getOutputs()[0]);
             initializeGraph();
             grad->eval({{"in", ins[0]}, {"outG", ins[1]}}, outs[0]);
         };

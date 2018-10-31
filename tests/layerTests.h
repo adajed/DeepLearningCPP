@@ -4,12 +4,12 @@
 #include <gtest/gtest.h>
 #include <functional>
 
-#include "dll.h"
+#include "graphdl.h"
 #include "graph.h"
 #include "refTensor.h"
 
-using namespace dll;
-using namespace dll::core;
+using namespace graphdl;
+using namespace graphdl::core;
 
 using testing::Combine;
 using testing::Range;
@@ -23,14 +23,15 @@ class LayerTest : public testing::Test
    protected:
     virtual void TearDown() override
     {
-        dll::core::GraphRegister::getGlobalGraphRegister().clear();
+        getGraphRegister().clear();
         testing::Test::TearDown();
     }
 
     using LayerBuilder = std::function<void(const HostVec&, const HostVec&)>;
 
     bool runTest(const std::vector<RefTensor>& refInputs,
-                 const std::vector<RefTensor>& refOutputs, LayerBuilder builder,
+                 const std::vector<RefTensor>& refOutputs,
+                 LayerBuilder builder,
                  float eps = 10e-6);
 };
 

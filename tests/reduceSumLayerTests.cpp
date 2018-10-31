@@ -4,7 +4,7 @@
 
 namespace
 {
-using namespace dll::core::layers;
+using namespace graphdl::core::layers;
 using TestCase = Vec;
 
 std::vector<TestCase> SHAPES = {
@@ -44,8 +44,8 @@ class ReduceSumTest : public LayerTest,
 
         LayerBuilder builder = [&testCase](const HostVec& ins,
                                            const HostVec& outs) {
-            ITensorSPtr in = createInput("in", testCase);
-            ITensorSPtr out = reduceSum(in);
+            ITensorPtr in = createInput("in", testCase);
+            ITensorPtr out = reduceSum(in);
             initializeGraph();
 
             out->eval({{"in", ins[0]}}, outs[0]);

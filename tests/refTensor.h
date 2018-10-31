@@ -3,13 +3,13 @@
 
 #include <ostream>
 
-#include "oper.h"
+#include "graphdl.h"
 #include "tensorShape.h"
 
 #include "randGen.h"
 
-using namespace dll;
-using namespace dll::core;
+using namespace graphdl;
+using namespace graphdl::core;
 
 class RefTensor
 {

@@ -5,7 +5,7 @@
 
 namespace
 {
-using namespace dll::core::layers;
+using namespace graphdl::core::layers;
 using TestCase = std::tuple<Vec, Vec>;
 
 std::vector<TestCase> SHAPES = {
@@ -38,12 +38,12 @@ class MatmulTest : public LayerTest,
 
         LayerBuilder builder = [&testCase](const HostVec& ins,
                                            const HostVec& outs) {
-            dll::ITensorSPtr input1 =
-                dll::createInput("i1", std::get<0>(testCase));
-            dll::ITensorSPtr input2 =
-                dll::createInput("i2", std::get<1>(testCase));
-            dll::ITensorSPtr output = dll::matmul(input1, input2);
-            dll::initializeGraph();
+            ITensorPtr input1 =
+                createInput("i1", std::get<0>(testCase));
+            ITensorPtr input2 =
+                createInput("i2", std::get<1>(testCase));
+            ITensorPtr output = matmul(input1, input2);
+            initializeGraph();
             output->eval({{"i1", ins[0]}, {"i2", ins[1]}}, outs[0]);
         };
         bool correct = runTest({mInput1, mInput2}, {mOutput}, builder);
@@ -70,8 +70,8 @@ class MatmulTest : public LayerTest,
             initializeGraph();
 
             std::vector<Tensor::SPtr> grads = oper->getOutputs();
-            std::vector<ITensorSPtr> igrads = {ITensorSPtr(grads[0]),
-                                               ITensorSPtr(grads[1])};
+            std::vector<ITensorPtr> igrads = {ITensorPtr(grads[0]),
+                                               ITensorPtr(grads[1])};
 
             eval(igrads, {{"i1", ins[0]}, {"i2", ins[1]}, {"outG", ins[2]}},
                  outs);
@@ -83,11 +83,11 @@ class MatmulTest : public LayerTest,
 
     void testWrongShapes(const TestCase& testCase)
     {
-        dll::ITensorSPtr input1 = dll::createInput("i1", std::get<0>(testCase));
-        dll::ITensorSPtr input2 = dll::createInput("i2", std::get<1>(testCase));
-        dll::ITensorSPtr output;
-        EXPECT_THROW({ output = dll::matmul(input1, input2); },
-                     dll::errors::NotMatchingShapesError);
+        ITensorPtr input1 = createInput("i1", std::get<0>(testCase));
+        ITensorPtr input2 = createInput("i2", std::get<1>(testCase));
+        ITensorPtr output;
+        EXPECT_THROW({ output = matmul(input1, input2); },
+                     errors::NotMatchingShapesError);
     }
 
    private:

@@ -1,6 +1,5 @@
 #include "assign.h"
-#include "dll_errors.h"
-#include "dll_ops.h"
+#include "graphdl_ops.h"
 #include "layerTests.h"
 
 namespace
@@ -48,15 +47,13 @@ class AssignTest : public LayerTest,
         tensor.fillRandomly(gen);
 
         LayerBuilder builder = [&testCase](HostVec ins, HostVec outs) {
-            Tensor::SPtr in =
-                core::getDefaultGraph()->addInput("in", std::get<0>(testCase));
-            Tensor::SPtr w =
-                core::getDefaultGraph()->addWeights("w", std::get<0>(testCase));
-            Tensor::SPtr assign = core::assign(w, in);
+            ITensorPtr in = createInput("in", std::get<0>(testCase));
+            ITensorPtr w = createWeights("w", std::get<0>(testCase));
+            ITensorPtr a = assign(w, in);
             initializeGraph();
 
-            HostTensor temp{nullptr, 0};
-            assign->eval({{"in", ins[0]}}, temp);
+            HostTensor temp;
+            a->eval({{"in", ins[0]}}, temp);
             w->eval({}, outs[0]);
         };
         bool correct = runTest({tensor}, {tensor}, builder);
@@ -70,9 +67,9 @@ class AssignErrorTest : public LayerTest,
    public:
     void test(const ErrorTestCase& testCase)
     {
-        ITensorSPtr in = createInput("in", std::get<0>(testCase));
-        ITensorSPtr w = createInput("w", std::get<1>(testCase));
-        ITensorSPtr a;
+        ITensorPtr in = createInput("in", std::get<0>(testCase));
+        ITensorPtr w = createInput("w", std::get<1>(testCase));
+        ITensorPtr a;
         EXPECT_THROW({ a = assign(w, in); }, errors::NotMatchingShapesError);
     }
 };
