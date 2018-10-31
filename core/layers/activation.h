@@ -1,10 +1,10 @@
-#ifndef DLL_CORE_LAYERS_ACTIVATION_OPER_H_
-#define DLL_CORE_LAYERS_ACTIVATION_OPER_H_
+#ifndef GRAPHDL_CORE_LAYERS_ACTIVATION_H_
+#define GRAPHDL_CORE_LAYERS_ACTIVATION_H_
 
 #include <functional>
-#include "gradientOper.h"
+#include "differentiableLayer.h"
 
-namespace dll
+namespace graphdl
 {
 namespace core
 {
@@ -21,36 +21,36 @@ enum class Activation
     kRECIPROCAL = 6
 };
 
-class ActivationOper : public GradientOper
+class ActivationLayer : public DifferentiableLayer
 {
    public:
-    ActivationOper(Tensor::SPtr, Activation);
+    ActivationLayer(ID, Tensor::SPtr, Activation);
 
-    GradientOper::TensorMap gradients(Tensor::SPtr, Tensor::SPtr) override;
+    TensorMap gradients(Tensor::SPtr, Tensor::SPtr) override;
 
    private:
-    void executeOper(const InputDict&) override;
+    void execute(const InputDict&) override;
 
     Activation mOp;
     std::function<float(float)> mFun;
 };
 
-class ActivationGradientOper : public Oper
+class ActivationGradientLayer : public Layer
 {
    public:
-    ActivationGradientOper(Tensor::SPtr, Tensor::SPtr, Tensor::SPtr,
-                           Activation);
+    ActivationGradientLayer(ID, Tensor::SPtr, Tensor::SPtr, Tensor::SPtr,
+                            Activation);
 
    private:
-    void executeOper(const InputDict&) override;
+    void execute(const InputDict&) override;
 
     Activation mOp;
     std::function<float(float, float)> mFun;
 };
 
-Tensor::SPtr createActivation(Tensor::SPtr, Activation);
-
 }  // namespace layers
+
+Tensor::SPtr createActivation(Tensor::SPtr, layers::Activation);
 
 Tensor::SPtr relu(Tensor::SPtr);
 Tensor::SPtr sigmoid(Tensor::SPtr);
@@ -61,6 +61,6 @@ Tensor::SPtr neg(Tensor::SPtr);
 Tensor::SPtr reciprocal(Tensor::SPtr);
 
 }  // namespace core
-}  // namespace dll
+}  // namespace graphdl
 
-#endif  // DLL_CORE_LAYERS_ACTIVATION_OPER_H_
+#endif  // GRAPHDL_CORE_LAYERS_ACTIVATION_H_
