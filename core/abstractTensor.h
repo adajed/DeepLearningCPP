@@ -3,7 +3,7 @@
 
 #include <memory>
 #include "graphdl.h"
-#include "oper.h"
+#include "layer.h"
 
 namespace graphdl
 {
@@ -15,7 +15,7 @@ namespace core
 class AbstractTensor : public ITensor
 {
    public:
-    using Ptr = std::unique_ptr<AbstractTensor>;
+    using Ptr = std::shared_ptr<AbstractTensor>;
 
     AbstractTensor(Tensor::SPtr tensor);
 
@@ -27,11 +27,15 @@ class AbstractTensor : public ITensor
 
     void eval(const InputDict& inputs, HostTensor hostTensor) override;
 
+    Tensor::SPtr get() const;
+
    private:
     Tensor::SPtr mTensor;
 };
 
-AbstractTensor::Ptr makeAbstract(Tensor::SPtr tensor);
+AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor);
+
+AbstractTensor::Ptr castITensorPtr(ITensorPtr tensor);
 
 }  // namespace core
 }  // namespace graphdl

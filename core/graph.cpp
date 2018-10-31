@@ -9,7 +9,13 @@ namespace core
 const std::string GraphRegister::DEFAULT_GRAPH_NAME = "default_graph";
 
 Graph::Graph(const std::string& name)
-    : mName(name), mInputLayers(), mWeightLayers(), mLayers(), mTensors()
+    : mName(name),
+      mInputLayers(),
+      mWeightLayers(),
+      mLayers(),
+      mTensors(),
+      mTensorCounter(0),
+      mLayerCounter(0)
 {
 }
 
@@ -34,7 +40,7 @@ std::map<std::string, Tensor::SPtr> Graph::getWeights() const
     for (auto weight : mWeightLayers)
     {
         Tensor::SPtr tensor = weight->getOutputs()[0];
-        weightTensors.insert({weight->getName(), weight});
+        weightTensors.insert({tensor->getName(), tensor});
     }
     return weightTensors;
 }
@@ -69,40 +75,33 @@ void Graph::freeMemory()
     for (auto pair : mTensors) pair.second->freeMemory();
 }
 
-Tensor::SPtr Graph::addInput(const std::string& name, const Shape& shape)
+Tensor::SPtr Graph::addInput(const std::string& name, Layer::SPtr layer)
 {
-    if (mInputLayers.count(name) > 0) return nullptr;
-
-    std::shared_ptr<InputLayer> layer =
-        std::make_shared<InputLayer>(name, shape);
-    mInputLayers.insert({name, layer});
-    insertLayer(Layer::SPtr(layer));
-
+    mInputLayers.push_back(layer);
     return layer->getOutputs()[0];
 }
 
-Tensor::SPtr Graph::addWeights(const std::string& name, const Shape& shape)
+Tensor::SPtr Graph::addWeights(const std::string& name, Layer::SPtr layer)
 {
-    if (mWeightLayers.count(name) > 0) return nullptr;
-
-    auto weightsLayer = std::make_shared<WeightsLayer>(name, shape);
-    mWeightLayers.insert({name, weightsLayer});
-    insertLayer(Layer::SPtr(weightsLayer));
-
-    return weightsLayer->getOutputs()[0];
+    mWeightLayers.push_back(layer);
+    return layer->getOutputs()[0];
 }
 
 void Graph::insertLayer(Layer::SPtr layer)
 {
     Layer::ID opID = layer->getID();
     mLayers.insert({opID, layer});
-    for (Tensor::SPtr tensor : layer->getOutputs())
-    {
-        Tensor::ID tensorID = tensor->getID();
-        tensor->setLayer(layer);
-        mTensors.insert({tensorID, tensor});
-    }
 }
+
+void Graph::insertTensor(Tensor::SPtr tensor)
+{
+    Tensor::ID tensorID = tensor->getID();
+    mTensors.insert({tensorID, tensor});
+}
+
+Tensor::ID Graph::nextTensorID() { return mTensorCounter++; }
+
+Layer::ID Graph::nextLayerID() { return mLayerCounter++; }
 
 GraphRegister& GraphRegister::getGlobalGraphRegister()
 {

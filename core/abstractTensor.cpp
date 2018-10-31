@@ -23,9 +23,16 @@ void AbstractTensor::eval(const InputDict& inputs, HostTensor hostTensor)
     mTensor->getMemory().fill(hostTensor.data());
 }
 
-AbstractTensor::Ptr makeAbstract(Tensor::SPtr tensor)
+Tensor::SPtr AbstractTensor::get() const { return mTensor; }
+
+AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor)
 {
-    return std::make_unique<AbstractTensor>(tensor);
+    return std::make_shared<AbstractTensor>(tensor);
+}
+
+AbstractTensor::Ptr castITensorPtr(ITensorPtr itensor)
+{
+    return std::static_pointer_cast<AbstractTensor>(itensor);
 }
 
 }  // namespace core

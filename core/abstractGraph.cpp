@@ -1,4 +1,5 @@
 #include "abstractGraph.h"
+#include <assert.h>
 #include "abstractTensor.h"
 #include "graphdl.h"
 
@@ -6,9 +7,7 @@ namespace graphdl
 {
 namespace core
 {
-AbstractGraph::AbstractGraph(Graph::SPtr graph) : mGraph(graph);
-{
-}
+AbstractGraph::AbstractGraph(Graph::SPtr graph) : mGraph(graph) {}
 
 std::string AbstractGraph::getName() const { return mGraph->getName(); }
 
@@ -19,10 +18,7 @@ std::map<std::string, ITensorPtr> AbstractGraph::getInputs() const
     std::map<std::string, Tensor::SPtr> inputs = mGraph->getInputs();
     std::map<std::string, ITensorPtr> iInputs;
     for (auto in : inputs)
-    {
-        ITensorPtr iTensor = std::make_unique<AbstractTensor>(in.second);
-        iInputs.insert({in.first, iTensor});
-    }
+        iInputs[in.first] = std::make_unique<AbstractTensor>(in.second);
 
     return iInputs;
 }
@@ -32,17 +28,21 @@ std::map<std::string, ITensorPtr> AbstractGraph::getWeights() const
     std::map<std::string, Tensor::SPtr> weights = mGraph->getWeights();
     std::map<std::string, ITensorPtr> iWeights;
     for (auto w : weights)
-    {
-        ITensorPtr iW = std::make_unique<AbstractTensor>(in.second);
-        iWeights.insert({in.first, iW});
-    }
+        iWeights[w.first] = std::make_unique<AbstractTensor>(w.second);
 
     return iWeights;
 }
 
-AbstractGraph::Ptr makeAbstract(Graph::Ptr graph)
+Graph::SPtr AbstractGraph::get() const { return mGraph; }
+
+AbstractGraph::Ptr makeAbstractGraph(Graph::SPtr graph)
 {
     return std::make_unique<AbstractGraph>(graph);
+}
+
+AbstractGraph::Ptr castIGraphPtr(IGraphPtr igraph)
+{
+    return std::static_pointer_cast<AbstractGraph>(igraph);
 }
 
 }  // namespace core
@@ -50,37 +50,39 @@ AbstractGraph::Ptr makeAbstract(Graph::Ptr graph)
 IGraphPtr createGraph(const std::string& name)
 {
     if (core::getGraphRegister().hasKey(name))
-        throw std::exception("Graph with given name already exists");
+        throw std::runtime_error("Graph with given name already exists");
 
     core::Graph::SPtr graph = std::make_shared<core::Graph>(name);
     core::getGraphRegister().insert(graph);
-    return core::makeAbstract(graph);
+    return core::makeAbstractGraph(graph);
 }
 
 void setDefaultGraph(IGraphPtr graph)
 {
-    AbstractGraph::Ptr aGraph = castIGraphPtr(graph);
-    core::getGraphRegister().setDefaultGraph(aGraph->getGraph());
+    core::AbstractGraph::Ptr aGraph = core::castIGraphPtr(graph);
+    core::getGraphRegister().setDefaultGraph(aGraph->get());
 }
 
 IGraphPtr getDefaultGraph()
 {
     core::Graph::SPtr graph = core::getDefaultGraph();
-    return core::makeAbstract(graph);
+    return core::makeAbstractGraph(graph);
 }
 
 ITensorPtr createInput(const std::string& name, const Shape& shape)
 {
-    core::Graph::SPtr graph = core::getDefaultGraph();
-    core::Tensor::SPtr tensor = graph->addInput(name, shape);
-    return core::makeAbstract(tensor);
+    core::Layer::SPtr input = core::createLayer<core::InputLayer>(name, shape);
+    core::Tensor::SPtr tensor = core::getDefaultGraph()->addInput(name, input);
+    return core::makeAbstractTensor(tensor);
 }
 
 ITensorPtr createWeights(const std::string& name, const Shape& shape)
 {
-    core::Graph::SPtr graph = core::getDefaultGraph();
-    core::Tensor::SPtr tensor = graph->addWeights(name, shape);
-    return core::makeAbstract(tensor);
+    core::Layer::SPtr weights =
+        core::createLayer<core::WeightsLayer>(name, shape);
+    core::Tensor::SPtr tensor =
+        core::getDefaultGraph()->addWeights(name, weights);
+    return core::makeAbstractTensor(tensor);
 }
 
 void initializeGraph()
@@ -89,7 +91,7 @@ void initializeGraph()
 
     // allocate memory for all tensors
     if (!graph->allocateMemory())
-        throw std::exception("Error during memory allocation");
+        throw std::runtime_error("Error during memory allocation");
 
     // initialize all the layers
     graph->initializeLayers();

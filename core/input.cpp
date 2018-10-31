@@ -4,10 +4,8 @@ namespace graphdl
 {
 namespace core
 {
-InputLayer::InputLayer(Graph::SPtr graph,
-                       const std::string& name,
-                       const Shape& shape)
-    : Oper(graph, {} {createTensor(name, shape)})
+InputLayer::InputLayer(ID id, const std::string& name, const Shape& shape)
+    : Layer(id, {}, {createTensor(name, shape)})
 {
 }
 
@@ -17,8 +15,8 @@ void InputLayer::execute(const InputDict& inputs)
     HostTensor input = inputs.at(name);
     Memory output = mOutputs[0]->getMemory();
 
-    for (std::size_t i = 0; i < input.count; ++i)
-        output.getValues()[i] = input.values[i];
+    for (std::size_t i = 0; i < input.size(); ++i)
+        output.getValues()[i] = input[i];
 }
 
 }  // namespace core

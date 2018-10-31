@@ -14,7 +14,7 @@ namespace core
 class AbstractGraph : public IGraph
 {
    public:
-    using Ptr = std::unique_ptr<AbstractGraph>;
+    using Ptr = std::shared_ptr<AbstractGraph>;
 
     AbstractGraph(Graph::SPtr graph);
 
@@ -26,11 +26,15 @@ class AbstractGraph : public IGraph
 
     std::map<std::string, ITensorPtr> getWeights() const override;
 
+    Graph::SPtr get() const;
+
    private:
     Graph::SPtr mGraph;
 };
 
-AbstractGraph::Ptr makeAbstract(Graph::SPtr graph);
+AbstractGraph::Ptr makeAbstractGraph(Graph::SPtr graph);
+
+AbstractGraph::Ptr castIGraphPtr(IGraphPtr graph);
 
 }  // namespace core
 }  // namespace graphdl

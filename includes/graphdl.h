@@ -20,10 +20,10 @@ using InputDict = std::map<std::string, HostTensor>;
 using Shape = std::vector<unsigned int>;
 
 class ITensor;
-using ITensorPtr = std::unique_ptr<ITensor>;
+using ITensorPtr = std::shared_ptr<ITensor>;
 
 class IGraph;
-using IGraphPtr = std::unique_ptr<IGraph>;
+using IGraphPtr = std::shared_ptr<IGraph>;
 
 //! \class ITensor
 //! \brief Interface representing tensor.

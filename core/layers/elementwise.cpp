@@ -1,7 +1,7 @@
-#include "elementwiseOper.h"
 #include <assert.h>
 #include "dll_errors.h"
 #include "dll_ops.h"
+#include "elementwiseOper.h"
 #include "graph.h"
 
 namespace dll

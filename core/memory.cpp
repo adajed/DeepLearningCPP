@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <cstring>
 #include <iostream>
 
 #include "memory.h"
@@ -8,9 +9,7 @@ namespace graphdl
 namespace core
 {
 Memory::Memory(MemoryType type, size_t count)
-    : mType(type)
-    , mValues(nullptr)
-    , mCount(count)
+    : mType(type), mValues(nullptr), mCount(count)
 {
 }
 
@@ -27,7 +26,7 @@ size_t Memory::getCount() const { return mCount; }
 void Memory::fill(float* memory) const
 {
     assert(isAllocated());
-    std::memcpy(memory, mValues, count() * sizeof(float));
+    std::memcpy(memory, mValues, sizeof(float) * getCount());
 }
 
 bool Memory::isAllocated() const { return mValues != nullptr; }
@@ -43,7 +42,7 @@ bool Memory::allocate()
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
         // TODO: allocate memory on device
-        throw std::exception("GPU support not implemented, please use CPU");
+        throw std::runtime_error("GPU support not implemented, please use CPU");
     }
 
     // you shouldn't be here
@@ -61,7 +60,7 @@ void Memory::free()
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
         // TODO: free memory on device
-        throw std::exception("GPU support not implemented, please use CPU");
+        throw std::runtime_error("GPU support not implemented, please use CPU");
     }
 }
 

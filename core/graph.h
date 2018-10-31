@@ -60,7 +60,8 @@ class Graph
     //! \param shape Shape of the new input.
     //!
     //! \return Pointer to tensor representing new input.
-    Tensor::SPtr addInput(const std::string& name, const Shape& shape);
+    Tensor::SPtr addInput(const std::string& name,
+                          std::shared_ptr<Layer> layer);
 
     //! \fn addWeights
     //! \brief Adds new weights to the graph.
@@ -68,20 +69,29 @@ class Graph
     //! \param shape Shape of new weights.
     //!
     //! \return Pointer to tensor representing new weights.
-    Tensor::SPtr addWeights(const std::string& name, const Shape& shape);
+    Tensor::SPtr addWeights(const std::string& name,
+                            std::shared_ptr<Layer> layer);
 
     //! \fn insertLayer
-    //! \brief Adds layer and all its tensors to the graph.
-    //! \param layer Shared pointer to layer that will be added to the graph.
     //!
     void insertLayer(Layer::SPtr layer);
 
+    //! \fn insertTensor
+    //!
+    void insertTensor(Tensor::SPtr tensor);
+
+    Tensor::ID nextTensorID();
+
+    Layer::ID nextLayerID();
+
    private:
     std::string mName;  //!< Name of the graph.
-    std::vector<std::shared_ptr<InputLayer>> mInputLayers;
-    std::vector<std::shared_ptr<WeightLayer>> mWeightLayers;
+    std::vector<std::shared_ptr<Layer>> mInputLayers;
+    std::vector<std::shared_ptr<Layer>> mWeightLayers;
     std::map<Layer::ID, Layer::SPtr> mLayers;
     std::map<Tensor::ID, Tensor::SPtr> mTensors;
+    Tensor::ID mTensorCounter;
+    Layer::ID mLayerCounter;
 };
 
 //! \class GraphRegister
@@ -154,10 +164,15 @@ template <typename LayerType, typename... Args>
 Layer::SPtr createLayer(Args... args)
 {
     core::Graph::SPtr graph = core::getDefaultGraph();
-    Layer::SPtr layer = std::make_shared<LayerType>(graph, args...);
+    Layer::SPtr layer =
+        std::make_shared<LayerType>(graph->nextLayerID(), args...);
+    layer->setGraph(graph);
+    graph->insertLayer(layer);
     for (Tensor::SPtr tensor : layer->getOutputs())
+    {
         tensor->setLayer(layer);
-    core::getDefaultGraph()->insertLayer(layer);
+        graph->insertTensor(tensor);
+    }
     return layer;
 }
 

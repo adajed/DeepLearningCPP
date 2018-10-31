@@ -1,6 +1,7 @@
 #ifndef GRAPHDL_CORE_LAYER_H_
 #define GRAPHDL_CORE_LAYER_H_
 
+#include <exception>
 #include "graphdl.h"
 #include "memory.h"
 #include "tensorShape.h"
@@ -23,7 +24,7 @@ class Tensor
     using SPtr = std::shared_ptr<Tensor>;
     using WeakPtr = std::weak_ptr<Tensor>;
 
-    Tensor(std::shared_ptr<Graph> graph, const std::string& name, const TensorShape& shape);
+    Tensor(ID id, const std::string& name, const TensorShape& shape);
 
     //! \fn getID
     //!
@@ -88,7 +89,6 @@ class Tensor
 
     bool mIsEvaluated;
     std::weak_ptr<Layer> mLayer;
-    std::weak_ptr<Graph> mGraph;
     Memory mMemory;
 };
 
@@ -104,9 +104,9 @@ class Layer
     using UPtr = std::unique_ptr<Layer>;
     using SPtr = std::shared_ptr<Layer>;
     using WeakPtr = std::weak_ptr<Layer>;
+    using TensorMap = std::map<Tensor::SPtr, Tensor::SPtr>;
 
-    Layer(std::shared_ptr<Graph> graph,
-          const std::vector<Tensor::SPtr>& inputs,
+    Layer(ID id, const std::vector<Tensor::SPtr>& inputs,
           const std::vector<Tensor::SPtr>& outputs);
 
     //! \fn getID
@@ -116,6 +116,10 @@ class Layer
     //! \fn getGraph
     //!
     std::shared_ptr<Graph> getGraph() const;
+
+    //! \fn setGraph
+    //!
+    void setGraph(std::shared_ptr<Graph> graph);
 
     //! \fn getInputs
     //!
@@ -137,7 +141,10 @@ class Layer
     //! \fn gradients
     //! \brief Returns gradients of this tensor with respect to weights.
     //!
-    virtual std::map<Tensor::SPtr, Tensor::SPtr> gradients() {}
+    virtual TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad)
+    {
+        throw std::runtime_error("Gradients not implemented");
+    }
 
     //! \fn initialize
     //! \brief Initializes layer before computation process.
