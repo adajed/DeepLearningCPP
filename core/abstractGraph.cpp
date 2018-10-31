@@ -76,6 +76,11 @@ IGraphPtr getDefaultGraph()
 
 ITensorPtr createInput(const std::string& name, const Shape& shape)
 {
+    auto inputs = core::getDefaultGraph()->getInputs();
+    for (auto in : inputs)
+        if (in.first == name)
+            throw std::runtime_error("Input \"" + name + "\" already exists");
+
     core::Layer::SPtr input = core::createLayer<core::InputLayer>(name, shape);
     core::Tensor::SPtr tensor = core::getDefaultGraph()->addInput(name, input);
     return core::makeAbstractTensor(tensor);

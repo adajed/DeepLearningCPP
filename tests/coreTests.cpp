@@ -79,6 +79,9 @@ TEST_F(CoreTest, addInputWithTheSameName)
 {
     graphdl::ITensorPtr input1 = graphdl::createInput("input1", {3, 224, 224});
     EXPECT_NE(input1, nullptr);
+    EXPECT_THROW(
+        { graphdl::ITensorPtr t = graphdl::createInput("input1", {}); },
+        std::runtime_error);
 }
 
 TEST_F(CoreTest, gradients)
