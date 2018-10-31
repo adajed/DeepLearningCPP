@@ -81,7 +81,7 @@ TEST_F(CoreTest, addInputWithTheSameName)
     EXPECT_NE(input1, nullptr);
 }
 
-TEST_F(CoreTest, DISABLED_gradients)
+TEST_F(CoreTest, gradients)
 {
     graphdl::ITensorPtr i = graphdl::createInput("input", {1});
     graphdl::ITensorPtr w = graphdl::createWeights("weights", {1});
@@ -89,13 +89,10 @@ TEST_F(CoreTest, DISABLED_gradients)
     graphdl::ITensorPtr grad = graphdl::gradients(output)[w];
     graphdl::initializeGraph();
 
-    graphdl::HostTensor iH(1);
-    graphdl::HostTensor wH(1);
-    graphdl::HostTensor gH(1);
-    iH[0] = 5.;
+    graphdl::HostTensor iH({5.});
 
-    graphdl::eval({w, grad}, {{"input", iH}}, {wH, gH});
-    EXPECT_FLOAT_EQ(gH[0], 1. / 5.);
+    auto outputs = graphdl::eval({w, grad}, {{"input", iH}});
+    EXPECT_FLOAT_EQ(outputs[1][0], 1. / 5.);
 }
 
 TEST_F(CoreTest, nonScalarGradientException)

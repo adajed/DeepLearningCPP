@@ -29,8 +29,8 @@ class RefTensor
     float& operator[](const std::vector<unsigned int>& point);
     const float& operator[](const std::vector<unsigned int>& point) const;
 
-    //! \fn count
-    std::size_t count() const;
+    //! \fn getCount
+    std::size_t getCount() const;
 
     //! \fn shape
     TensorShape shape() const;

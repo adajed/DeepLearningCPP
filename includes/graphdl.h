@@ -50,7 +50,7 @@ class ITensor
     //! \brief Evaulates tensor.
     //! \param inputs Map from names of input tensors to values.
     //!
-    virtual void eval(const InputDict& inputs, HostTensor hostTensor) = 0;
+    virtual HostTensor eval(const InputDict& inputs) = 0;
 
     virtual ~ITensor() {}
 };
@@ -129,8 +129,8 @@ void initializeGraph();
 //! \param tensors Vector of tensors to evaluate.
 //! \param inputs Map of input values.
 //!
-void eval(const std::vector<ITensorPtr>& tensors, const InputDict& inputs,
-          const std::vector<HostTensor>& hostTensors);
+std::vector<HostTensor> eval(const std::vector<ITensorPtr>& tensors,
+                             const InputDict& inputs);
 
 //! \fn gradients
 //! \brief Creates part of graph responsible for calculating gradients.

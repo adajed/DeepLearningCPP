@@ -16,11 +16,13 @@ void AbstractTensor::setName(const std::string& name)
 
 Shape AbstractTensor::getShape() const { return mTensor->getShape(); }
 
-void AbstractTensor::eval(const InputDict& inputs, HostTensor hostTensor)
+HostTensor AbstractTensor::eval(const InputDict& inputs)
 {
-    assert(mTensor->getMemory().getCount() >= hostTensor.size());
     mTensor->eval(inputs);
-    mTensor->getMemory().fill(hostTensor.data());
+
+    HostTensor output(mTensor->getShape().getCount());
+    mTensor->getMemory().fill(output.data());
+    return output;
 }
 
 Tensor::SPtr AbstractTensor::get() const { return mTensor; }

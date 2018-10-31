@@ -46,15 +46,14 @@ class AssignTest : public LayerTest,
         RefTensor tensor(std::get<0>(testCase));
         tensor.fillRandomly(gen);
 
-        LayerBuilder builder = [&testCase](HostVec ins, HostVec outs) {
+        LayerBuilder builder = [&testCase](const HostVec& ins) {
             ITensorPtr in = createInput("in", std::get<0>(testCase));
             ITensorPtr w = createWeights("w", std::get<0>(testCase));
             ITensorPtr a = assign(w, in);
             initializeGraph();
 
-            HostTensor temp;
-            a->eval({{"in", ins[0]}}, temp);
-            w->eval({}, outs[0]);
+            (void)a->eval({{"in", ins[0]}});
+            return HostVec({w->eval({})});
         };
         bool correct = runTest({tensor}, {tensor}, builder);
         EXPECT_TRUE(correct);
@@ -70,7 +69,7 @@ class AssignErrorTest : public LayerTest,
         ITensorPtr in = createInput("in", std::get<0>(testCase));
         ITensorPtr w = createInput("w", std::get<1>(testCase));
         ITensorPtr a;
-        EXPECT_THROW({ a = assign(w, in); }, errors::NotMatchingShapesError);
+        EXPECT_THROW({ a = assign(w, in); }, std::runtime_error);
     }
 };
 

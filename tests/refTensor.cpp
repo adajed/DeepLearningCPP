@@ -5,7 +5,7 @@
 RefTensor::RefTensor() : mValues(0), mCount(0), mShape({}) {}
 
 RefTensor::RefTensor(const TensorShape& shape)
-    : mValues(shape.count()), mCount(shape.count()), mShape(shape)
+    : mValues(shape.getCount()), mCount(shape.getCount()), mShape(shape)
 {
 }
 
@@ -49,7 +49,7 @@ const float& RefTensor::operator[](const std::vector<unsigned int>& point) const
     return at(pos);
 }
 
-std::size_t RefTensor::count() const { return mCount; }
+std::size_t RefTensor::getCount() const { return mCount; }
 
 TensorShape RefTensor::shape() const { return mShape; }
 
@@ -63,16 +63,15 @@ void RefTensor::fillRandomly(RandGen& gen)
 
 HostTensor RefTensor::toHostTensor()
 {
-    HostTensor t{nullptr, mCount};
-    t.values = new float[mCount];
+    HostTensor t(mCount);
 
-    for (std::size_t i = 0; i < mCount; ++i) t.values[i] = mValues[i];
+    for (std::size_t i = 0; i < mCount; ++i) t[i] = mValues[i];
     return t;
 }
 
 std::ostream& operator<<(std::ostream& stream, const RefTensor& tensor)
 {
-    for (std::size_t i = 0; i < tensor.count(); ++i)
+    for (std::size_t i = 0; i < tensor.getCount(); ++i)
         stream << tensor.at(i) << " ";
     return stream;
 }

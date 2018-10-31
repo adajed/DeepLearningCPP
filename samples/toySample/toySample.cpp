@@ -13,17 +13,12 @@ int main()
     graphdl::ITensorPtr a = graphdl::assign(w, w - step * grad);
     graphdl::initializeGraph();
 
-    graphdl::HostTensor lossT(1);
-    graphdl::HostTensor assignT(0);
-    lossT[0] = 1;
-
-    std::vector<graphdl::ITensorPtr> calc({loss, a});
     for (int i = 0; i < 10; ++i)
     {
-        graphdl::eval(calc, {}, {lossT, assignT});
-        std::cout << "step " << i << " : loss " << lossT[0];
-        w->eval({}, lossT);
-        std::cout << ", weight " << lossT[0] << std::endl;
+        auto outputs = graphdl::eval({loss, a}, {});
+        std::cout << "step " << i << " : loss " << outputs[0][0];
+        graphdl::HostTensor wHost = w->eval({});
+        std::cout << ", weight " << wHost[0] << std::endl;
     }
 
     return 0;

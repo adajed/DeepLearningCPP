@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <cstring>
-#include <iostream>
+#include <stdexcept>
 
 #include "memory.h"
 

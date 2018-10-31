@@ -102,16 +102,16 @@ void initializeGraph()
     graph->initializeLayers();
 }
 
-void eval(const std::vector<ITensorPtr>& tensors, const InputDict& inputs,
-          const std::vector<HostTensor>& hostTensors)
+std::vector<HostTensor> eval(const std::vector<ITensorPtr>& tensors,
+                             const InputDict& inputs)
 {
-    assert(tensors.size() == hostTensors.size());
-
     core::Graph::SPtr graph = core::getDefaultGraph();
     graph->prepareForNextComputation();
 
+    std::vector<HostTensor> outputs;
     for (std::size_t i = 0; i < tensors.size(); ++i)
-        tensors[i]->eval(inputs, hostTensors[i]);
+        outputs.push_back(tensors[i]->eval(inputs));
+    return outputs;
 }
 
 }  // namespace graphdl

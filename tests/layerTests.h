@@ -4,8 +4,8 @@
 #include <gtest/gtest.h>
 #include <functional>
 
-#include "graphdl.h"
 #include "graph.h"
+#include "graphdl.h"
 #include "refTensor.h"
 
 using namespace graphdl;
@@ -27,11 +27,10 @@ class LayerTest : public testing::Test
         testing::Test::TearDown();
     }
 
-    using LayerBuilder = std::function<void(const HostVec&, const HostVec&)>;
+    using LayerBuilder = std::function<HostVec(const HostVec&)>;
 
     bool runTest(const std::vector<RefTensor>& refInputs,
-                 const std::vector<RefTensor>& refOutputs,
-                 LayerBuilder builder,
+                 const std::vector<RefTensor>& refOutputs, LayerBuilder builder,
                  float eps = 10e-6);
 };
 

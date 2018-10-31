@@ -25,7 +25,7 @@ class AbstractTensor : public ITensor
 
     Shape getShape() const override;
 
-    void eval(const InputDict& inputs, HostTensor hostTensor) override;
+    HostTensor eval(const InputDict& inputs) override;
 
     Tensor::SPtr get() const;
 
