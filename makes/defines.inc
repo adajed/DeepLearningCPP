@@ -8,6 +8,7 @@ COMMON_CFLAGS=-Wall -I/$(ROOT_DIR)/includes
 COMMON_LFLAGS=
 
 CC=g++
+NVCC=nvcc
 
 # clang-format
 CLANG_FORMAT=clang-format

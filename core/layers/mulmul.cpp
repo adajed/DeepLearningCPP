@@ -40,14 +40,15 @@ void MatmulLayer::execute(const InputDict& inputs)
     m1->eval(inputs);
     m2->eval(inputs);
 
-    Memory in1 = m1->getMemory();
-    Memory in2 = m2->getMemory();
-    Memory out = mOutputs[0]->getMemory();
+    float* in1 = m1->getMemory().getValues();
+    float* in2 = m2->getMemory().getValues();
+    float* out = mOutputs[0]->getMemory().getValues();
+    std::size_t size = mOutputs[0]->getMemory().getCount();
 
     int m = m2->getShape()[0];
     int k = mOutputs[0]->getShape()[1];
 
-    for (std::size_t pos = 0; pos < out.getCount(); ++pos)
+    for (std::size_t pos = 0; pos < size; ++pos)
     {
         int x = pos / k;
         int y = pos % k;
@@ -92,32 +93,32 @@ void MatmulGradientLayer::execute(const InputDict& inputs)
     m2->eval(inputs);
     outGrad->eval(inputs);
 
-    Memory in1 = m1->getMemory();
-    Memory in2 = m2->getMemory();
-    Memory outG = outGrad->getMemory();
-    Memory grad1 = mOutputs[0]->getMemory();
-    Memory grad2 = mOutputs[1]->getMemory();
+    float* in1 = m1->getMemory().getValues();
+    float* in2 = m2->getMemory().getValues();
+    float* outG = outGrad->getMemory().getValues();
+    float* grad1 = mOutputs[0]->getMemory().getValues();
+    float* grad2 = mOutputs[1]->getMemory().getValues();
 
-    int n = m1->getShape()[0];
-    int m = m1->getShape()[1];
-    int k = m2->getShape()[1];
+    std::size_t n = m1->getShape()[0];
+    std::size_t m = m1->getShape()[1];
+    std::size_t k = m2->getShape()[1];
 
-    for (std::size_t pos = 0; pos < grad1.getCount(); ++pos)
+    for (std::size_t pos = 0; pos < n * m; ++pos)
     {
         int x = pos / m;
         int y = pos % m;
 
         grad1[pos] = 0.;
-        for (int i = 0; i < k; ++i)
+        for (std::size_t i = 0; i < k; ++i)
             grad1[pos] += in2[k * y + i] * outG[k * x + i];
     }
-    for (std::size_t pos = 0; pos < grad2.getCount(); ++pos)
+    for (std::size_t pos = 0; pos < m * k; ++pos)
     {
         int x = pos / k;
         int y = pos % k;
 
         grad2[pos] = 0.;
-        for (int i = 0; i < n; ++i)
+        for (std::size_t i = 0; i < n; ++i)
             grad2[pos] += in1[m * i + x] * outG[k * i + y];
     }
 }

@@ -7,6 +7,11 @@ namespace graphdl
 {
 namespace core
 {
+namespace cuda
+{
+extern "C" void copyInput(float* dest, float* src, size_t count);
+}
+
 class InputLayer : public Layer
 {
    public:

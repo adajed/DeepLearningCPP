@@ -39,15 +39,16 @@ AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
 void AddNLayer::execute(const InputDict& inputs)
 {
     std::vector<Tensor::SPtr> ins = getInputs();
-    std::vector<Memory> inMemory;
+    std::vector<float*> inMemory;
     for (Tensor::SPtr in : ins)
     {
         in->eval(inputs);
-        inMemory.push_back(in->getMemory());
+        inMemory.push_back(in->getMemory().getValues());
     }
-    Memory outMemory = mOutputs[0]->getMemory();
+    float* outMemory = mOutputs[0]->getMemory().getValues();
+    std::size_t size = mOutputs[0]->getMemory().getCount();
 
-    for (std::size_t pos = 0; pos < outMemory.getCount(); ++pos)
+    for (std::size_t pos = 0; pos < size; ++pos)
     {
         outMemory[pos] = 0.;
         for (unsigned i = 0; i < inMemory.size(); ++i)
@@ -81,12 +82,13 @@ void AddNGradientLayer::execute(const InputDict& inputs)
     Tensor::SPtr outputGrad = mInputs.back().lock();
     outputGrad->eval(inputs);
 
-    Memory outG = outputGrad->getMemory();
-    std::vector<Memory> inG;
+    std::size_t size = outputGrad->getMemory().getCount();
+    float* outG = outputGrad->getMemory().getValues();
+    std::vector<float*> inG;
     for (unsigned i = 0; i < mOutputs.size(); ++i)
-        inG.push_back(mOutputs[i]->getMemory());
+        inG.push_back(mOutputs[i]->getMemory().getValues());
 
-    for (std::size_t pos = 0; pos < outG.getCount(); ++pos)
+    for (std::size_t pos = 0; pos < size; ++pos)
     {
         for (unsigned i = 0; i < inG.size(); ++i) inG[i][pos] = outG[pos];
     }

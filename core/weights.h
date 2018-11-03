@@ -7,6 +7,11 @@ namespace graphdl
 {
 namespace core
 {
+namespace cuda
+{
+extern "C" void initWeights(float* memory, size_t count);
+}
+
 class WeightsLayer : public Layer
 {
    public:

@@ -20,12 +20,12 @@ void ReduceSumLayer::execute(const InputDict& inputs)
     Tensor::SPtr in = mInputs[0].lock();
     in->eval(inputs);
 
-    Memory input = in->getMemory();
-    Memory output = mOutputs[0]->getMemory();
+    float* input = in->getMemory().getValues();
+    float* output = mOutputs[0]->getMemory().getValues();
+    std::size_t size = in->getMemory().getCount();
 
     output[0] = 0.;
-    for (std::size_t pos = 0; pos < input.getCount(); ++pos)
-        output[0] += input[pos];
+    for (std::size_t pos = 0; pos < size; ++pos) output[0] += input[pos];
 }
 
 Layer::TensorMap ReduceSumLayer::gradients(Tensor::SPtr out,
@@ -50,11 +50,11 @@ void ReduceSumGradientLayer::execute(const InputDict& inputs)
     Tensor::SPtr outputGrad = mInputs[2].lock();
     outputGrad->eval(inputs);
 
-    Memory outGrad = outputGrad->getMemory();
-    Memory inGrad = mOutputs[0]->getMemory();
+    float* outGrad = outputGrad->getMemory().getValues();
+    float* inGrad = mOutputs[0]->getMemory().getValues();
+    std::size_t size = mOutputs[0]->getMemory().getCount();
 
-    for (std::size_t pos = 0; pos < inGrad.getCount(); ++pos)
-        inGrad[pos] = outGrad[0];
+    for (std::size_t pos = 0; pos < size; ++pos) inGrad[pos] = outGrad[0];
 }
 
 }  // namespace layers

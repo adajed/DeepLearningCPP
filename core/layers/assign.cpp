@@ -22,9 +22,10 @@ void AssignLayer::execute(const InputDict& inputs)
     Tensor::SPtr dest = mDest.lock();
     src->eval(inputs);
 
-    Memory in = src->getMemory();
-    Memory out = dest->getMemory();
-    for (std::size_t pos = 0; pos < in.getCount(); ++pos) out[pos] = in[pos];
+    float* in = src->getMemory().getValues();
+    float* out = dest->getMemory().getValues();
+    std::size_t size = src->getMemory().getCount();
+    for (std::size_t pos = 0; pos < size; ++pos) out[pos] = in[pos];
 }
 
 }  // namespace layers

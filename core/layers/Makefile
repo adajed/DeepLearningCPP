@@ -12,14 +12,20 @@ COMMON_CFLAGS += -std=c++17 -I$(ROOT_DIR)/core -fPIC
 CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
 
-.PHONY: release debug
+.PHONY: release debug cuda_release cuda_debug format
 
 all: release debug
 
-release: $(OBJS_R)
-debug: $(OBJS_D)
+release: cuda_release $(OBJS_R)
+debug: cuda_debug $(OBJS_D)
 
 #### COMPILING
+
+cuda_release:
+	@+make -C cuda release
+
+cuda_debug:
+	@+make -C cuda debug
 
 $(OUTDIR_R)/%.o: %.cpp $(CPP_HEADERS) | $(OUTDIR_R)
 	@echo "Compiling release: $<"
@@ -40,3 +46,4 @@ $(OUTDIR_D):
 #### clang-format
 format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)
+	@+make -C cuda format

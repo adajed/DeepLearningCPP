@@ -16,8 +16,9 @@ ConstantLayer::ConstantLayer(ID id, float value, const TensorShape& shape)
 
 void ConstantLayer::initialize()
 {
-    Memory out = mOutputs[0]->getMemory();
-    for (std::size_t i = 0; i < out.getCount(); ++i) out[i] = mValue;
+    float* out = mOutputs[0]->getMemory().getValues();
+    std::size_t size = mOutputs[0]->getMemory().getCount();
+    for (std::size_t i = 0; i < size; ++i) out[i] = mValue;
 }
 
 //! This method does nothing, because tensor is already

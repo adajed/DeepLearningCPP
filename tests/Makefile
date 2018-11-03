@@ -15,9 +15,9 @@ COMMON_CFLAGS += -std=c++17 -I$(ROOT_DIR)/core -I$(ROOT_DIR)/core/layers
 CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
 
-COMMON_LFLAGS +=-L$(OUTDIR) -L$(GTEST_LIB_PATH)
-LFLAGS_R=$(COMMON_LFLAGS) -ldll_static -pthread -lgtest
-LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug -pthread -lgtest
+COMMON_LFLAGS +=-L$(OUTDIR) -L$(GTEST_LIB_PATH) -L/usr/local/cuda-10.0/lib64
+LFLAGS_R=$(COMMON_LFLAGS) -ldll_static -lcuda -lcurand -lcudart -pthread -lgtest
+LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug -lcuda -lcurand -lcudart -pthread -lgtest
 
 .PHONY: release debug format
 

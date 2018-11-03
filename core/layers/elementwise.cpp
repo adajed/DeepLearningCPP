@@ -55,11 +55,12 @@ void ElementwiseLayer::execute(const InputDict& inputs)
     i0->eval(inputs);
     i1->eval(inputs);
 
-    Memory input0 = i0->getMemory();
-    Memory input1 = i1->getMemory();
-    Memory output = mOutputs[0]->getMemory();
+    float* input0 = i0->getMemory().getValues();
+    float* input1 = i1->getMemory().getValues();
+    float* output = mOutputs[0]->getMemory().getValues();
+    std::size_t size = mOutputs[0]->getMemory().getCount();
 
-    for (std::size_t i = 0; i < output.getCount(); ++i)
+    for (std::size_t i = 0; i < size; ++i)
         output[i] = mFun(input0[i], input1[i]);
 }
 
@@ -113,13 +114,14 @@ void ElementwiseGradientLayer::execute(const InputDict& inputs)
     input2->eval(inputs);
     outputGrad->eval(inputs);
 
-    Memory in1 = input1->getMemory();
-    Memory in2 = input2->getMemory();
-    Memory outGrad = outputGrad->getMemory();
-    Memory gradient1 = mOutputs[0]->getMemory();
-    Memory gradient2 = mOutputs[1]->getMemory();
+    float* in1 = input1->getMemory().getValues();
+    float* in2 = input2->getMemory().getValues();
+    float* outGrad = outputGrad->getMemory().getValues();
+    float* gradient1 = mOutputs[0]->getMemory().getValues();
+    float* gradient2 = mOutputs[1]->getMemory().getValues();
+    std::size_t size = input1->getMemory().getCount();
 
-    for (std::size_t i = 0; i < in1.getCount(); ++i)
+    for (std::size_t i = 0; i < size; ++i)
     {
         gradient1[i] = outGrad[i] * mFun1(in1[i], in2[i]);
         gradient2[i] = outGrad[i] * mFun2(in1[i], in2[i]);

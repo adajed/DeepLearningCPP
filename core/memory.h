@@ -18,11 +18,10 @@ class Memory
    public:
     Memory(MemoryType type, std::size_t count);
 
+    MemoryType getType() const;
+
     float* getValues();
     const float* getValues() const;
-
-    float& operator[](std::size_t pos);
-    const float& operator[](std::size_t pos) const;
 
     std::size_t getCount() const;
 

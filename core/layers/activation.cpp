@@ -48,11 +48,11 @@ void ActivationLayer::execute(const InputDict& inputs)
     Tensor::SPtr in = mInputs[0].lock();
     in->eval(inputs);
 
-    Memory input = in->getMemory();
-    Memory output = mOutputs[0]->getMemory();
+    float* input = in->getMemory().getValues();
+    float* output = mOutputs[0]->getMemory().getValues();
+    std::size_t size = in->getMemory().getCount();
 
-    for (std::size_t pos = 0; pos < input.getCount(); ++pos)
-        output[pos] = mFun(input[pos]);
+    for (std::size_t pos = 0; pos < size; ++pos) output[pos] = mFun(input[pos]);
 }
 
 Layer::TensorMap ActivationLayer::gradients(Tensor::SPtr out,
@@ -115,12 +115,13 @@ void ActivationGradientLayer::execute(const InputDict& inputs)
     out->eval(inputs);
     outGrad->eval(inputs);
 
-    Memory input = in->getMemory();
-    Memory output = out->getMemory();
-    Memory outputGrad = outGrad->getMemory();
-    Memory gradient = mOutputs[0]->getMemory();
+    float* input = in->getMemory().getValues();
+    float* output = out->getMemory().getValues();
+    float* outputGrad = outGrad->getMemory().getValues();
+    float* gradient = mOutputs[0]->getMemory().getValues();
+    std::size_t size = in->getMemory().getCount();
 
-    for (std::size_t pos = 0; pos < input.getCount(); ++pos)
+    for (std::size_t pos = 0; pos < size; ++pos)
         gradient[pos] = outputGrad[pos] * mFun(input[pos], output[pos]);
 }
 

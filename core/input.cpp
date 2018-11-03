@@ -1,4 +1,5 @@
 #include "input.h"
+#include <cstring>
 
 namespace graphdl
 {
@@ -15,8 +16,15 @@ void InputLayer::execute(const InputDict& inputs)
     HostTensor input = inputs.at(name);
     Memory output = mOutputs[0]->getMemory();
 
-    for (std::size_t i = 0; i < input.size(); ++i)
-        output.getValues()[i] = input[i];
+    if (output.getType() == MemoryType::kHOST_MEMORY)
+    {
+        std::memcpy(output.getValues(), input.data(),
+                    output.getCount() * sizeof(float));
+    }
+    else  // output.getType() == MemoryType::kDEVICE_MEMORY
+    {
+        cuda::copyInput(output.getValues(), input.data(), output.getCount());
+    }
 }
 
 }  // namespace core

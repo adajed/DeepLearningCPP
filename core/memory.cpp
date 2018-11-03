@@ -1,8 +1,11 @@
+#include "memory.h"
 #include <assert.h>
 #include <cstring>
 #include <stdexcept>
 
-#include "memory.h"
+#ifdef CUDA_SUPPORT
+#include <cuda.h>
+#endif
 
 namespace graphdl
 {
@@ -13,20 +16,31 @@ Memory::Memory(MemoryType type, size_t count)
 {
 }
 
+MemoryType Memory::getType() const { return mType; }
+
 float* Memory::getValues() { return mValues; }
 
 const float* Memory::getValues() const { return mValues; }
-
-float& Memory::operator[](std::size_t pos) { return mValues[pos]; }
-
-const float& Memory::operator[](std::size_t pos) const { return mValues[pos]; }
 
 size_t Memory::getCount() const { return mCount; }
 
 void Memory::fill(float* memory) const
 {
     assert(isAllocated());
-    std::memcpy(memory, mValues, sizeof(float) * getCount());
+
+    if (mType == MemoryType::kHOST_MEMORY)
+    {
+        std::memcpy(memory, mValues, sizeof(float) * getCount());
+    }
+    else  // mType == MemoryType::kHOST_MEMORY
+    {
+#ifdef CUDA_SUPPORT
+        cudaMemcpy(memory, mValues, sizeof(float) * getCount(),
+                   cudaMemcpyDeviceToHost);
+#else
+        throw std::runtime_error("GPU support not implemented, please use CPU");
+#endif
+    }
 }
 
 bool Memory::isAllocated() const { return mValues != nullptr; }
@@ -41,8 +55,14 @@ bool Memory::allocate()
     }
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
-        // TODO: allocate memory on device
+#ifdef CUDA_SUPPORT
+        if (cudaMallocManaged((void**)&mValues, mCount * sizeof(float)) !=
+            cudaSuccess)
+            return false;
+        return true;
+#else
         throw std::runtime_error("GPU support not implemented, please use CPU");
+#endif
     }
 
     // you shouldn't be here
@@ -59,8 +79,11 @@ void Memory::free()
     }
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
-        // TODO: free memory on device
+#ifdef CUDA_SUPPORT
+        cudaFree(mValues);
+#else
         throw std::runtime_error("GPU support not implemented, please use CPU");
+#endif
     }
 }
 
