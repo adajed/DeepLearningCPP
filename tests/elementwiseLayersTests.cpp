@@ -7,7 +7,7 @@ namespace
 {
 using namespace graphdl::core::layers;
 
-using TestCase = std::tuple<Vec, Elementwise>;
+using TestCase = std::tuple<Vec, Elementwise, MemoryLocation>;
 using ErrorTestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise>;
 
 Shape shape(const TestCase& testCase) { return std::get<0>(testCase); }
@@ -159,11 +159,11 @@ class ElementwiseTest : public LayerTest,
 
     LayerBuilder getBuilder(const TestCase& testCase)
     {
-        return [testCase](const HostVec& ins) {
+        return [&testCase](const HostVec& ins) {
             ITensorPtr input1 =
-                createInput("input1", shape(testCase), MemoryLocation::kHOST);
+                createInput("input1", shape(testCase), std::get<2>(testCase));
             ITensorPtr input2 =
-                createInput("input2", shape(testCase), MemoryLocation::kHOST);
+                createInput("input2", shape(testCase), std::get<2>(testCase));
             ITensorPtr output;
             switch (op(testCase))
             {
@@ -189,15 +189,13 @@ class ElementwiseTest : public LayerTest,
     LayerBuilder getGradientBuilder(const TestCase& testCase)
     {
         return [&testCase](const HostVec& ins) {
+            MemoryType type = memoryLocationToType(std::get<2>(testCase));
             Tensor::SPtr in1 = core::getDefaultGraph()->addInput(
-                "in1", createLayer<InputLayer>("in1", shape(testCase),
-                                               MemoryType::kHOST_MEMORY));
+                "in1", createLayer<InputLayer>("in1", shape(testCase), type));
             Tensor::SPtr in2 = core::getDefaultGraph()->addInput(
-                "in2", createLayer<InputLayer>("in2", shape(testCase),
-                                               MemoryType::kHOST_MEMORY));
+                "in2", createLayer<InputLayer>("in2", shape(testCase), type));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", shape(testCase),
-                                                MemoryType::kHOST_MEMORY));
+                "outG", createLayer<InputLayer>("outG", shape(testCase), type));
             Tensor::SPtr output = createElementwise(in1, in2, op(testCase));
             Layer::SPtr layer = createLayer<ElementwiseGradientLayer>(
                 in1, in2, output, outG, op(testCase));
@@ -252,7 +250,8 @@ class ElementwiseErrorTest : public LayerTest,
 
 TEST_P(ElementwiseTest, testAPI) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
+                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
+                                ValuesIn(LOCATIONS)));
 
 TEST_P(ElementwiseErrorTest, test) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerErrorTest, ElementwiseErrorTest,
@@ -260,6 +259,7 @@ INSTANTIATE_TEST_CASE_P(LayerErrorTest, ElementwiseErrorTest,
 
 TEST_P(ElementwiseGradientTest, testAPI) { testGradient(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseGradientTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
+                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
+                                ValuesIn(LOCATIONS)));
 
 }  // namespace

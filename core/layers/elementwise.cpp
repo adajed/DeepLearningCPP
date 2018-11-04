@@ -12,6 +12,134 @@ namespace layers
 {
 namespace
 {
+template <Elementwise elem>
+float op(float f1, float f2);
+template <>
+float op<Elementwise::kADD>(float f1, float f2)
+{
+    return f1 + f2;
+}
+template <>
+float op<Elementwise::kSUB>(float f1, float f2)
+{
+    return f1 - f2;
+}
+template <>
+float op<Elementwise::kMUL>(float f1, float f2)
+{
+    return f1 * f2;
+}
+template <>
+float op<Elementwise::kDIV>(float f1, float f2)
+{
+    return f1 / f2;
+}
+
+template <Elementwise elem>
+void elementwise(std::size_t size, float* x1, float* x2, float* y)
+{
+    for (std::size_t pos = 0; pos < size; ++pos)
+        y[pos] = op<elem>(x1[pos], x2[pos]);
+}
+
+void runElementwiseHost(std::size_t size, float* x1, float* x2, float* y,
+                        Elementwise op)
+{
+    switch (op)
+    {
+        case Elementwise::kADD:
+            elementwise<Elementwise::kADD>(size, x1, x2, y);
+            return;
+        case Elementwise::kSUB:
+            elementwise<Elementwise::kSUB>(size, x1, x2, y);
+            return;
+        case Elementwise::kMUL:
+            elementwise<Elementwise::kMUL>(size, x1, x2, y);
+            return;
+        case Elementwise::kDIV:
+            elementwise<Elementwise::kDIV>(size, x1, x2, y);
+            return;
+    }
+}
+
+template <Elementwise elem>
+float opGrad1(float f1, float f2);
+template <>
+float opGrad1<Elementwise::kADD>(float f1, float f2)
+{
+    return 1.;
+}
+template <>
+float opGrad1<Elementwise::kSUB>(float f1, float f2)
+{
+    return 1.;
+}
+template <>
+float opGrad1<Elementwise::kMUL>(float f1, float f2)
+{
+    return f2;
+}
+template <>
+float opGrad1<Elementwise::kDIV>(float f1, float f2)
+{
+    return 1. / f2;
+}
+
+template <Elementwise elem>
+float opGrad2(float f1, float f2);
+template <>
+float opGrad2<Elementwise::kADD>(float f1, float f2)
+{
+    return 1.;
+}
+template <>
+float opGrad2<Elementwise::kSUB>(float f1, float f2)
+{
+    return -1.;
+}
+template <>
+float opGrad2<Elementwise::kMUL>(float f1, float f2)
+{
+    return f1;
+}
+template <>
+float opGrad2<Elementwise::kDIV>(float f1, float f2)
+{
+    return -f1 / (f2 * f2);
+}
+
+template <Elementwise elem>
+void elementwiseGradient(std::size_t size, float* x1, float* x2, float* yG,
+                         float* x1G, float* x2G)
+{
+    for (std::size_t pos = 0; pos < size; ++pos)
+    {
+        x1G[pos] = yG[pos] * opGrad1<elem>(x1[pos], x2[pos]);
+        x2G[pos] = yG[pos] * opGrad2<elem>(x1[pos], x2[pos]);
+    }
+}
+
+void runElementwiseGradientHost(std::size_t size, float* x1, float* x2,
+                                float* yG, float* x1G, float* x2G,
+                                Elementwise op)
+{
+    switch (op)
+    {
+        case Elementwise::kADD:
+            elementwiseGradient<Elementwise::kADD>(size, x1, x2, yG, x1G, x2G);
+            return;
+        case Elementwise::kSUB:
+            elementwiseGradient<Elementwise::kSUB>(size, x1, x2, yG, x1G, x2G);
+            return;
+        case Elementwise::kMUL:
+            elementwiseGradient<Elementwise::kMUL>(size, x1, x2, yG, x1G, x2G);
+            return;
+        case Elementwise::kDIV:
+            elementwiseGradient<Elementwise::kDIV>(size, x1, x2, yG, x1G, x2G);
+            return;
+    }
+}
+
 std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1, Tensor::SPtr t2)
 {
     assert(t1->getType() == t2->getType());
@@ -33,21 +161,6 @@ ElementwiseLayer::ElementwiseLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
     : DifferentiableLayer(id, {t1, t2}, createOutputs(t1, t2)), mOp(op)
 {
     assert(t1->getShape() == t2->getShape());
-    switch (op)
-    {
-        case Elementwise::kADD:
-            mFun = [](float f1, float f2) { return f1 + f2; };
-            break;
-        case Elementwise::kSUB:
-            mFun = [](float f1, float f2) { return f1 - f2; };
-            break;
-        case Elementwise::kMUL:
-            mFun = [](float f1, float f2) { return f1 * f2; };
-            break;
-        case Elementwise::kDIV:
-            mFun = [](float f1, float f2) { return f1 / f2; };
-            break;
-    }
 }
 
 void ElementwiseLayer::execute(const InputDict& inputs)
@@ -63,8 +176,10 @@ void ElementwiseLayer::execute(const InputDict& inputs)
     float* output = mOutputs[0]->getMemory().getValues();
     std::size_t size = mOutputs[0]->getMemory().getCount();
 
-    for (std::size_t i = 0; i < size; ++i)
-        output[i] = mFun(input0[i], input1[i]);
+    if (i0->getType() == MemoryType::kHOST_MEMORY)
+        runElementwiseHost(size, input0, input1, output, mOp);
+    else
+        cuda::runElementwiseDevice(size, input0, input1, output, mOp);
 }
 
 Layer::TensorMap ElementwiseLayer::gradients(Tensor::SPtr output,
@@ -85,28 +200,8 @@ ElementwiseGradientLayer::ElementwiseGradientLayer(ID id, Tensor::SPtr t1,
                                                    Tensor::SPtr out,
                                                    Tensor::SPtr outGrad,
                                                    Elementwise op)
-    : Layer(id, {t1, t2, out, outGrad}, createGradientOutputs(t1, t2)), mOp(op)
-{
-    switch (op)
-    {
-        case Elementwise::kADD:
-            mFun1 = [](float f1, float f2) { return 1.; };
-            mFun2 = [](float f1, float f2) { return 1.; };
-            break;
-        case Elementwise::kSUB:
-            mFun1 = [](float f1, float f2) { return 1.; };
-            mFun2 = [](float f1, float f2) { return -1.; };
-            break;
-        case Elementwise::kMUL:
-            mFun1 = [](float f1, float f2) { return f2; };
-            mFun2 = [](float f1, float f2) { return f1; };
-            break;
-        case Elementwise::kDIV:
-            mFun1 = [](float f1, float f2) { return 1. / f2; };
-            mFun2 = [](float f1, float f2) { return -f1 / (f2 * f2); };
-            break;
-    }
-};
+    : Layer(id, {t1, t2, out, outGrad}, createGradientOutputs(t1, t2)),
+      mOp(op){};
 
 void ElementwiseGradientLayer::execute(const InputDict& inputs)
 {
@@ -124,11 +219,12 @@ void ElementwiseGradientLayer::execute(const InputDict& inputs)
     float* gradient2 = mOutputs[1]->getMemory().getValues();
     std::size_t size = input1->getMemory().getCount();
 
-    for (std::size_t i = 0; i < size; ++i)
-    {
-        gradient1[i] = outGrad[i] * mFun1(in1[i], in2[i]);
-        gradient2[i] = outGrad[i] * mFun2(in1[i], in2[i]);
-    }
+    if (input1->getType() == MemoryType::kHOST_MEMORY)
+        runElementwiseGradientHost(size, in1, in2, outGrad, gradient1,
+                                   gradient2, mOp);
+    else
+        cuda::runElementwiseGradientDevice(size, in1, in2, outGrad, gradient1,
+                                           gradient2, mOp);
 }
 
 }  // namespace layers
