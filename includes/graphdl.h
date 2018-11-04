@@ -116,7 +116,8 @@ IGraphPtr getDefaultGraph();
 //! \param shape Dimensions of the input.
 //! \param location Location of the input.
 //!
-ITensorPtr createInput(const std::string& name, const Shape& shape, MemoryLocation location);
+ITensorPtr createInput(const std::string& name, const Shape& shape,
+                       MemoryLocation location);
 
 //! \fn createWeights
 //! \brief This function creates new weights in current graph.
@@ -124,7 +125,8 @@ ITensorPtr createInput(const std::string& name, const Shape& shape, MemoryLocati
 //! \param shape Dimensions of the weights.
 //! \param location Location of the weights.
 //!
-ITensorPtr createWeights(const std::string& name, const Shape& shape, MemoryLocation location);
+ITensorPtr createWeights(const std::string& name, const Shape& shape,
+                         MemoryLocation location);
 
 //! \fn
 //! \brief Initializes graph (i.e. initializes all weights).

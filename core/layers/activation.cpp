@@ -12,7 +12,9 @@ namespace core
 namespace layers
 {
 ActivationLayer::ActivationLayer(ID id, Tensor::SPtr t, Activation op)
-    : DifferentiableLayer(id, {t}, {createTensor("", t->getShape(), t->getType())}), mOp(op)
+    : DifferentiableLayer(id, {t},
+                          {createTensor("", t->getShape(), t->getType())}),
+      mOp(op)
 {
     switch (op)
     {
@@ -72,7 +74,8 @@ ActivationGradientLayer::ActivationGradientLayer(ID id, Tensor::SPtr in,
                                                  Tensor::SPtr out,
                                                  Tensor::SPtr outGrad,
                                                  Activation op)
-    : Layer(id, {in, out, outGrad}, {createTensor("", in->getShape(), outGrad->getType())})
+    : Layer(id, {in, out, outGrad},
+            {createTensor("", in->getShape(), outGrad->getType())})
 {
     assert(in->getShape() == out->getShape());
     assert(out->getShape() == outGrad->getShape());

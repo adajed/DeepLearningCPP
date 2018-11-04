@@ -24,7 +24,8 @@ class Tensor
     using SPtr = std::shared_ptr<Tensor>;
     using WeakPtr = std::weak_ptr<Tensor>;
 
-    Tensor(ID id, const std::string& name, const TensorShape& shape, MemoryType type);
+    Tensor(ID id, const std::string& name, const TensorShape& shape,
+           MemoryType type);
 
     //! \fn getID
     //!
@@ -97,7 +98,8 @@ class Tensor
     Memory mMemory;
 };
 
-Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape, MemoryType type);
+Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape,
+                          MemoryType type);
 
 //! \class Layer
 //! \brief Class representing part of computation.

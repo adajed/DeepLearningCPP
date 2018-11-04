@@ -98,10 +98,8 @@ MemoryType memoryLocationToType(MemoryLocation location)
     }
 
     // you shoudn't be here
-    throw std::runtime_error(
-            "Unknown MemoryLocation: " +
-            std::to_string(static_cast<int>(location)));
-
+    throw std::runtime_error("Unknown MemoryLocation: " +
+                             std::to_string(static_cast<int>(location)));
 }
 
 }  // namespace core

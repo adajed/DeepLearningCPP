@@ -74,7 +74,8 @@ IGraphPtr getDefaultGraph()
     return core::makeAbstractGraph(graph);
 }
 
-ITensorPtr createInput(const std::string& name, const Shape& shape, MemoryLocation location)
+ITensorPtr createInput(const std::string& name, const Shape& shape,
+                       MemoryLocation location)
 {
 #ifndef CUDA_AVAILABLE
     if (location == MemoryLocation::kDEVICE)
@@ -86,12 +87,14 @@ ITensorPtr createInput(const std::string& name, const Shape& shape, MemoryLocati
             throw std::runtime_error("Input \"" + name + "\" already exists");
 
     core::MemoryType type = core::memoryLocationToType(location);
-    core::Layer::SPtr input = core::createLayer<core::InputLayer>(name, shape, type);
+    core::Layer::SPtr input =
+        core::createLayer<core::InputLayer>(name, shape, type);
     core::Tensor::SPtr tensor = core::getDefaultGraph()->addInput(name, input);
     return core::makeAbstractTensor(tensor);
 }
 
-ITensorPtr createWeights(const std::string& name, const Shape& shape, MemoryLocation location)
+ITensorPtr createWeights(const std::string& name, const Shape& shape,
+                         MemoryLocation location)
 {
 #ifndef CUDA_AVAILABLE
     if (location == MemoryLocation::kDEVICE)

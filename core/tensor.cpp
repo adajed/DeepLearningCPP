@@ -6,7 +6,8 @@ namespace graphdl
 {
 namespace core
 {
-Tensor::Tensor(ID id, const std::string& name, const TensorShape& shape, MemoryType type)
+Tensor::Tensor(ID id, const std::string& name, const TensorShape& shape,
+               MemoryType type)
     : mID(id),
       mName(name),
       mShape(shape),
@@ -51,7 +52,8 @@ void Tensor::reset() { mIsEvaluated = false; }
 
 Tensor::~Tensor() { mMemory.free(); }
 
-Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape, MemoryType type)
+Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape,
+                          MemoryType type)
 {
     Graph::SPtr graph = core::getDefaultGraph();
     return std::make_shared<Tensor>(graph->nextTensorID(), name, shape, type);

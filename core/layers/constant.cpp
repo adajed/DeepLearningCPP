@@ -10,7 +10,8 @@ namespace core
 {
 namespace layers
 {
-ConstantLayer::ConstantLayer(ID id, float value, const TensorShape& shape, MemoryType type)
+ConstantLayer::ConstantLayer(ID id, float value, const TensorShape& shape,
+                             MemoryType type)
     : Layer(id, {}, {createTensor("", shape, type)}), mValue(value)
 {
 }

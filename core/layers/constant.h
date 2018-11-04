@@ -12,7 +12,8 @@ namespace layers
 class ConstantLayer : public Layer
 {
    public:
-    ConstantLayer(ID id, float value, const TensorShape& shape, MemoryType type);
+    ConstantLayer(ID id, float value, const TensorShape& shape,
+                  MemoryType type);
 
     void initialize() override;
 

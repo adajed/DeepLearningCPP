@@ -16,7 +16,7 @@ class WeightsLayer : public Layer
 {
    public:
     WeightsLayer(ID id, const std::string& name, const Shape& shape,
-                    MemoryType type);
+                 MemoryType type);
 
     void initialize() override;
 

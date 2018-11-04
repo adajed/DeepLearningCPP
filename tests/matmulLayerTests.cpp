@@ -37,8 +37,10 @@ class MatmulTest : public LayerTest,
         setup(testCase);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
-            ITensorPtr input1 = createInput("i1", std::get<0>(testCase), MemoryLocation::kHOST);
-            ITensorPtr input2 = createInput("i2", std::get<1>(testCase), MemoryLocation::kHOST);
+            ITensorPtr input1 =
+                createInput("i1", std::get<0>(testCase), MemoryLocation::kHOST);
+            ITensorPtr input2 =
+                createInput("i2", std::get<1>(testCase), MemoryLocation::kHOST);
             ITensorPtr output = matmul(input1, input2);
             initializeGraph();
             return HostVec({output->eval({{"i1", ins[0]}, {"i2", ins[1]}})});
@@ -56,11 +58,14 @@ class MatmulTest : public LayerTest,
         unsigned k = std::get<1>(testCase)[1];
         LayerBuilder builder = [n, m, k](const HostVec& ins) {
             Tensor::SPtr i1 = core::getDefaultGraph()->addInput(
-                "i1", createLayer<InputLayer>("i1", Shape({n, m}), MemoryType::kHOST_MEMORY));
+                "i1", createLayer<InputLayer>("i1", Shape({n, m}),
+                                              MemoryType::kHOST_MEMORY));
             Tensor::SPtr i2 = core::getDefaultGraph()->addInput(
-                "i2", createLayer<InputLayer>("i2", Shape({m, k}), MemoryType::kHOST_MEMORY));
+                "i2", createLayer<InputLayer>("i2", Shape({m, k}),
+                                              MemoryType::kHOST_MEMORY));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", Shape({n, k}), MemoryType::kHOST_MEMORY));
+                "outG", createLayer<InputLayer>("outG", Shape({n, k}),
+                                                MemoryType::kHOST_MEMORY));
             Tensor::SPtr out = matmul(i1, i2);
             Layer::SPtr layer =
                 createLayer<MatmulGradientLayer>(i1, i2, out, outG);
@@ -80,8 +85,10 @@ class MatmulTest : public LayerTest,
 
     void testWrongShapes(const TestCase& testCase)
     {
-        ITensorPtr input1 = createInput("i1", std::get<0>(testCase), MemoryLocation::kHOST);
-        ITensorPtr input2 = createInput("i2", std::get<1>(testCase), MemoryLocation::kHOST);
+        ITensorPtr input1 =
+            createInput("i1", std::get<0>(testCase), MemoryLocation::kHOST);
+        ITensorPtr input2 =
+            createInput("i2", std::get<1>(testCase), MemoryLocation::kHOST);
         ITensorPtr output;
         EXPECT_THROW({ output = matmul(input1, input2); }, std::runtime_error);
     }

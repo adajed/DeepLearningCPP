@@ -22,7 +22,8 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
         setup(testCase);
 
         LayerBuilder builder = [testCase](const HostVec& ins) {
-            ITensorPtr input = createInput("input", std::get<0>(testCase), MemoryLocation::kHOST);
+            ITensorPtr input = createInput("input", std::get<0>(testCase),
+                                           MemoryLocation::kHOST);
             initializeGraph();
 
             return HostVec({input->eval({{"input", ins[0]}})});

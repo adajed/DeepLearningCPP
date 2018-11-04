@@ -49,7 +49,8 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
     mTensorGradients.clear();
     mCalculatedTensors.clear();
     //! d(mTensor)/d(mTensor) = 1.
-    mCalculatedTensors.insert({mTensor, constant(1., mTensor->getShape(), mTensor->getType())});
+    mCalculatedTensors.insert(
+        {mTensor, constant(1., mTensor->getShape(), mTensor->getType())});
 
     calculateGradientsForTensor(mTensor);
 
@@ -59,7 +60,8 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
         Tensor::SPtr weights = pair.second;
         if (mCalculatedTensors.count(weights) == 0)
             mCalculatedTensors.insert(
-                {weights, constant(0., weights->getShape(), weights->getType())});
+                {weights,
+                 constant(0., weights->getShape(), weights->getType())});
         gradients.insert({weights, mCalculatedTensors[weights]});
     }
     return gradients;

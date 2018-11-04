@@ -160,8 +160,10 @@ class ElementwiseTest : public LayerTest,
     LayerBuilder getBuilder(const TestCase& testCase)
     {
         return [testCase](const HostVec& ins) {
-            ITensorPtr input1 = createInput("input1", shape(testCase), MemoryLocation::kHOST);
-            ITensorPtr input2 = createInput("input2", shape(testCase), MemoryLocation::kHOST);
+            ITensorPtr input1 =
+                createInput("input1", shape(testCase), MemoryLocation::kHOST);
+            ITensorPtr input2 =
+                createInput("input2", shape(testCase), MemoryLocation::kHOST);
             ITensorPtr output;
             switch (op(testCase))
             {
@@ -188,11 +190,14 @@ class ElementwiseTest : public LayerTest,
     {
         return [&testCase](const HostVec& ins) {
             Tensor::SPtr in1 = core::getDefaultGraph()->addInput(
-                "in1", createLayer<InputLayer>("in1", shape(testCase), MemoryType::kHOST_MEMORY));
+                "in1", createLayer<InputLayer>("in1", shape(testCase),
+                                               MemoryType::kHOST_MEMORY));
             Tensor::SPtr in2 = core::getDefaultGraph()->addInput(
-                "in2", createLayer<InputLayer>("in2", shape(testCase), MemoryType::kHOST_MEMORY));
+                "in2", createLayer<InputLayer>("in2", shape(testCase),
+                                               MemoryType::kHOST_MEMORY));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", shape(testCase), MemoryType::kHOST_MEMORY));
+                "outG", createLayer<InputLayer>("outG", shape(testCase),
+                                                MemoryType::kHOST_MEMORY));
             Tensor::SPtr output = createElementwise(in1, in2, op(testCase));
             Layer::SPtr layer = createLayer<ElementwiseGradientLayer>(
                 in1, in2, output, outG, op(testCase));
@@ -218,8 +223,10 @@ class ElementwiseErrorTest : public LayerTest,
     void test(const ErrorTestCase& testCase)
     {
         std::tuple<Vec, Vec> shapes = std::get<0>(testCase);
-        ITensorPtr input1 = createInput("input1", std::get<0>(shapes), MemoryLocation::kHOST);
-        ITensorPtr input2 = createInput("input2", std::get<1>(shapes), MemoryLocation::kHOST);
+        ITensorPtr input1 =
+            createInput("input1", std::get<0>(shapes), MemoryLocation::kHOST);
+        ITensorPtr input2 =
+            createInput("input2", std::get<1>(shapes), MemoryLocation::kHOST);
         ITensorPtr output;
         EXPECT_THROW(
             {

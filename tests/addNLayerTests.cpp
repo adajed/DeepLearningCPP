@@ -66,7 +66,8 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {
                 std::string name = "i" + std::to_string(i);
-                inputs.push_back(createInput(name, std::get<1>(testCase), MemoryLocation::kHOST));
+                inputs.push_back(createInput(name, std::get<1>(testCase),
+                                             MemoryLocation::kHOST));
                 inMap.insert({name, ins[i]});
             }
             ITensorPtr output = addN(inputs);
@@ -104,14 +105,14 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {
                 std::string name = "i" + std::to_string(i);
-                Layer::SPtr inputLayer =
-                    createLayer<InputLayer>(name, std::get<1>(testCase), MemoryType::kHOST_MEMORY);
+                Layer::SPtr inputLayer = createLayer<InputLayer>(
+                    name, std::get<1>(testCase), MemoryType::kHOST_MEMORY);
                 inputs.push_back(
                     core::getDefaultGraph()->addInput(name, inputLayer));
                 inMap.insert({name, ins[i]});
             }
-            Layer::SPtr outputGradLayer =
-                createLayer<InputLayer>("outG", std::get<1>(testCase), MemoryType::kHOST_MEMORY);
+            Layer::SPtr outputGradLayer = createLayer<InputLayer>(
+                "outG", std::get<1>(testCase), MemoryType::kHOST_MEMORY);
             Tensor::SPtr outputGrad =
                 core::getDefaultGraph()->addInput("outG", outputGradLayer);
             inMap.insert({"outG", ins.back()});
@@ -141,7 +142,8 @@ class AddNErrorTest : public LayerTest,
         for (unsigned i = 0; i < testCase.size(); ++i)
         {
             std::string name = "i" + std::to_string(i);
-            inputs.push_back(createInput(name, testCase[i], MemoryLocation::kHOST));
+            inputs.push_back(
+                createInput(name, testCase[i], MemoryLocation::kHOST));
         }
         ITensorPtr output;
         EXPECT_THROW({ output = addN(inputs); }, std::runtime_error);

@@ -6,7 +6,8 @@ namespace graphdl
 {
 namespace core
 {
-WeightsLayer::WeightsLayer(ID id, const std::string& name, const Shape& shape, MemoryType type)
+WeightsLayer::WeightsLayer(ID id, const std::string& name, const Shape& shape,
+                           MemoryType type)
     : Layer(id, {}, {createTensor(name, shape, type)})
 {
 }

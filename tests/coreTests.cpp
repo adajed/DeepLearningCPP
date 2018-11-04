@@ -55,7 +55,8 @@ TEST_F(CoreTest, addInput)
 {
     const std::string INPUT_NAME = "input1";
     graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
-    graphdl::ITensorPtr input = graphdl::createInput(INPUT_NAME, {3, 224, 224}, loc);
+    graphdl::ITensorPtr input =
+        graphdl::createInput(INPUT_NAME, {3, 224, 224}, loc);
     auto inputs = graphdl::getDefaultGraph()->getInputs();
     EXPECT_EQ(inputs.size(), 1);
     EXPECT_EQ(inputs.count(INPUT_NAME), 1);
@@ -71,7 +72,8 @@ TEST_F(CoreTest, addWeights)
 {
     const std::string WEIGHTS_NAME = "weights";
     graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
-    graphdl::ITensorPtr w = graphdl::createWeights(WEIGHTS_NAME, {100, 100}, loc);
+    graphdl::ITensorPtr w =
+        graphdl::createWeights(WEIGHTS_NAME, {100, 100}, loc);
     auto weights = graphdl::getDefaultGraph()->getWeights();
     EXPECT_EQ(weights.size(), 1);
     EXPECT_EQ(weights.count(WEIGHTS_NAME), 1);
@@ -80,7 +82,8 @@ TEST_F(CoreTest, addWeights)
 TEST_F(CoreTest, addInputWithTheSameName)
 {
     graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
-    graphdl::ITensorPtr input1 = graphdl::createInput("input1", {3, 224, 224}, loc);
+    graphdl::ITensorPtr input1 =
+        graphdl::createInput("input1", {3, 224, 224}, loc);
     EXPECT_NE(input1, nullptr);
     EXPECT_THROW(
         { graphdl::ITensorPtr t = graphdl::createInput("input1", {}, loc); },

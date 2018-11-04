@@ -15,7 +15,8 @@ namespace
 std::vector<Tensor::SPtr> createOutput(Tensor::SPtr m1, Tensor::SPtr m2)
 {
     assert(m1->getType() == m2->getType());
-    return {createTensor("", {m1->getShape()[0], m2->getShape()[1]}, m1->getType())};
+    return {createTensor("", {m1->getShape()[0], m2->getShape()[1]},
+                         m1->getType())};
 }
 
 std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr m1,
