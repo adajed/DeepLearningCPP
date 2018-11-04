@@ -12,6 +12,36 @@ namespace layers
 {
 namespace
 {
+void runMatmulCPU(int n, int m, int k, float* X1, float* X2, float* Y)
+{
+    for (int x = 0; x < n; ++x)
+        for (int y = 0; y < k; ++y)
+        {
+            Y[k * x + y] = 0.;
+            for (int i = 0; i < m; ++i)
+                Y[k * x + y] += X1[m * x + i] * X2[k * i + y];
+        }
+}
+
+void runMatmulGradientCPU(int n, int m, int k, float* X1, float* X2,
+                          float* Ygrad, float* X1grad, float* X2grad)
+{
+    for (int x = 0; x < n; ++x)
+        for (int y = 0; y < m; ++y)
+        {
+            X1grad[m * x + y] = 0.;
+            for (int i = 0; i < k; ++i)
+                X1grad[m * x + y] += X2[k * y + i] * Ygrad[k * x + i];
+        }
+    for (int x = 0; x < m; ++x)
+        for (int y = 0; y < k; ++y)
+        {
+            X2grad[k * x + y] = 0.;
+            for (int i = 0; i < n; ++i)
+                X2grad[k * x + y] += X1[m * i + x] * Ygrad[k * i + y];
+        }
+}
+
 std::vector<Tensor::SPtr> createOutput(Tensor::SPtr m1, Tensor::SPtr m2)
 {
     assert(m1->getType() == m2->getType());
@@ -47,19 +77,14 @@ void MatmulLayer::execute(const InputDict& inputs)
     float* in1 = m1->getMemory().getValues();
     float* in2 = m2->getMemory().getValues();
     float* out = mOutputs[0]->getMemory().getValues();
-    std::size_t size = mOutputs[0]->getMemory().getCount();
-
+    int n = m1->getShape()[0];
     int m = m2->getShape()[0];
-    int k = mOutputs[0]->getShape()[1];
+    int k = m2->getShape()[1];
 
-    for (std::size_t pos = 0; pos < size; ++pos)
-    {
-        int x = pos / k;
-        int y = pos % k;
-
-        out[pos] = 0.;
-        for (int i = 0; i < m; ++i) out[pos] += in1[m * x + i] * in2[k * i + y];
-    }
+    if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
+        runMatmulCPU(n, m, k, in1, in2, out);
+    else
+        cuda::runMatmulGPU(n, m, k, in1, in2, out);
 }
 
 Layer::TensorMap MatmulLayer::gradients(Tensor::SPtr output,
@@ -107,24 +132,10 @@ void MatmulGradientLayer::execute(const InputDict& inputs)
     std::size_t m = m1->getShape()[1];
     std::size_t k = m2->getShape()[1];
 
-    for (std::size_t pos = 0; pos < n * m; ++pos)
-    {
-        int x = pos / m;
-        int y = pos % m;
-
-        grad1[pos] = 0.;
-        for (std::size_t i = 0; i < k; ++i)
-            grad1[pos] += in2[k * y + i] * outG[k * x + i];
-    }
-    for (std::size_t pos = 0; pos < m * k; ++pos)
-    {
-        int x = pos / k;
-        int y = pos % k;
-
-        grad2[pos] = 0.;
-        for (std::size_t i = 0; i < n; ++i)
-            grad2[pos] += in1[m * i + x] * outG[k * i + y];
-    }
+    if (m1->getType() == MemoryType::kHOST_MEMORY)
+        runMatmulGradientCPU(n, m, k, in1, in2, outG, grad1, grad2);
+    else
+        cuda::runMatmulGradientGPU(n, m, k, in1, in2, outG, grad1, grad2);
 }
 
 }  // namespace layers

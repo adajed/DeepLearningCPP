@@ -6,9 +6,9 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = std::tuple<Vec, Vec>;
+using TestCase = std::tuple<std::pair<Vec, Vec>, MemoryLocation>;
 
-std::vector<TestCase> SHAPES = {
+std::vector<std::pair<Vec, Vec>> SHAPES = {
     // clang-format off
     {{1, 1}, {1, 1}},
     {{2, 2}, {2, 2}},
@@ -19,7 +19,7 @@ std::vector<TestCase> SHAPES = {
     // clang-format on
 };
 
-std::vector<TestCase> ERROR_SHAPES = {
+std::vector<std::pair<Vec, Vec>> ERROR_SHAPES = {
     // clang-format off
     {{1, 1}, {1}},
     {{2}, {2}},
@@ -37,15 +37,15 @@ class MatmulTest : public LayerTest,
         setup(testCase);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
-            ITensorPtr input1 =
-                createInput("i1", std::get<0>(testCase), MemoryLocation::kHOST);
-            ITensorPtr input2 =
-                createInput("i2", std::get<1>(testCase), MemoryLocation::kHOST);
+            ITensorPtr input1 = createInput("i1", std::get<0>(testCase).first,
+                                            std::get<1>(testCase));
+            ITensorPtr input2 = createInput("i2", std::get<0>(testCase).second,
+                                            std::get<1>(testCase));
             ITensorPtr output = matmul(input1, input2);
             initializeGraph();
             return HostVec({output->eval({{"i1", ins[0]}, {"i2", ins[1]}})});
         };
-        bool correct = runTest({mInput1, mInput2}, {mOutput}, builder);
+        bool correct = runTest({mInput1, mInput2}, {mOutput}, builder, 10e-5);
         EXPECT_TRUE(correct);
     }
 
@@ -53,19 +53,17 @@ class MatmulTest : public LayerTest,
     {
         setupGradient(testCase);
 
-        unsigned n = std::get<0>(testCase)[0];
-        unsigned m = std::get<0>(testCase)[1];
-        unsigned k = std::get<1>(testCase)[1];
-        LayerBuilder builder = [n, m, k](const HostVec& ins) {
+        unsigned n = std::get<0>(testCase).first[0];
+        unsigned m = std::get<0>(testCase).first[1];
+        unsigned k = std::get<0>(testCase).second[1];
+        MemoryType type = memoryLocationToType(std::get<1>(testCase));
+        LayerBuilder builder = [n, m, k, type](const HostVec& ins) {
             Tensor::SPtr i1 = core::getDefaultGraph()->addInput(
-                "i1", createLayer<InputLayer>("i1", Shape({n, m}),
-                                              MemoryType::kHOST_MEMORY));
+                "i1", createLayer<InputLayer>("i1", Shape({n, m}), type));
             Tensor::SPtr i2 = core::getDefaultGraph()->addInput(
-                "i2", createLayer<InputLayer>("i2", Shape({m, k}),
-                                              MemoryType::kHOST_MEMORY));
+                "i2", createLayer<InputLayer>("i2", Shape({m, k}), type));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", Shape({n, k}),
-                                                MemoryType::kHOST_MEMORY));
+                "outG", createLayer<InputLayer>("outG", Shape({n, k}), type));
             Tensor::SPtr out = matmul(i1, i2);
             Layer::SPtr layer =
                 createLayer<MatmulGradientLayer>(i1, i2, out, outG);
@@ -79,16 +77,16 @@ class MatmulTest : public LayerTest,
                         {{"i1", ins[0]}, {"i2", ins[1]}, {"outG", ins[2]}});
         };
         bool correct = runTest({mInput1, mInput2, mOutputGrad},
-                               {mGradient1, mGradient2}, builder);
+                               {mGradient1, mGradient2}, builder, 10e-5);
         EXPECT_TRUE(correct);
     }
 
     void testWrongShapes(const TestCase& testCase)
     {
-        ITensorPtr input1 =
-            createInput("i1", std::get<0>(testCase), MemoryLocation::kHOST);
-        ITensorPtr input2 =
-            createInput("i2", std::get<1>(testCase), MemoryLocation::kHOST);
+        ITensorPtr input1 = createInput("i1", std::get<0>(testCase).first,
+                                        std::get<1>(testCase));
+        ITensorPtr input2 = createInput("i2", std::get<0>(testCase).second,
+                                        std::get<1>(testCase));
         ITensorPtr output;
         EXPECT_THROW({ output = matmul(input1, input2); }, std::runtime_error);
     }
@@ -100,9 +98,9 @@ class MatmulTest : public LayerTest,
     {
         UniformGen gen(0);
 
-        unsigned n = std::get<0>(testCase)[0];
-        unsigned m = std::get<0>(testCase)[1];
-        unsigned k = std::get<1>(testCase)[1];
+        unsigned n = std::get<0>(testCase).first[0];
+        unsigned m = std::get<0>(testCase).first[1];
+        unsigned k = std::get<0>(testCase).second[1];
 
         mInput1 = RefTensor({n, m});
         mInput2 = RefTensor({m, k});
@@ -127,9 +125,9 @@ class MatmulTest : public LayerTest,
     {
         UniformGen gen(0);
 
-        unsigned n = std::get<0>(testCase)[0];
-        unsigned m = std::get<0>(testCase)[1];
-        unsigned k = std::get<1>(testCase)[1];
+        unsigned n = std::get<0>(testCase).first[0];
+        unsigned m = std::get<0>(testCase).first[1];
+        unsigned k = std::get<0>(testCase).second[1];
 
         mInput1 = RefTensor({n, m});
         mInput2 = RefTensor({m, k});
@@ -166,18 +164,21 @@ class MatmulTest : public LayerTest,
 };
 
 TEST_P(MatmulTest, testAPI) { test(GetParam()); }
-INSTANTIATE_TEST_CASE_P(LayerTest, MatmulTest, ValuesIn(SHAPES));
+INSTANTIATE_TEST_CASE_P(LayerTest, MatmulTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
 class MatmulErrorsTest : public MatmulTest
 {
 };
 TEST_P(MatmulErrorsTest, testWrongShapes) { testWrongShapes(GetParam()); }
-INSTANTIATE_TEST_CASE_P(LayerTest, MatmulErrorsTest, ValuesIn(ERROR_SHAPES));
+INSTANTIATE_TEST_CASE_P(LayerTest, MatmulErrorsTest,
+                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(LOCATIONS)));
 
 class MatmulGradientTest : public MatmulTest
 {
 };
 TEST_P(MatmulGradientTest, testAPI) { testGradient(GetParam()); }
-INSTANTIATE_TEST_CASE_P(LayerTest, MatmulGradientTest, ValuesIn(SHAPES));
+INSTANTIATE_TEST_CASE_P(LayerTest, MatmulGradientTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
 }  // namespace

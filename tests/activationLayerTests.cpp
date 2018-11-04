@@ -40,13 +40,6 @@ std::vector<Activation> OPS = {
     // clang-format on
 };
 
-std::vector<MemoryLocation> LOCATIONS = {
-    // clang-format off
-    MemoryLocation::kHOST,
-    MemoryLocation::kDEVICE
-    // clang-format on
-};
-
 class ActivationTest : public LayerTest,
                        public testing::WithParamInterface<TestCase>
 {

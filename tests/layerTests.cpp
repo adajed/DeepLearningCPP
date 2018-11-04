@@ -1,5 +1,12 @@
 #include "layerTests.h"
 
+std::vector<MemoryLocation> LOCATIONS = {
+    // clang-format off
+    MemoryLocation::kHOST,
+    MemoryLocation::kDEVICE
+    // clang-format on
+};
+
 bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
                    float eps)
 {

@@ -30,6 +30,16 @@ class MatmulGradientLayer : public Layer
     void execute(const InputDict&) override;
 };
 
+namespace cuda
+{
+extern "C" void runMatmulGPU(int n, int m, int k, float* X1, float* X2,
+                             float* Y);
+
+extern "C" void runMatmulGradientGPU(int n, int m, int k, float* X1, float* X2,
+                                     float* Ygrad, float* X1grad,
+                                     float* X2grad);
+
+}  // namespace cuda
 }  // namespace layers
 
 Tensor::SPtr matmul(Tensor::SPtr, Tensor::SPtr);

@@ -18,6 +18,8 @@ using testing::ValuesIn;
 using Vec = std::vector<unsigned>;
 using HostVec = std::vector<HostTensor>;
 
+extern std::vector<MemoryLocation> LOCATIONS;
+
 class LayerTest : public testing::Test
 {
    protected:
