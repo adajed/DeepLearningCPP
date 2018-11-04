@@ -10,6 +10,21 @@ namespace core
 {
 namespace layers
 {
+namespace
+{
+void runReduceSumHost(std::size_t size, float* x, float* y)
+{
+    y[0] = 0.;
+    for (std::size_t pos = 0; pos < size; ++pos) y[0] += x[pos];
+}
+
+void runReduceSumGradientHost(std::size_t size, float* yGrad, float* xGrad)
+{
+    for (std::size_t pos = 0; pos < size; ++pos) xGrad[pos] = yGrad[0];
+}
+
+}  // namespace
+
 ReduceSumLayer::ReduceSumLayer(ID id, Tensor::SPtr tensor)
     : DifferentiableLayer(id, {tensor},
                           {createTensor("", {}, tensor->getType())})
@@ -25,8 +40,10 @@ void ReduceSumLayer::execute(const InputDict& inputs)
     float* output = mOutputs[0]->getMemory().getValues();
     std::size_t size = in->getMemory().getCount();
 
-    output[0] = 0.;
-    for (std::size_t pos = 0; pos < size; ++pos) output[0] += input[pos];
+    if (in->getType() == MemoryType::kHOST_MEMORY)
+        runReduceSumHost(size, input, output);
+    else
+        cuda::runReduceSumDevice(size, input, output);
 }
 
 Layer::TensorMap ReduceSumLayer::gradients(Tensor::SPtr out,
@@ -56,7 +73,10 @@ void ReduceSumGradientLayer::execute(const InputDict& inputs)
     float* inGrad = mOutputs[0]->getMemory().getValues();
     std::size_t size = mOutputs[0]->getMemory().getCount();
 
-    for (std::size_t pos = 0; pos < size; ++pos) inGrad[pos] = outGrad[0];
+    if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
+        runReduceSumGradientHost(size, outGrad, inGrad);
+    else
+        cuda::runReduceSumGradientDevice(size, outGrad, inGrad);
 }
 
 }  // namespace layers

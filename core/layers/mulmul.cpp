@@ -24,7 +24,7 @@ void runMatmulHost(int n, int m, int k, float* X1, float* X2, float* Y)
 }
 
 void runMatmulGradientHost(int n, int m, int k, float* X1, float* X2,
-                          float* Ygrad, float* X1grad, float* X2grad)
+                           float* Ygrad, float* X1grad, float* X2grad)
 {
     for (int x = 0; x < n; ++x)
         for (int y = 0; y < m; ++y)

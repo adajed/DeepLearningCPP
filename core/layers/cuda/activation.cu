@@ -132,7 +132,7 @@ __global__ void activationGradientKernel(std::size_t size, float* x, float* y,
 }
 
 extern "C" void runActivationDevice(std::size_t size, float* x, float* y,
-                                 Activation op)
+                                    Activation op)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -176,9 +176,9 @@ extern "C" void runActivationDevice(std::size_t size, float* x, float* y,
     return;
 }
 
-extern "C" void runActivationGradientDevice(std::size_t size, float* x, float* y,
-                                         float* yGrad, float* xGrad,
-                                         Activation op)
+extern "C" void runActivationGradientDevice(std::size_t size, float* x,
+                                            float* y, float* yGrad,
+                                            float* xGrad, Activation op)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;

@@ -145,7 +145,7 @@ void activationGradient(std::size_t size, float* x, float* y, float* yGrad,
 }
 
 void runActivationGradientHost(std::size_t size, float* x, float* y,
-                              float* yGrad, float* xGrad, Activation op)
+                               float* yGrad, float* xGrad, Activation op)
 {
     switch (op)
     {
@@ -243,10 +243,10 @@ void ActivationGradientLayer::execute(const InputDict& inputs)
 
     if (in->getType() == MemoryType::kHOST_MEMORY)
         runActivationGradientHost(size, input, output, outputGrad, gradient,
-                                 mOp);
+                                  mOp);
     else  // in->getType() == MemoryType::kDEVICE_MEMORY
         cuda::runActivationGradientDevice(size, input, output, outputGrad,
-                                       gradient, mOp);
+                                          gradient, mOp);
 }
 
 }  // namespace layers

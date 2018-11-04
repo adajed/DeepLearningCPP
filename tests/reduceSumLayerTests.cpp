@@ -6,9 +6,9 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = Vec;
+using TestCase = std::tuple<Vec, MemoryLocation>;
 
-std::vector<TestCase> SHAPES = {
+std::vector<Vec> SHAPES = {
     // clang-format off
     {},
     {1},
@@ -35,7 +35,7 @@ class ReduceSumTest : public LayerTest,
     {
         UniformGen gen(0);
 
-        RefTensor input(testCase);
+        RefTensor input(std::get<0>(testCase));
         RefTensor output(TensorShape({}));
         input.fillRandomly(gen);
 
@@ -44,7 +44,8 @@ class ReduceSumTest : public LayerTest,
             output.at(0) += input.at(pos);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
-            ITensorPtr in = createInput("in", testCase, MemoryLocation::kHOST);
+            ITensorPtr in =
+                createInput("in", std::get<0>(testCase), std::get<1>(testCase));
             ITensorPtr out = reduceSum(in);
             initializeGraph();
 
@@ -57,9 +58,9 @@ class ReduceSumTest : public LayerTest,
     void testGradient(const TestCase& testCase)
     {
         UniformGen gen(0);
-        RefTensor input(testCase);
+        RefTensor input(std::get<0>(testCase));
         RefTensor outputGrad(TensorShape({}));
-        RefTensor inputGrad(testCase);
+        RefTensor inputGrad(std::get<0>(testCase));
         input.fillRandomly(gen);
         outputGrad.fillRandomly(gen);
 
@@ -67,12 +68,12 @@ class ReduceSumTest : public LayerTest,
             inputGrad.at(pos) = outputGrad.at(0);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
+            MemoryType type = memoryLocationToType(std::get<1>(testCase));
             Tensor::SPtr in = core::getDefaultGraph()->addInput(
-                "in", createLayer<InputLayer>("in", testCase,
-                                              MemoryType::kHOST_MEMORY));
+                "in",
+                createLayer<InputLayer>("in", std::get<0>(testCase), type));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", Shape({}),
-                                                MemoryType::kHOST_MEMORY));
+                "outG", createLayer<InputLayer>("outG", Shape({}), type));
             Tensor::SPtr out = core::reduceSum(in);
             Layer::SPtr layer =
                 createLayer<ReduceSumGradientLayer>(in, out, outG);
@@ -88,12 +89,14 @@ class ReduceSumTest : public LayerTest,
 };
 
 TEST_P(ReduceSumTest, testAPI) { test(GetParam()); }
-INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumTest, ValuesIn(SHAPES));
+INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
 class ReduceSumGradientTest : public ReduceSumTest
 {
 };
 TEST_P(ReduceSumGradientTest, testAPI) { testGradient(GetParam()); }
-INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumGradientTest, ValuesIn(SHAPES));
+INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumGradientTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
 }  // namespace

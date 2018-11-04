@@ -52,11 +52,11 @@ class ActivationGradientLayer : public Layer
 namespace cuda
 {
 extern "C" void runActivationDevice(std::size_t size, float* x, float* y,
-                                 Activation op);
+                                    Activation op);
 
-extern "C" void runActivationGradientDevice(std::size_t size, float* x, float* y,
-                                         float* yGrad, float* xGrad,
-                                         Activation op);
+extern "C" void runActivationGradientDevice(std::size_t size, float* x,
+                                            float* y, float* yGrad,
+                                            float* xGrad, Activation op);
 }  // namespace cuda
 
 }  // namespace layers

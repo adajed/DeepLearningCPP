@@ -48,7 +48,7 @@ __global__ void matmulGradientKernel(int n, int m, int k, float* X1, float* X2,
 }
 
 extern "C" void runMatmulDevice(int n, int m, int k, float* X1, float* X2,
-                             float* Y)
+                                float* Y)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (n * k + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -57,8 +57,9 @@ extern "C" void runMatmulDevice(int n, int m, int k, float* X1, float* X2,
     cudaDeviceSynchronize();
 }
 
-extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1, float* X2,
-                                     float* Ygrad, float* X1grad, float* X2grad)
+extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1,
+                                        float* X2, float* Ygrad, float* X1grad,
+                                        float* X2grad)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (n * m + m * k + BLOCK_SIZE - 1) / BLOCK_SIZE;
