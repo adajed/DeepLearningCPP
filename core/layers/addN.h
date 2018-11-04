@@ -31,6 +31,14 @@ class AddNGradientLayer : public Layer
     void execute(const InputDict& inputs) override;
 };
 
+namespace cuda
+{
+extern "C" void runAddNDevice(int n, std::size_t size, float** xs, float* y);
+
+extern "C" void runAddNGradientDevice(int n, std::size_t size, float* yGrad,
+                                      float** xGrads);
+
+}  // namespace cuda
 }  // namespace layers
 
 Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors);

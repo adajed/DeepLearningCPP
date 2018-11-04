@@ -7,7 +7,7 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = std::tuple<int, Vec>;
+using TestCase = std::tuple<int, Vec, MemoryLocation>;
 using ErrorTestCase = std::vector<Vec>;
 
 std::vector<Vec> SHAPES = {
@@ -67,7 +67,7 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
             {
                 std::string name = "i" + std::to_string(i);
                 inputs.push_back(createInput(name, std::get<1>(testCase),
-                                             MemoryLocation::kHOST));
+                                             std::get<2>(testCase)));
                 inMap.insert({name, ins[i]});
             }
             ITensorPtr output = addN(inputs);
@@ -102,17 +102,18 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
         LayerBuilder builder = [&testCase](const HostVec& ins) {
             std::vector<Tensor::SPtr> inputs;
             std::map<std::string, HostTensor> inMap;
+            MemoryType type = memoryLocationToType(std::get<2>(testCase));
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {
                 std::string name = "i" + std::to_string(i);
-                Layer::SPtr inputLayer = createLayer<InputLayer>(
-                    name, std::get<1>(testCase), MemoryType::kHOST_MEMORY);
+                Layer::SPtr inputLayer =
+                    createLayer<InputLayer>(name, std::get<1>(testCase), type);
                 inputs.push_back(
                     core::getDefaultGraph()->addInput(name, inputLayer));
                 inMap.insert({name, ins[i]});
             }
-            Layer::SPtr outputGradLayer = createLayer<InputLayer>(
-                "outG", std::get<1>(testCase), MemoryType::kHOST_MEMORY);
+            Layer::SPtr outputGradLayer =
+                createLayer<InputLayer>("outG", std::get<1>(testCase), type);
             Tensor::SPtr outputGrad =
                 core::getDefaultGraph()->addInput("outG", outputGradLayer);
             inMap.insert({"outG", ins.back()});
@@ -156,11 +157,13 @@ class AddNGradientTest : public AddNTest
 
 TEST_P(AddNTest, testAPI) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, AddNTest,
-                        Combine(Range(1, 11), ValuesIn(SHAPES)));
+                        Combine(Range(1, 11), ValuesIn(SHAPES),
+                                ValuesIn(LOCATIONS)));
 
 TEST_P(AddNGradientTest, testAPI) { testGradient(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, AddNGradientTest,
-                        Combine(Range(1, 11), ValuesIn(SHAPES)));
+                        Combine(Range(1, 11), ValuesIn(SHAPES),
+                                ValuesIn(LOCATIONS)));
 
 TEST_P(AddNErrorTest, test) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerErrorTest, AddNErrorTest, ValuesIn(ERROR_SHAPES));

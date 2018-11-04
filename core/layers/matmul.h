@@ -32,10 +32,10 @@ class MatmulGradientLayer : public Layer
 
 namespace cuda
 {
-extern "C" void runMatmulGPU(int n, int m, int k, float* X1, float* X2,
+extern "C" void runMatmulDevice(int n, int m, int k, float* X1, float* X2,
                              float* Y);
 
-extern "C" void runMatmulGradientGPU(int n, int m, int k, float* X1, float* X2,
+extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1, float* X2,
                                      float* Ygrad, float* X1grad,
                                      float* X2grad);
 

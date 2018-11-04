@@ -12,7 +12,7 @@ namespace layers
 {
 namespace
 {
-void runMatmulCPU(int n, int m, int k, float* X1, float* X2, float* Y)
+void runMatmulHost(int n, int m, int k, float* X1, float* X2, float* Y)
 {
     for (int x = 0; x < n; ++x)
         for (int y = 0; y < k; ++y)
@@ -23,7 +23,7 @@ void runMatmulCPU(int n, int m, int k, float* X1, float* X2, float* Y)
         }
 }
 
-void runMatmulGradientCPU(int n, int m, int k, float* X1, float* X2,
+void runMatmulGradientHost(int n, int m, int k, float* X1, float* X2,
                           float* Ygrad, float* X1grad, float* X2grad)
 {
     for (int x = 0; x < n; ++x)
@@ -82,9 +82,9 @@ void MatmulLayer::execute(const InputDict& inputs)
     int k = m2->getShape()[1];
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
-        runMatmulCPU(n, m, k, in1, in2, out);
+        runMatmulHost(n, m, k, in1, in2, out);
     else
-        cuda::runMatmulGPU(n, m, k, in1, in2, out);
+        cuda::runMatmulDevice(n, m, k, in1, in2, out);
 }
 
 Layer::TensorMap MatmulLayer::gradients(Tensor::SPtr output,
@@ -133,9 +133,9 @@ void MatmulGradientLayer::execute(const InputDict& inputs)
     std::size_t k = m2->getShape()[1];
 
     if (m1->getType() == MemoryType::kHOST_MEMORY)
-        runMatmulGradientCPU(n, m, k, in1, in2, outG, grad1, grad2);
+        runMatmulGradientHost(n, m, k, in1, in2, outG, grad1, grad2);
     else
-        cuda::runMatmulGradientGPU(n, m, k, in1, in2, outG, grad1, grad2);
+        cuda::runMatmulGradientDevice(n, m, k, in1, in2, outG, grad1, grad2);
 }
 
 }  // namespace layers

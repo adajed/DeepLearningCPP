@@ -62,7 +62,7 @@ void activation(std::size_t size, float* x, float* y)
     for (std::size_t i = 0; i < size; ++i) y[i] = op<act>(x[i]);
 }
 
-void runActivationCPU(std::size_t size, float* x, float* y, Activation op)
+void runActivationHost(std::size_t size, float* x, float* y, Activation op)
 {
     switch (op)
     {
@@ -144,7 +144,7 @@ void activationGradient(std::size_t size, float* x, float* y, float* yGrad,
         xGrad[i] = yGrad[i] * opGrad<act>(x[i], y[i]);
 }
 
-void runActivationGradientCPU(std::size_t size, float* x, float* y,
+void runActivationGradientHost(std::size_t size, float* x, float* y,
                               float* yGrad, float* xGrad, Activation op)
 {
     switch (op)
@@ -196,9 +196,9 @@ void ActivationLayer::execute(const InputDict& inputs)
     std::size_t size = in->getMemory().getCount();
 
     if (in->getType() == MemoryType::kHOST_MEMORY)
-        runActivationCPU(size, input, output, mOp);
+        runActivationHost(size, input, output, mOp);
     else  // in->getType() == MemoryType::kDEVICE_MEMORY
-        cuda::runActivationGPU(size, input, output, mOp);
+        cuda::runActivationDevice(size, input, output, mOp);
 }
 
 Layer::TensorMap ActivationLayer::gradients(Tensor::SPtr out,
@@ -242,10 +242,10 @@ void ActivationGradientLayer::execute(const InputDict& inputs)
     std::size_t size = in->getMemory().getCount();
 
     if (in->getType() == MemoryType::kHOST_MEMORY)
-        runActivationGradientCPU(size, input, output, outputGrad, gradient,
+        runActivationGradientHost(size, input, output, outputGrad, gradient,
                                  mOp);
     else  // in->getType() == MemoryType::kDEVICE_MEMORY
-        cuda::runActivationGradientGPU(size, input, output, outputGrad,
+        cuda::runActivationGradientDevice(size, input, output, outputGrad,
                                        gradient, mOp);
 }
 

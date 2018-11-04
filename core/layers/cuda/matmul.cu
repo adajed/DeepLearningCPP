@@ -47,7 +47,7 @@ __global__ void matmulGradientKernel(int n, int m, int k, float* X1, float* X2,
     }
 }
 
-extern "C" void runMatmulGPU(int n, int m, int k, float* X1, float* X2,
+extern "C" void runMatmulDevice(int n, int m, int k, float* X1, float* X2,
                              float* Y)
 {
     const int BLOCK_SIZE = 256;
@@ -57,7 +57,7 @@ extern "C" void runMatmulGPU(int n, int m, int k, float* X1, float* X2,
     cudaDeviceSynchronize();
 }
 
-extern "C" void runMatmulGradientGPU(int n, int m, int k, float* X1, float* X2,
+extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1, float* X2,
                                      float* Ygrad, float* X1grad, float* X2grad)
 {
     const int BLOCK_SIZE = 256;
