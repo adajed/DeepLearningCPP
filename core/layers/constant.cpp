@@ -20,7 +20,11 @@ void ConstantLayer::initialize()
 {
     float* out = mOutputs[0]->getMemory().getValues();
     std::size_t size = mOutputs[0]->getMemory().getCount();
-    for (std::size_t i = 0; i < size; ++i) out[i] = mValue;
+
+    if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
+        for (std::size_t i = 0; i < size; ++i) out[i] = mValue;
+    else
+        cuda::fillWithValue(size, out, mValue);
 }
 
 //! This method does nothing, because tensor is already
