@@ -49,6 +49,16 @@ class ActivationGradientLayer : public Layer
     std::function<float(float, float)> mFun;
 };
 
+namespace cuda
+{
+extern "C" void runActivationGPU(std::size_t size, float* x, float* y,
+                                 Activation op);
+
+extern "C" void runActivationGradientGPU(std::size_t size, float* x, float* y,
+                                         float* yGrad, float* xGrad,
+                                         Activation op);
+}  // namespace cuda
+
 }  // namespace layers
 
 Tensor::SPtr createActivation(Tensor::SPtr, layers::Activation);

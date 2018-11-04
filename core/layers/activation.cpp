@@ -11,38 +11,179 @@ namespace core
 {
 namespace layers
 {
+namespace
+{
+template <Activation act>
+float op(float x);
+template <>
+float op<Activation::kRELU>(float x)
+{
+    return x >= 0. ? x : 0.;
+}
+template <>
+float op<Activation::kSIGMOID>(float x)
+{
+    return 1. / (1. + std::exp(-x));
+}
+template <>
+float op<Activation::kTANH>(float x)
+{
+    return std::tanh(x);
+}
+template <>
+float op<Activation::kSQUARE>(float x)
+{
+    return x * x;
+}
+template <>
+float op<Activation::kABS>(float x)
+{
+    return std::abs(x);
+}
+template <>
+float op<Activation::kNEG>(float x)
+{
+    return -x;
+}
+template <>
+float op<Activation::kRECIPROCAL>(float x)
+{
+    return 1. / x;
+}
+template <>
+float op<Activation::kLOG>(float x)
+{
+    return std::log(x);
+}
+
+template <Activation act>
+void activation(std::size_t size, float* x, float* y)
+{
+    for (std::size_t i = 0; i < size; ++i) y[i] = op<act>(x[i]);
+}
+
+void runActivationCPU(std::size_t size, float* x, float* y, Activation op)
+{
+    switch (op)
+    {
+        case Activation::kRELU:
+            activation<Activation::kRELU>(size, x, y);
+            return;
+        case Activation::kSIGMOID:
+            activation<Activation::kSIGMOID>(size, x, y);
+            return;
+        case Activation::kTANH:
+            activation<Activation::kTANH>(size, x, y);
+            return;
+        case Activation::kSQUARE:
+            activation<Activation::kSQUARE>(size, x, y);
+            return;
+        case Activation::kABS:
+            activation<Activation::kABS>(size, x, y);
+            return;
+        case Activation::kNEG:
+            activation<Activation::kNEG>(size, x, y);
+            return;
+        case Activation::kRECIPROCAL:
+            activation<Activation::kRECIPROCAL>(size, x, y);
+            return;
+        case Activation::kLOG:
+            activation<Activation::kLOG>(size, x, y);
+            return;
+    }
+}
+
+template <Activation act>
+float opGrad(float x, float o);
+template <>
+float opGrad<Activation::kRELU>(float x, float o)
+{
+    return x >= 0. ? 1. : 0.;
+}
+template <>
+float opGrad<Activation::kSIGMOID>(float x, float o)
+{
+    return o * (1. - o);
+}
+template <>
+float opGrad<Activation::kTANH>(float x, float o)
+{
+    return 1. - o * o;
+}
+template <>
+float opGrad<Activation::kSQUARE>(float x, float o)
+{
+    return 2. * x;
+}
+template <>
+float opGrad<Activation::kABS>(float x, float o)
+{
+    return x >= 0. ? 1. : -1;
+}
+template <>
+float opGrad<Activation::kNEG>(float x, float o)
+{
+    return -1;
+}
+template <>
+float opGrad<Activation::kRECIPROCAL>(float x, float o)
+{
+    return -1. * o * o;
+}
+template <>
+float opGrad<Activation::kLOG>(float x, float o)
+{
+    return 1. / x;
+}
+
+template <Activation act>
+void activationGradient(std::size_t size, float* x, float* y, float* yGrad,
+                        float* xGrad)
+{
+    for (std::size_t i = 0; i < size; ++i)
+        xGrad[i] = yGrad[i] * opGrad<act>(x[i], y[i]);
+}
+
+void runActivationGradientCPU(std::size_t size, float* x, float* y,
+                              float* yGrad, float* xGrad, Activation op)
+{
+    switch (op)
+    {
+        case Activation::kRELU:
+            activationGradient<Activation::kRELU>(size, x, y, yGrad, xGrad);
+            return;
+        case Activation::kSIGMOID:
+            activationGradient<Activation::kSIGMOID>(size, x, y, yGrad, xGrad);
+            return;
+        case Activation::kTANH:
+            activationGradient<Activation::kTANH>(size, x, y, yGrad, xGrad);
+            return;
+        case Activation::kSQUARE:
+            activationGradient<Activation::kSQUARE>(size, x, y, yGrad, xGrad);
+            return;
+        case Activation::kABS:
+            activationGradient<Activation::kABS>(size, x, y, yGrad, xGrad);
+            return;
+        case Activation::kNEG:
+            activationGradient<Activation::kNEG>(size, x, y, yGrad, xGrad);
+            return;
+        case Activation::kRECIPROCAL:
+            activationGradient<Activation::kRECIPROCAL>(size, x, y, yGrad,
+                                                        xGrad);
+            return;
+        case Activation::kLOG:
+            activationGradient<Activation::kLOG>(size, x, y, yGrad, xGrad);
+            return;
+    }
+}
+
+}  // namespace
+
 ActivationLayer::ActivationLayer(ID id, Tensor::SPtr t, Activation op)
     : DifferentiableLayer(id, {t},
                           {createTensor("", t->getShape(), t->getType())}),
       mOp(op)
 {
-    switch (op)
-    {
-        case Activation::kRELU:
-            mFun = [](float x) { return x > 0. ? x : 0.; };
-            break;
-        case Activation::kSIGMOID:
-            mFun = [](float x) { return 1. / (1. + std::exp(-x)); };
-            break;
-        case Activation::kTANH:
-            mFun = [](float x) { return std::tanh(x); };
-            break;
-        case Activation::kSQUARE:
-            mFun = [](float x) { return x * x; };
-            break;
-        case Activation::kABS:
-            mFun = [](float x) { return std::abs(x); };
-            break;
-        case Activation::kNEG:
-            mFun = [](float x) { return -x; };
-            break;
-        case Activation::kRECIPROCAL:
-            mFun = [](float x) { return 1. / x; };
-            break;
-        case Activation::kLOG:
-            mFun = [](float x) { return std::log(x); };
-            break;
-    }
 }
 
 void ActivationLayer::execute(const InputDict& inputs)
@@ -54,7 +195,10 @@ void ActivationLayer::execute(const InputDict& inputs)
     float* output = mOutputs[0]->getMemory().getValues();
     std::size_t size = in->getMemory().getCount();
 
-    for (std::size_t pos = 0; pos < size; ++pos) output[pos] = mFun(input[pos]);
+    if (in->getType() == MemoryType::kHOST_MEMORY)
+        runActivationCPU(size, input, output, mOp);
+    else  // in->getType() == MemoryType::kDEVICE_MEMORY
+        cuda::runActivationGPU(size, input, output, mOp);
 }
 
 Layer::TensorMap ActivationLayer::gradients(Tensor::SPtr out,
@@ -75,38 +219,11 @@ ActivationGradientLayer::ActivationGradientLayer(ID id, Tensor::SPtr in,
                                                  Tensor::SPtr outGrad,
                                                  Activation op)
     : Layer(id, {in, out, outGrad},
-            {createTensor("", in->getShape(), outGrad->getType())})
+            {createTensor("", in->getShape(), outGrad->getType())}),
+      mOp(op)
 {
     assert(in->getShape() == out->getShape());
     assert(out->getShape() == outGrad->getShape());
-
-    switch (op)
-    {
-        case Activation::kRELU:
-            mFun = [](float x, float o) { return x > 0. ? 1. : 0.; };
-            break;
-        case Activation::kSIGMOID:
-            mFun = [](float x, float o) { return o * (1. - o); };
-            break;
-        case Activation::kTANH:
-            mFun = [](float x, float o) { return 1. - o * o; };
-            break;
-        case Activation::kSQUARE:
-            mFun = [](float x, float o) { return 2 * x; };
-            break;
-        case Activation::kABS:
-            mFun = [](float x, float o) { return x > 0 ? 1. : -1.; };
-            break;
-        case Activation::kNEG:
-            mFun = [](float x, float o) { return -1; };
-            break;
-        case Activation::kRECIPROCAL:
-            mFun = [](float x, float o) { return -1. * o * o; };
-            break;
-        case Activation::kLOG:
-            mFun = [](float x, float o) { return 1. / x; };
-            break;
-    }
 }
 
 void ActivationGradientLayer::execute(const InputDict& inputs)
@@ -124,8 +241,12 @@ void ActivationGradientLayer::execute(const InputDict& inputs)
     float* gradient = mOutputs[0]->getMemory().getValues();
     std::size_t size = in->getMemory().getCount();
 
-    for (std::size_t pos = 0; pos < size; ++pos)
-        gradient[pos] = outputGrad[pos] * mFun(input[pos], output[pos]);
+    if (in->getType() == MemoryType::kHOST_MEMORY)
+        runActivationGradientCPU(size, input, output, outputGrad, gradient,
+                                 mOp);
+    else  // in->getType() == MemoryType::kDEVICE_MEMORY
+        cuda::runActivationGradientGPU(size, input, output, outputGrad,
+                                       gradient, mOp);
 }
 
 }  // namespace layers

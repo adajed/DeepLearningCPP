@@ -3,8 +3,18 @@
 #include <cstring>
 #include <stdexcept>
 
-#ifdef CUDA_SUPPORT
+#ifdef CUDA_AVAILABLE
 #include <cuda.h>
+#include <cuda_runtime_api.h>
+
+#define CUDA_CALL(op)                                          \
+    {                                                          \
+        cudaError_t error__ = (op);                            \
+        if (error__)                                           \
+            printf("Cuda error: " #op " returned op \"%s\"\n", \
+                   cudaGetErrorString(error__));               \
+    }
+
 #endif
 
 namespace graphdl
@@ -34,9 +44,9 @@ void Memory::fill(float* memory) const
     }
     else  // mType == MemoryType::kHOST_MEMORY
     {
-#ifdef CUDA_SUPPORT
-        cudaMemcpy(memory, mValues, sizeof(float) * getCount(),
-                   cudaMemcpyDeviceToHost);
+#ifdef CUDA_AVAILABLE
+        CUDA_CALL(cudaMemcpy(memory, mValues, sizeof(float) * getCount(),
+                             cudaMemcpyDeviceToHost));
 #else
         throw std::runtime_error("GPU support not implemented, please use CPU");
 #endif
@@ -55,10 +65,8 @@ bool Memory::allocate()
     }
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
-#ifdef CUDA_SUPPORT
-        if (cudaMallocManaged((void**)&mValues, mCount * sizeof(float)) !=
-            cudaSuccess)
-            return false;
+#ifdef CUDA_AVAILABLE
+        CUDA_CALL(cudaMallocManaged((void**)&mValues, mCount * sizeof(float)));
         return true;
 #else
         throw std::runtime_error("GPU support not implemented, please use CPU");
@@ -79,7 +87,8 @@ void Memory::free()
     }
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
-#ifdef CUDA_SUPPORT
+#ifdef CUDA_AVAILABLE
+        // FIXME: add CUDA_CALL, currently "driver shutting down" error
         cudaFree(mValues);
 #else
         throw std::runtime_error("GPU support not implemented, please use CPU");

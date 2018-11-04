@@ -9,7 +9,7 @@ namespace cuda
 {
 extern "C" void copyInput(float* dest, float* src, size_t N)
 {
-    cudaMemcpy(dest, src, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(dest, src, N * sizeof(float), cudaMemcpyHostToDevice);
 }
 
 }  // namespace cuda

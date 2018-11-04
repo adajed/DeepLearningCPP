@@ -6,7 +6,7 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = std::tuple<Vec, Activation>;
+using TestCase = std::tuple<Vec, Activation, MemoryLocation>;
 
 std::vector<Vec> SHAPES = {
     // clang-format off
@@ -37,6 +37,13 @@ std::vector<Activation> OPS = {
     Activation::kNEG,
     Activation::kRECIPROCAL,
     Activation::kLOG
+    // clang-format on
+};
+
+std::vector<MemoryLocation> LOCATIONS = {
+    // clang-format off
+    MemoryLocation::kHOST,
+    MemoryLocation::kDEVICE
     // clang-format on
 };
 
@@ -171,7 +178,7 @@ class ActivationTest : public LayerTest,
     {
         return [&testCase](const HostVec& ins) {
             ITensorPtr in =
-                createInput("in", std::get<0>(testCase), MemoryLocation::kHOST);
+                createInput("in", std::get<0>(testCase), std::get<2>(testCase));
             ITensorPtr out;
             switch (std::get<1>(testCase))
             {
@@ -208,12 +215,13 @@ class ActivationTest : public LayerTest,
     LayerBuilder getGradientBuilder(const TestCase& testCase)
     {
         return [&testCase](const HostVec& ins) {
+            MemoryType type = memoryLocationToType(std::get<2>(testCase));
             Tensor::SPtr in = core::getDefaultGraph()->addInput(
-                "in", createLayer<InputLayer>("in", std::get<0>(testCase),
-                                              MemoryType::kHOST_MEMORY));
+                "in",
+                createLayer<InputLayer>("in", std::get<0>(testCase), type));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", std::get<0>(testCase),
-                                                MemoryType::kHOST_MEMORY));
+                "outG",
+                createLayer<InputLayer>("outG", std::get<0>(testCase), type));
 
             // make sure that input to log is positive
             if (std::get<1>(testCase) == Activation::kLOG) in = abs(in);
@@ -232,12 +240,14 @@ class ActivationTest : public LayerTest,
 
 TEST_P(ActivationTest, testAPI) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, ActivationTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
+                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
+                                ValuesIn(LOCATIONS)));
 
 class ActivationGradientTest : public ActivationTest
 {
 };
 TEST_P(ActivationGradientTest, testAPI) { testGradient(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, ActivationGradientTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
+                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
+                                ValuesIn(LOCATIONS)));
 }  // namespace

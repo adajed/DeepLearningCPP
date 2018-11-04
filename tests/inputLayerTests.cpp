@@ -2,15 +2,22 @@
 
 namespace
 {
-using TestCase = std::tuple<TensorShape>;
+using TestCase = std::tuple<Vec, MemoryLocation>;
 
-std::vector<TestCase> testCases = {
+std::vector<Vec> SHAPES = {
     // clang-format off
-    {{1}},
-    {{1, 1}},
-    {{2}},
-    {{2, 2}},
-    {{2, 2, 2}}
+    {1},
+    {1, 1},
+    {2},
+    {2, 2},
+    {2, 2, 2}
+    // clang-format on
+};
+
+std::vector<MemoryLocation> LOCATIONS = {
+    // clang-format off
+    MemoryLocation::kHOST,
+    MemoryLocation::kDEVICE
     // clang-format on
 };
 
@@ -23,7 +30,7 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
 
         LayerBuilder builder = [testCase](const HostVec& ins) {
             ITensorPtr input = createInput("input", std::get<0>(testCase),
-                                           MemoryLocation::kHOST);
+                                           std::get<1>(testCase));
             initializeGraph();
 
             return HostVec({input->eval({{"input", ins[0]}})});
@@ -51,5 +58,6 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
 };
 
 TEST_P(InputTest, test) { test(GetParam()); }
-INSTANTIATE_TEST_CASE_P(LayerTest, InputTest, testing::ValuesIn(testCases));
+INSTANTIATE_TEST_CASE_P(LayerTest, InputTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 }  // namespace
