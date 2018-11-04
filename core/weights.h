@@ -15,7 +15,8 @@ extern "C" void initWeights(float* memory, size_t count);
 class WeightsLayer : public Layer
 {
    public:
-    WeightsLayer(ID id, const std::string& name, const Shape& shape);
+    WeightsLayer(ID id, const std::string& name, const Shape& shape,
+                    MemoryType type);
 
     void initialize() override;
 

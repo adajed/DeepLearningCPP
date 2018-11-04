@@ -44,7 +44,7 @@ class ReduceSumTest : public LayerTest,
             output.at(0) += input.at(pos);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
-            ITensorPtr in = createInput("in", testCase);
+            ITensorPtr in = createInput("in", testCase, MemoryLocation::kHOST);
             ITensorPtr out = reduceSum(in);
             initializeGraph();
 
@@ -68,9 +68,9 @@ class ReduceSumTest : public LayerTest,
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
             Tensor::SPtr in = core::getDefaultGraph()->addInput(
-                "in", createLayer<InputLayer>("in", testCase));
+                "in", createLayer<InputLayer>("in", testCase, MemoryType::kHOST_MEMORY));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", Shape({})));
+                "outG", createLayer<InputLayer>("outG", Shape({}), MemoryType::kHOST_MEMORY));
             Tensor::SPtr out = core::reduceSum(in);
             Layer::SPtr layer =
                 createLayer<ReduceSumGradientLayer>(in, out, outG);

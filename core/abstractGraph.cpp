@@ -74,22 +74,37 @@ IGraphPtr getDefaultGraph()
     return core::makeAbstractGraph(graph);
 }
 
-ITensorPtr createInput(const std::string& name, const Shape& shape)
+ITensorPtr createInput(const std::string& name, const Shape& shape, MemoryLocation location)
 {
+#ifndef CUDA_AVAILABLE
+    if (location == MemoryLocation::kDEVICE)
+        throw std::runtime_error("Cuda not available, please use kHOST");
+#endif
     auto inputs = core::getDefaultGraph()->getInputs();
     for (auto in : inputs)
         if (in.first == name)
             throw std::runtime_error("Input \"" + name + "\" already exists");
 
-    core::Layer::SPtr input = core::createLayer<core::InputLayer>(name, shape);
+    core::MemoryType type = core::memoryLocationToType(location);
+    core::Layer::SPtr input = core::createLayer<core::InputLayer>(name, shape, type);
     core::Tensor::SPtr tensor = core::getDefaultGraph()->addInput(name, input);
     return core::makeAbstractTensor(tensor);
 }
 
-ITensorPtr createWeights(const std::string& name, const Shape& shape)
+ITensorPtr createWeights(const std::string& name, const Shape& shape, MemoryLocation location)
 {
+#ifndef CUDA_AVAILABLE
+    if (location == MemoryLocation::kDEVICE)
+        throw std::runtime_error("Cuda not available, please use kHOST");
+#endif
+    auto graphWeights = core::getDefaultGraph()->getWeights();
+    for (auto in : graphWeights)
+        if (in.first == name)
+            throw std::runtime_error("Weights \"" + name + "\" already exists");
+
+    core::MemoryType type = core::memoryLocationToType(location);
     core::Layer::SPtr weights =
-        core::createLayer<core::WeightsLayer>(name, shape);
+        core::createLayer<core::WeightsLayer>(name, shape, type);
     core::Tensor::SPtr tensor =
         core::getDefaultGraph()->addWeights(name, weights);
     return core::makeAbstractTensor(tensor);

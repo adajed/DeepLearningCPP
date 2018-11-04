@@ -87,5 +87,22 @@ void Memory::free()
     }
 }
 
+MemoryType memoryLocationToType(MemoryLocation location)
+{
+    switch (location)
+    {
+        case MemoryLocation::kHOST:
+            return MemoryType::kHOST_MEMORY;
+        case MemoryLocation::kDEVICE:
+            return MemoryType::kDEVICE_MEMORY;
+    }
+
+    // you shoudn't be here
+    throw std::runtime_error(
+            "Unknown MemoryLocation: " +
+            std::to_string(static_cast<int>(location)));
+
+}
+
 }  // namespace core
 }  // namespace graphdl

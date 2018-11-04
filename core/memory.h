@@ -2,6 +2,7 @@
 #define GRAPHDL_CORE_MEMORY_H_
 
 #include <cstddef>
+#include "graphdl.h"
 
 namespace graphdl
 {
@@ -42,6 +43,8 @@ class Memory
     float* mValues;
     std::size_t mCount;
 };
+
+MemoryType memoryLocationToType(MemoryLocation location);
 
 }  // namespace core
 }  // namespace graphdl

@@ -17,7 +17,7 @@ ITensorPtr operator*(ITensorPtr t1, ITensorPtr t2);
 ITensorPtr div(ITensorPtr t1, ITensorPtr t2);
 ITensorPtr operator/(ITensorPtr t1, ITensorPtr t2);
 
-ITensorPtr constant(float value, const Shape& shape);
+ITensorPtr constant(float value, const Shape& shape, MemoryLocation loc);
 
 ITensorPtr matmul(ITensorPtr m1, ITensorPtr m2);
 

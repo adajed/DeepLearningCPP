@@ -11,7 +11,7 @@ namespace core
 namespace layers
 {
 AssignLayer::AssignLayer(ID id, Tensor::SPtr dest, Tensor::SPtr src)
-    : Layer(id, {src}, {createTensor("", {0})}), mDest(dest)
+    : Layer(id, {src}, {createTensor("", {0}, MemoryType::kHOST_MEMORY)}), mDest(dest)
 {
     assert(dest->getShape() == src->getShape());
 }

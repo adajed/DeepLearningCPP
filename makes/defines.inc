@@ -4,7 +4,7 @@ OUTDIR=$(ROOT_DIR)/build
 
 GTEST_LIB_PATH=/usr/lib
 
-COMMON_CFLAGS=-Wall -I/$(ROOT_DIR)/includes
+COMMON_CFLAGS=-std=c++14 -Wall -I/$(ROOT_DIR)/includes -DCUDA_AVAILABLE
 COMMON_LFLAGS=
 
 CC=g++

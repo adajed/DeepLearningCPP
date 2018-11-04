@@ -19,6 +19,12 @@ using HostTensor = std::vector<float>;
 using InputDict = std::map<std::string, HostTensor>;
 using Shape = std::vector<unsigned int>;
 
+enum class MemoryLocation
+{
+    kHOST = 0,
+    kDEVICE = 1
+};
+
 class ITensor;
 using ITensorPtr = std::shared_ptr<ITensor>;
 
@@ -108,15 +114,17 @@ IGraphPtr getDefaultGraph();
 //! \brief This function creates new input in the default graph.
 //! \param name Name of the input.
 //! \param shape Dimensions of the input.
+//! \param location Location of the input.
 //!
-ITensorPtr createInput(const std::string& name, const Shape& shape);
+ITensorPtr createInput(const std::string& name, const Shape& shape, MemoryLocation location);
 
 //! \fn createWeights
 //! \brief This function creates new weights in current graph.
 //! \param name Name og the weights.
 //! \param shape Dimensions of the weights.
+//! \param location Location of the weights.
 //!
-ITensorPtr createWeights(const std::string& name, const Shape& shape);
+ITensorPtr createWeights(const std::string& name, const Shape& shape, MemoryLocation location);
 
 //! \fn
 //! \brief Initializes graph (i.e. initializes all weights).

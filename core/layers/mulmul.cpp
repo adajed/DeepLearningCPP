@@ -14,13 +14,16 @@ namespace
 {
 std::vector<Tensor::SPtr> createOutput(Tensor::SPtr m1, Tensor::SPtr m2)
 {
-    return {createTensor("", {m1->getShape()[0], m2->getShape()[1]})};
+    assert(m1->getType() == m2->getType());
+    return {createTensor("", {m1->getShape()[0], m2->getShape()[1]}, m1->getType())};
 }
 
 std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr m1,
                                                 Tensor::SPtr m2)
 {
-    return {createTensor("", m1->getShape()), createTensor("", m2->getShape())};
+    assert(m1->getType() == m2->getType());
+    return {createTensor("", m1->getShape(), m1->getType()),
+            createTensor("", m2->getShape(), m2->getType())};
 }
 
 }  // namespace

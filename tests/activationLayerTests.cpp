@@ -170,7 +170,7 @@ class ActivationTest : public LayerTest,
     LayerBuilder getBuilder(const TestCase& testCase)
     {
         return [&testCase](const HostVec& ins) {
-            ITensorPtr in = createInput("in", std::get<0>(testCase));
+            ITensorPtr in = createInput("in", std::get<0>(testCase), MemoryLocation::kHOST);
             ITensorPtr out;
             switch (std::get<1>(testCase))
             {
@@ -208,9 +208,9 @@ class ActivationTest : public LayerTest,
     {
         return [&testCase](const HostVec& ins) {
             Tensor::SPtr in = core::getDefaultGraph()->addInput(
-                "in", createLayer<InputLayer>("in", std::get<0>(testCase)));
+                "in", createLayer<InputLayer>("in", std::get<0>(testCase), MemoryType::kHOST_MEMORY));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", std::get<0>(testCase)));
+                "outG", createLayer<InputLayer>("outG", std::get<0>(testCase), MemoryType::kHOST_MEMORY));
 
             // make sure that input to log is positive
             if (std::get<1>(testCase) == Activation::kLOG) in = abs(in);

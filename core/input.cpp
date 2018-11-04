@@ -5,8 +5,9 @@ namespace graphdl
 {
 namespace core
 {
-InputLayer::InputLayer(ID id, const std::string& name, const Shape& shape)
-    : Layer(id, {}, {createTensor(name, shape)})
+InputLayer::InputLayer(ID id, const std::string& name, const Shape& shape,
+                       MemoryType type)
+    : Layer(id, {}, {createTensor(name, shape, type)})
 {
 }
 

@@ -47,26 +47,27 @@ int numCorrect(const HostTensor& y, const HostTensor& pred)
 
 Network buildNetwork()
 {
-    ITensorPtr X = createInput("X", {BATCH_SIZE, 28 * 28});
-    ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10});
+    MemoryLocation host = MemoryLocation::kHOST;
+    ITensorPtr X = createInput("X", {BATCH_SIZE, 28 * 28}, host);
+    ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, host);
 
-    ITensorPtr W1 = createWeights("W1", {28 * 28, 200});
-    ITensorPtr W2 = createWeights("W2", {200, 100});
-    ITensorPtr W3 = createWeights("W3", {100, 10});
+    ITensorPtr W1 = createWeights("W1", {28 * 28, 200}, host);
+    ITensorPtr W2 = createWeights("W2", {200, 100}, host);
+    ITensorPtr W3 = createWeights("W3", {100, 10}, host);
 
     ITensorPtr a1 = sigmoid(matmul(X, W1));
     ITensorPtr a2 = sigmoid(matmul(a1, W2));
     ITensorPtr a3 = sigmoid(matmul(a2, W3));
 
-    ITensorPtr ones = constant(1., Y->getShape());
+    ITensorPtr ones = constant(1., Y->getShape(), host);
     ITensorPtr loss = neg(reduceSum(Y * log(a3) + (ones - Y) * log(ones - a3)));
-    loss = loss / constant(BATCH_SIZE, {});
+    loss = loss / constant(BATCH_SIZE, {}, host);
 
     std::map<ITensorPtr, ITensorPtr> grads = gradients(loss);
     std::vector<ITensorPtr> modifiers;
     for (auto pair : grads)
     {
-        ITensorPtr s = constant(0.1, pair.first->getShape());
+        ITensorPtr s = constant(0.1, pair.first->getShape(), host);
         modifiers.push_back(assign(pair.first, pair.first - s * pair.second));
     }
 

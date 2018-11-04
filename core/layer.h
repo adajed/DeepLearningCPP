@@ -24,7 +24,7 @@ class Tensor
     using SPtr = std::shared_ptr<Tensor>;
     using WeakPtr = std::weak_ptr<Tensor>;
 
-    Tensor(ID id, const std::string& name, const TensorShape& shape);
+    Tensor(ID id, const std::string& name, const TensorShape& shape, MemoryType type);
 
     //! \fn getID
     //!
@@ -55,6 +55,11 @@ class Tensor
     //! \brief Returns graph to which this tensor belongs to.
     //!
     std::shared_ptr<Graph> getGraph() const;
+
+    //! \fn getType
+    //! \brief Returns memory location of this tensor.
+    //!
+    MemoryType getType() const;
 
     //! \fn getMemory
     //!
@@ -92,7 +97,7 @@ class Tensor
     Memory mMemory;
 };
 
-Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape);
+Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape, MemoryType type);
 
 //! \class Layer
 //! \brief Class representing part of computation.

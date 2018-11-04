@@ -11,7 +11,7 @@ namespace core
 namespace layers
 {
 ReduceSumLayer::ReduceSumLayer(ID id, Tensor::SPtr tensor)
-    : DifferentiableLayer(id, {tensor}, {createTensor("", {})})
+    : DifferentiableLayer(id, {tensor}, {createTensor("", {}, tensor->getType())})
 {
 }
 
@@ -41,7 +41,7 @@ Layer::TensorMap ReduceSumLayer::gradients(Tensor::SPtr out,
 ReduceSumGradientLayer::ReduceSumGradientLayer(ID id, Tensor::SPtr in,
                                                Tensor::SPtr out,
                                                Tensor::SPtr outGrad)
-    : Layer(id, {in, out, outGrad}, {createTensor("", in->getShape())})
+    : Layer(id, {in, out, outGrad}, {createTensor("", in->getShape(), outGrad->getType())})
 {
 }
 

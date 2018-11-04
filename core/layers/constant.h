@@ -12,7 +12,7 @@ namespace layers
 class ConstantLayer : public Layer
 {
    public:
-    ConstantLayer(ID id, float value, const TensorShape& shape);
+    ConstantLayer(ID id, float value, const TensorShape& shape, MemoryType type);
 
     void initialize() override;
 
@@ -24,7 +24,7 @@ class ConstantLayer : public Layer
 
 }  // namespace layers
 
-Tensor::SPtr constant(float value, const TensorShape& shape);
+Tensor::SPtr constant(float value, const TensorShape& shape, MemoryType type);
 
 }  // namespace core
 }  // namespace graphdl

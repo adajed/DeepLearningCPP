@@ -24,7 +24,7 @@ std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
 std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
 {
     std::vector<Tensor::SPtr> outs;
-    for (Tensor::SPtr i : ins) outs.push_back(createTensor("", i->getShape()));
+    for (Tensor::SPtr i : ins) outs.push_back(createTensor("", i->getShape(), i->getType()));
     return outs;
 }
 
@@ -32,7 +32,7 @@ std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
 
 AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
     : DifferentiableLayer(id, tensors,
-                          {createTensor("", tensors[0]->getShape())})
+                          {createTensor("", tensors[0]->getShape(), tensors[0]->getType())})
 {
 }
 

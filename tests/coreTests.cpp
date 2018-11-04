@@ -54,7 +54,8 @@ TEST_F(CoreTest, emptyInput)
 TEST_F(CoreTest, addInput)
 {
     const std::string INPUT_NAME = "input1";
-    graphdl::ITensorPtr input = graphdl::createInput(INPUT_NAME, {3, 224, 224});
+    graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr input = graphdl::createInput(INPUT_NAME, {3, 224, 224}, loc);
     auto inputs = graphdl::getDefaultGraph()->getInputs();
     EXPECT_EQ(inputs.size(), 1);
     EXPECT_EQ(inputs.count(INPUT_NAME), 1);
@@ -69,7 +70,8 @@ TEST_F(CoreTest, emptyWeights)
 TEST_F(CoreTest, addWeights)
 {
     const std::string WEIGHTS_NAME = "weights";
-    graphdl::ITensorPtr w = graphdl::createWeights(WEIGHTS_NAME, {100, 100});
+    graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr w = graphdl::createWeights(WEIGHTS_NAME, {100, 100}, loc);
     auto weights = graphdl::getDefaultGraph()->getWeights();
     EXPECT_EQ(weights.size(), 1);
     EXPECT_EQ(weights.count(WEIGHTS_NAME), 1);
@@ -77,18 +79,20 @@ TEST_F(CoreTest, addWeights)
 
 TEST_F(CoreTest, addInputWithTheSameName)
 {
-    graphdl::ITensorPtr input1 = graphdl::createInput("input1", {3, 224, 224});
+    graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr input1 = graphdl::createInput("input1", {3, 224, 224}, loc);
     EXPECT_NE(input1, nullptr);
     EXPECT_THROW(
-        { graphdl::ITensorPtr t = graphdl::createInput("input1", {}); },
+        { graphdl::ITensorPtr t = graphdl::createInput("input1", {}, loc); },
         std::runtime_error);
 }
 
 TEST_F(CoreTest, gradients)
 {
-    graphdl::ITensorPtr i = graphdl::createInput("input", {1});
-    graphdl::ITensorPtr w = graphdl::createWeights("weights", {1});
-    graphdl::ITensorPtr output = (graphdl::constant(1., {1}) / i) * w;
+    graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr i = graphdl::createInput("input", {}, host);
+    graphdl::ITensorPtr w = graphdl::createWeights("weights", {}, host);
+    graphdl::ITensorPtr output = (graphdl::constant(1., {}, host) / i) * w;
     graphdl::ITensorPtr grad = graphdl::gradients(output)[w];
     graphdl::initializeGraph();
 
@@ -100,8 +104,9 @@ TEST_F(CoreTest, gradients)
 
 TEST_F(CoreTest, nonScalarGradientException)
 {
-    graphdl::ITensorPtr i = graphdl::createInput("input", {2, 2});
-    graphdl::ITensorPtr w = graphdl::createWeights("weights", {2, 2});
+    graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr i = graphdl::createInput("input", {2, 2}, host);
+    graphdl::ITensorPtr w = graphdl::createWeights("weights", {2, 2}, host);
     graphdl::ITensorPtr o = i * w;
     graphdl::ITensorPtr grad;
     EXPECT_THROW({ grad = graphdl::gradients(o)[w]; }, std::runtime_error);

@@ -6,13 +6,13 @@ namespace graphdl
 {
 namespace core
 {
-Tensor::Tensor(ID id, const std::string& name, const TensorShape& shape)
+Tensor::Tensor(ID id, const std::string& name, const TensorShape& shape, MemoryType type)
     : mID(id),
       mName(name),
       mShape(shape),
       mIsEvaluated(false),
       mLayer(),
-      mMemory(MemoryType::kHOST_MEMORY, shape.getCount())
+      mMemory(type, shape.getCount())
 {
 }
 
@@ -29,6 +29,8 @@ Layer::SPtr Tensor::getLayer() const { return mLayer.lock(); }
 void Tensor::setLayer(Layer::SPtr layer) { mLayer = Layer::WeakPtr(layer); }
 
 Graph::SPtr Tensor::getGraph() const { return mLayer.lock()->getGraph(); }
+
+MemoryType Tensor::getType() const { return mMemory.getType(); }
 
 Memory Tensor::getMemory() { return mMemory; }
 
@@ -49,10 +51,10 @@ void Tensor::reset() { mIsEvaluated = false; }
 
 Tensor::~Tensor() { mMemory.free(); }
 
-Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape)
+Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape, MemoryType type)
 {
     Graph::SPtr graph = core::getDefaultGraph();
-    return std::make_shared<Tensor>(graph->nextTensorID(), name, shape);
+    return std::make_shared<Tensor>(graph->nextTensorID(), name, shape, type);
 }
 
 }  // namespace core

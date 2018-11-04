@@ -47,8 +47,8 @@ class AssignTest : public LayerTest,
         tensor.fillRandomly(gen);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
-            ITensorPtr in = createInput("in", std::get<0>(testCase));
-            ITensorPtr w = createWeights("w", std::get<0>(testCase));
+            ITensorPtr in = createInput("in", std::get<0>(testCase), MemoryLocation::kHOST);
+            ITensorPtr w = createWeights("w", std::get<0>(testCase), MemoryLocation::kHOST);
             ITensorPtr a = assign(w, in);
             initializeGraph();
 
@@ -66,8 +66,8 @@ class AssignErrorTest : public LayerTest,
    public:
     void test(const ErrorTestCase& testCase)
     {
-        ITensorPtr in = createInput("in", std::get<0>(testCase));
-        ITensorPtr w = createInput("w", std::get<1>(testCase));
+        ITensorPtr in = createInput("in", std::get<0>(testCase), MemoryLocation::kHOST);
+        ITensorPtr w = createInput("w", std::get<1>(testCase), MemoryLocation::kHOST);
         ITensorPtr a;
         EXPECT_THROW({ a = assign(w, in); }, std::runtime_error);
     }

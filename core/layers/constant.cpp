@@ -2,6 +2,7 @@
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+#include "memory.h"
 
 namespace graphdl
 {
@@ -9,8 +10,8 @@ namespace core
 {
 namespace layers
 {
-ConstantLayer::ConstantLayer(ID id, float value, const TensorShape& shape)
-    : Layer(id, {}, {createTensor("", shape)}), mValue(value)
+ConstantLayer::ConstantLayer(ID id, float value, const TensorShape& shape, MemoryType type)
+    : Layer(id, {}, {createTensor("", shape, type)}), mValue(value)
 {
 }
 
@@ -27,17 +28,18 @@ void ConstantLayer::execute(const InputDict& inputs) {}
 
 }  // namespace layers
 
-Tensor::SPtr constant(float value, const TensorShape& shape)
+Tensor::SPtr constant(float value, const TensorShape& shape, MemoryType type)
 {
-    Layer::SPtr layer = createLayer<layers::ConstantLayer>(value, shape);
+    Layer::SPtr layer = createLayer<layers::ConstantLayer>(value, shape, type);
     return layer->getOutputs()[0];
 }
 
 }  // namespace core
 
-ITensorPtr constant(float value, const Shape& shape)
+ITensorPtr constant(float value, const Shape& shape, MemoryLocation location)
 {
-    return makeAbstractTensor(core::constant(value, shape));
+    core::MemoryType type = core::memoryLocationToType(location);
+    return makeAbstractTensor(core::constant(value, shape, type));
 }
 
 }  // namespace graphdl
