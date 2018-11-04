@@ -20,6 +20,11 @@ class AssignLayer : public Layer
     Tensor::WeakPtr mDest;
 };
 
+namespace cuda
+{
+void assignDevice(float* dest, float* src, std::size_t size);
+
+}  // namespace cuda
 }  // namespace layers
 
 Tensor::SPtr assign(Tensor::SPtr dest, Tensor::SPtr src);

@@ -4,22 +4,22 @@
 
 namespace
 {
-using TestCase = std::tuple<Vec>;
+using TestCase = std::tuple<Vec, MemoryLocation>;
 using ErrorTestCase = std::tuple<Vec, Vec>;
 
-std::vector<TestCase> SHAPES = {
+std::vector<Vec> SHAPES = {
     // clang-format off
-    {{}},
-    {{1}},
-    {{1, 1}},
-    {{1, 1, 1}},
-    {{1, 1, 1, 1}},
-    {{1, 1, 1, 1, 1}},
-    {{2}},
-    {{2, 2}},
-    {{2, 2, 2}},
-    {{2, 2, 2, 2}},
-    {{2, 2, 2, 2, 2}}
+    {},
+    {1},
+    {1, 1},
+    {1, 1, 1},
+    {1, 1, 1, 1},
+    {1, 1, 1, 1, 1},
+    {2},
+    {2, 2},
+    {2, 2, 2},
+    {2, 2, 2, 2},
+    {2, 2, 2, 2, 2}
     // clang-format on
 };
 
@@ -48,9 +48,9 @@ class AssignTest : public LayerTest,
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
             ITensorPtr in =
-                createInput("in", std::get<0>(testCase), MemoryLocation::kHOST);
+                createInput("in", std::get<0>(testCase), std::get<1>(testCase));
             ITensorPtr w = createWeights("w", std::get<0>(testCase),
-                                         MemoryLocation::kHOST);
+                                         std::get<1>(testCase));
             ITensorPtr a = assign(w, in);
             initializeGraph();
 
@@ -78,7 +78,8 @@ class AssignErrorTest : public LayerTest,
 };
 
 TEST_P(AssignTest, testAPI) { test(GetParam()); }
-INSTANTIATE_TEST_CASE_P(LayerTest, AssignTest, ValuesIn(SHAPES));
+INSTANTIATE_TEST_CASE_P(LayerTest, AssignTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
 TEST_P(AssignErrorTest, test) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerErrorTest, AssignErrorTest,

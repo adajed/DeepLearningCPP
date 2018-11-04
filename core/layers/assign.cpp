@@ -26,7 +26,13 @@ void AssignLayer::execute(const InputDict& inputs)
     float* in = src->getMemory().getValues();
     float* out = dest->getMemory().getValues();
     std::size_t size = src->getMemory().getCount();
-    for (std::size_t pos = 0; pos < size; ++pos) out[pos] = in[pos];
+
+    if (src->getType() == MemoryType::kHOST_MEMORY)
+    {
+        for (std::size_t pos = 0; pos < size; ++pos) out[pos] = in[pos];
+    }
+    else
+        cuda::assignDevice(out, in, size);
 }
 
 }  // namespace layers
