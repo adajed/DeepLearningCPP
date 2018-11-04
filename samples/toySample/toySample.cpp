@@ -5,10 +5,10 @@
 
 int main()
 {
-    graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
-    graphdl::ITensorPtr step = graphdl::constant(0.2, {}, host);
-    graphdl::ITensorPtr c = graphdl::constant(5., {}, host);
-    graphdl::ITensorPtr w = graphdl::createWeights("w", {}, host);
+    graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr step = graphdl::constant(0.2, {}, loc);
+    graphdl::ITensorPtr c = graphdl::constant(5., {}, loc);
+    graphdl::ITensorPtr w = graphdl::createWeights("w", {}, loc);
     graphdl::ITensorPtr loss = graphdl::square(c - w);
     graphdl::ITensorPtr grad = graphdl::gradients(loss)[w];
     graphdl::ITensorPtr a = graphdl::assign(w, w - step * grad);

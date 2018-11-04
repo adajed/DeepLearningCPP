@@ -33,8 +33,9 @@ class ConstantTest : public LayerTest,
             tensor.at(pos) = std::get<1>(testCase);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
-            ITensorPtr c = constant(
-                    std::get<1>(testCase), std::get<0>(testCase), std::get<2>(testCase));
+            ITensorPtr c =
+                constant(std::get<1>(testCase), std::get<0>(testCase),
+                         std::get<2>(testCase));
             initializeGraph();
 
             return HostVec({c->eval({})});
@@ -46,6 +47,7 @@ class ConstantTest : public LayerTest,
 
 TEST_P(ConstantTest, testAPI) { test(GetParam()); }
 INSTANTIATE_TEST_CASE_P(LayerTest, ConstantTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn({3.14f}), ValuesIn(LOCATIONS)));
+                        Combine(ValuesIn(SHAPES), ValuesIn({3.14f}),
+                                ValuesIn(LOCATIONS)));
 
 }  // namespace
