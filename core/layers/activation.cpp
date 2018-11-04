@@ -224,6 +224,9 @@ ActivationGradientLayer::ActivationGradientLayer(ID id, Tensor::SPtr in,
 {
     assert(in->getShape() == out->getShape());
     assert(out->getShape() == outGrad->getShape());
+
+    assert(in->getType() == out->getType());
+    assert(in->getType() == outGrad->getType());
 }
 
 void ActivationGradientLayer::execute(const InputDict& inputs)

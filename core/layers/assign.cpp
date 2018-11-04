@@ -41,6 +41,8 @@ Tensor::SPtr assign(Tensor::SPtr dest, Tensor::SPtr src)
 {
     if (dest->getShape() != src->getShape())
         throw std::runtime_error("Shapes don\'t match");
+    if (dest->getType() != src->getType())
+        throw std::runtime_error("Tensor must be on the same device type");
 
     Layer::SPtr layer = createLayer<layers::AssignLayer>(dest, src);
     return layer->getOutputs()[0];

@@ -92,6 +92,10 @@ AddNGradientLayer::AddNGradientLayer(ID id, std::vector<Tensor::SPtr> ins,
     : Layer(id, createGradientInputs(ins, out, outGrad),
             createGradientOutputs(ins))
 {
+    for (unsigned i = 1; i < ins.size(); ++i)
+        assert(ins[0]->getType() == ins[i]->getType());
+    assert(ins[0]->getType() == out->getType());
+    assert(ins[0]->getType() == outGrad->getType());
 }
 
 void AddNGradientLayer::execute(const InputDict& inputs)
@@ -121,6 +125,9 @@ Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors)
     {
         if (tensors[0]->getShape() != tensors[i]->getShape())
             throw std::runtime_error("Shapes of inputs tensors don\'t match");
+        if (tensors[0]->getType() != tensors[i]->getType())
+            throw std::runtime_error(
+                "Input tensors must be on the same device type");
     }
 
     Layer::SPtr layer = createLayer<layers::AddNLayer>(tensors);
