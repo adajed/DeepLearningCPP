@@ -51,7 +51,7 @@ class ReduceSumTest : public LayerTest,
 
             return HostVec({out->eval({{"in", ins[0]}})});
         };
-        bool correct = runTest({input}, {output}, builder);
+        bool correct = runTest({input}, {output}, builder, 10e-5);
         EXPECT_TRUE(correct);
     }
 
