@@ -1,5 +1,7 @@
 include ./makes/defines.inc
 
+.PHONY: release debug clean ctags format help
+
 all: release debug
 
 release:
@@ -14,8 +16,6 @@ debug:
 	@+make -C samples/toySample debug
 	@+make -C samples/mnist debug
 
-.PHONY: clean ctags format
-
 clean:
 	rm -r $(OUTDIR)
 
@@ -28,3 +28,12 @@ format:
 	@+make -C tests format
 	@+make -C samples/toySample format
 	@+make -C samples/mnist format
+
+help:
+	@echo "Possible commands:"
+	@echo "\tall     - release + debug"
+	@echo "\trelease - release version of library"
+	@echo "\tdebug   - debug version of library"
+	@echo "\tclean   - cleans all files"
+	@echo "\tctags   - creates tags for all files"
+	@echo "\tformat  - runs clang-format for all source files"
