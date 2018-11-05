@@ -69,8 +69,10 @@ void AddNLayer::execute(const InputDict& inputs)
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
         runAddNHost(xs.size(), size, xs.data(), output);
+#ifdef CUDA_AVAILABLE
     else
         cuda::runAddNDevice(xs.size(), size, xs.data(), output);
+#endif
 }
 
 Layer::TensorMap AddNLayer::gradients(Tensor::SPtr out, Tensor::SPtr outGrad)
@@ -111,8 +113,10 @@ void AddNGradientLayer::execute(const InputDict& inputs)
 
     if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
         runAddNGradientHost(xGrads.size(), size, yGrad, xGrads.data());
+#ifdef CUDA_AVAILABLE
     else
         cuda::runAddNGradientDevice(xGrads.size(), size, yGrad, xGrads.data());
+#endif
 }
 
 }  // namespace layers

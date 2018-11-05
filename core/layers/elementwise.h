@@ -50,6 +50,7 @@ class ElementwiseGradientLayer : public Layer
     ElementwiseFun mFun1, mFun2;
 };
 
+#ifdef CUDA_AVAILABLE
 namespace cuda
 {
 void runElementwiseDevice(std::size_t size, float* x1, float* x2, float* y,
@@ -60,6 +61,7 @@ void runElementwiseGradientDevice(std::size_t size, float* x1, float* x2,
                                   Elementwise op);
 
 }  // namespace cuda
+#endif
 }  // namespace layers
 
 Tensor::SPtr createElementwise(Tensor::SPtr, Tensor::SPtr, layers::Elementwise);

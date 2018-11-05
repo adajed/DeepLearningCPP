@@ -22,10 +22,14 @@ debug: cuda_debug $(OBJS_D)
 #### COMPILING
 
 cuda_release:
+ifeq ($(CUDA_AVAILABLE),1)
 	@+make -C cuda release
+endif
 
 cuda_debug:
+ifeq ($(CUDA_AVAILABLE),1)
 	@+make -C cuda debug
+endif
 
 $(OUTDIR_R)/%.o: %.cpp $(CPP_HEADERS) | $(OUTDIR_R)
 	@echo "Compiling release: $<"

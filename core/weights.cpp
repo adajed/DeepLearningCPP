@@ -26,10 +26,10 @@ void WeightsLayer::initialize()
 
         for (std::size_t i = 0; i < size; ++i) memory[i] = dist(e2);
     }
+#ifdef CUDA_AVAILABLE
     else
-    {
         cuda::initWeights(memory, size);
-    }
+#endif
 }
 
 // This does nothing, because weights are already in memory.

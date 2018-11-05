@@ -83,8 +83,10 @@ void MatmulLayer::execute(const InputDict& inputs)
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
         runMatmulHost(n, m, k, in1, in2, out);
+#ifdef CUDA_AVAILABLE
     else
         cuda::runMatmulDevice(n, m, k, in1, in2, out);
+#endif
 }
 
 Layer::TensorMap MatmulLayer::gradients(Tensor::SPtr output,
@@ -134,8 +136,10 @@ void MatmulGradientLayer::execute(const InputDict& inputs)
 
     if (m1->getType() == MemoryType::kHOST_MEMORY)
         runMatmulGradientHost(n, m, k, in1, in2, outG, grad1, grad2);
+#ifdef CUDA_AVAILABLE
     else
         cuda::runMatmulGradientDevice(n, m, k, in1, in2, outG, grad1, grad2);
+#endif
 }
 
 }  // namespace layers

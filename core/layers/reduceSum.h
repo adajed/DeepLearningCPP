@@ -30,6 +30,7 @@ class ReduceSumGradientLayer : public Layer
     void execute(const InputDict& inputs) override;
 };
 
+#ifdef CUDA_AVAILABLE
 namespace cuda
 {
 extern "C" void runReduceSumDevice(std::size_t size, float* x, float* y);
@@ -38,6 +39,7 @@ extern "C" void runReduceSumGradientDevice(std::size_t, float* yGrad,
                                            float* xGrad);
 
 }  // namespace cuda
+#endif
 }  // namespace layers
 
 Tensor::SPtr reduceSum(Tensor::SPtr tensor);

@@ -31,8 +31,10 @@ void AssignLayer::execute(const InputDict& inputs)
     {
         for (std::size_t pos = 0; pos < size; ++pos) out[pos] = in[pos];
     }
+#ifdef CUDA_AVAILABLE
     else
         cuda::assignDevice(out, in, size);
+#endif
 }
 
 }  // namespace layers

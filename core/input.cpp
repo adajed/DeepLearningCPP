@@ -22,10 +22,10 @@ void InputLayer::execute(const InputDict& inputs)
         std::memcpy(output.getValues(), input.data(),
                     output.getCount() * sizeof(float));
     }
+#ifdef CUDA_AVAILABLE
     else  // output.getType() == MemoryType::kDEVICE_MEMORY
-    {
         cuda::copyInput(output.getValues(), input.data(), output.getCount());
-    }
+#endif
 }
 
 }  // namespace core

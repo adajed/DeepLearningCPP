@@ -23,11 +23,13 @@ class ConstantLayer : public Layer
     float mValue;
 };
 
+#ifdef CUDA_AVAILABLE
 namespace cuda
 {
 void fillWithValue(std::size_t size, float* x, float val);
 
 }  // namespace cuda
+#endif
 }  // namespace layers
 
 Tensor::SPtr constant(float value, const TensorShape& shape, MemoryType type);

@@ -48,7 +48,11 @@ int numCorrect(const HostTensor& y, const HostTensor& pred)
 
 Network buildNetwork()
 {
+#ifdef CUDA_AVAILABLE
     MemoryLocation loc = MemoryLocation::kDEVICE;
+#else
+    MemoryLocation loc = MemoryLocation::kHOST;
+#endif
     ITensorPtr X = createInput("X", {BATCH_SIZE, 28 * 28}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 

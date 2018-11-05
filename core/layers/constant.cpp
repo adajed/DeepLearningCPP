@@ -23,8 +23,10 @@ void ConstantLayer::initialize()
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
         for (std::size_t i = 0; i < size; ++i) out[i] = mValue;
+#ifdef CUDA_AVAILABLE
     else
         cuda::fillWithValue(size, out, mValue);
+#endif
 }
 
 //! This method does nothing, because tensor is already

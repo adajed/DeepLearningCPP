@@ -197,8 +197,10 @@ void ActivationLayer::execute(const InputDict& inputs)
 
     if (in->getType() == MemoryType::kHOST_MEMORY)
         runActivationHost(size, input, output, mOp);
+#ifdef CUDA_AVAILABLE
     else  // in->getType() == MemoryType::kDEVICE_MEMORY
         cuda::runActivationDevice(size, input, output, mOp);
+#endif
 }
 
 Layer::TensorMap ActivationLayer::gradients(Tensor::SPtr out,
@@ -247,9 +249,11 @@ void ActivationGradientLayer::execute(const InputDict& inputs)
     if (in->getType() == MemoryType::kHOST_MEMORY)
         runActivationGradientHost(size, input, output, outputGrad, gradient,
                                   mOp);
+#ifdef CUDA_AVAILABLE
     else  // in->getType() == MemoryType::kDEVICE_MEMORY
         cuda::runActivationGradientDevice(size, input, output, outputGrad,
                                           gradient, mOp);
+#endif
 }
 
 }  // namespace layers

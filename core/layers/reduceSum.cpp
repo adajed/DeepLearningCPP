@@ -42,8 +42,10 @@ void ReduceSumLayer::execute(const InputDict& inputs)
 
     if (in->getType() == MemoryType::kHOST_MEMORY)
         runReduceSumHost(size, input, output);
+#ifdef CUDA_AVAILABLE
     else
         cuda::runReduceSumDevice(size, input, output);
+#endif
 }
 
 Layer::TensorMap ReduceSumLayer::gradients(Tensor::SPtr out,
@@ -75,8 +77,10 @@ void ReduceSumGradientLayer::execute(const InputDict& inputs)
 
     if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
         runReduceSumGradientHost(size, outGrad, inGrad);
+#ifdef CUDA_AVAILABLE
     else
         cuda::runReduceSumGradientDevice(size, outGrad, inGrad);
+#endif
 }
 
 }  // namespace layers

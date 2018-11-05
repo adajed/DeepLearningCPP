@@ -49,6 +49,7 @@ class ActivationGradientLayer : public Layer
     std::function<float(float, float)> mFun;
 };
 
+#ifdef CUDA_AVAILABLE
 namespace cuda
 {
 extern "C" void runActivationDevice(std::size_t size, float* x, float* y,
@@ -58,6 +59,7 @@ extern "C" void runActivationGradientDevice(std::size_t size, float* x,
                                             float* y, float* yGrad,
                                             float* xGrad, Activation op);
 }  // namespace cuda
+#endif
 
 }  // namespace layers
 

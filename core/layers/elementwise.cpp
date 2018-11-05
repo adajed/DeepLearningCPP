@@ -178,8 +178,10 @@ void ElementwiseLayer::execute(const InputDict& inputs)
 
     if (i0->getType() == MemoryType::kHOST_MEMORY)
         runElementwiseHost(size, input0, input1, output, mOp);
+#ifdef CUDA_AVAILABLE
     else
         cuda::runElementwiseDevice(size, input0, input1, output, mOp);
+#endif
 }
 
 Layer::TensorMap ElementwiseLayer::gradients(Tensor::SPtr output,
@@ -222,9 +224,11 @@ void ElementwiseGradientLayer::execute(const InputDict& inputs)
     if (input1->getType() == MemoryType::kHOST_MEMORY)
         runElementwiseGradientHost(size, in1, in2, outGrad, gradient1,
                                    gradient2, mOp);
+#ifdef CUDA_AVAILABLE
     else
         cuda::runElementwiseGradientDevice(size, in1, in2, outGrad, gradient1,
                                            gradient2, mOp);
+#endif
 }
 
 }  // namespace layers
