@@ -23,7 +23,8 @@ using ElementwiseFun = std::function<float(float, float)>;
 class ElementwiseLayer : public DifferentiableLayer
 {
    public:
-    ElementwiseLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2, Elementwise op);
+    ElementwiseLayer(ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                     Elementwise op);
 
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
@@ -37,9 +38,9 @@ class ElementwiseLayer : public DifferentiableLayer
 class ElementwiseGradientLayer : public Layer
 {
    public:
-    ElementwiseGradientLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
-                             Tensor::SPtr out, Tensor::SPtr outGrad,
-                             Elementwise op);
+    ElementwiseGradientLayer(ID id, const Tensor::SPtr& t1,
+                             const Tensor::SPtr& t2, Tensor::SPtr out,
+                             Tensor::SPtr outGrad, Elementwise op);
 
    private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr, Tensor::SPtr);
@@ -52,19 +53,20 @@ class ElementwiseGradientLayer : public Layer
 
 }  // namespace layers
 
-Tensor::SPtr createElementwise(Tensor::SPtr, Tensor::SPtr, layers::Elementwise);
+Tensor::SPtr createElementwise(const Tensor::SPtr&, const Tensor::SPtr&,
+                               layers::Elementwise);
 
-Tensor::SPtr add(Tensor::SPtr, Tensor::SPtr);
-Tensor::SPtr operator+(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr add(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator+(const Tensor::SPtr&, const Tensor::SPtr&);
 
-Tensor::SPtr sub(Tensor::SPtr, Tensor::SPtr);
-Tensor::SPtr operator-(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr sub(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator-(const Tensor::SPtr&, const Tensor::SPtr&);
 
-Tensor::SPtr mul(Tensor::SPtr, Tensor::SPtr);
-Tensor::SPtr operator*(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr mul(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator*(const Tensor::SPtr&, const Tensor::SPtr&);
 
-Tensor::SPtr div(Tensor::SPtr, Tensor::SPtr);
-Tensor::SPtr operator/(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr div(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator/(const Tensor::SPtr&, const Tensor::SPtr&);
 
 }  // namespace core
 }  // namespace graphdl

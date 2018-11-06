@@ -25,7 +25,7 @@ enum class Activation
 class ActivationLayer : public DifferentiableLayer
 {
    public:
-    ActivationLayer(ID, Tensor::SPtr, Activation);
+    ActivationLayer(ID, const Tensor::SPtr&, Activation);
 
     TensorMap gradients(Tensor::SPtr, Tensor::SPtr) override;
 
@@ -39,8 +39,8 @@ class ActivationLayer : public DifferentiableLayer
 class ActivationGradientLayer : public Layer
 {
    public:
-    ActivationGradientLayer(ID, Tensor::SPtr, Tensor::SPtr, Tensor::SPtr,
-                            Activation);
+    ActivationGradientLayer(ID, const Tensor::SPtr&, const Tensor::SPtr&,
+                            const Tensor::SPtr&, Activation);
 
    private:
     void execute(const InputDict&) override;

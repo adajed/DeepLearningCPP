@@ -1,6 +1,8 @@
 #include "elementwise.h"
-#include <assert.h>
 #include "abstractTensor.h"
+
+#include <cassert>
+#include <utility>
 #include "graph.h"
 #include "graphdl_ops.h"
 
@@ -12,22 +14,22 @@ namespace layers
 {
 namespace
 {
-std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr t1, Tensor::SPtr t2)
+std::vector<Tensor::SPtr> createOutputs(const Tensor::SPtr& t1)
 {
     return {createTensor("", t1->getShape())};
 }
 
-std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr t1,
-                                                Tensor::SPtr t2)
+std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& t1,
+                                                const Tensor::SPtr& t2)
 {
     return {createTensor("", t1->getShape()), createTensor("", t2->getShape())};
 }
 
 }  // namespace
 
-ElementwiseLayer::ElementwiseLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
-                                   Elementwise op)
-    : DifferentiableLayer(id, {t1, t2}, createOutputs(t1, t2)), mOp(op)
+ElementwiseLayer::ElementwiseLayer(ID id, const Tensor::SPtr& t1,
+                                   const Tensor::SPtr& t2, Elementwise op)
+    : DifferentiableLayer(id, {t1, t2}, createOutputs(t1)), mOp(op)
 {
     assert(t1->getShape() == t2->getShape());
     switch (op)
@@ -76,12 +78,12 @@ Layer::TensorMap ElementwiseLayer::gradients(Tensor::SPtr output,
     return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
 }
 
-ElementwiseGradientLayer::ElementwiseGradientLayer(ID id, Tensor::SPtr t1,
-                                                   Tensor::SPtr t2,
-                                                   Tensor::SPtr out,
-                                                   Tensor::SPtr outGrad,
-                                                   Elementwise op)
-    : Layer(id, {t1, t2, out, outGrad}, createGradientOutputs(t1, t2)), mOp(op)
+ElementwiseGradientLayer::ElementwiseGradientLayer(
+    ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2, Tensor::SPtr out,
+    Tensor::SPtr outGrad, Elementwise op)
+    : Layer(id, {t1, t2, std::move(out), std::move(outGrad)},
+            createGradientOutputs(t1, t2)),
+      mOp(op)
 {
     switch (op)
     {
@@ -128,7 +130,7 @@ void ElementwiseGradientLayer::execute(const InputDict& inputs)
 
 }  // namespace layers
 
-Tensor::SPtr createElementwise(Tensor::SPtr t1, Tensor::SPtr t2,
+Tensor::SPtr createElementwise(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
                                layers::Elementwise op)
 {
     if (t1->getShape() != t2->getShape())
@@ -138,70 +140,94 @@ Tensor::SPtr createElementwise(Tensor::SPtr t1, Tensor::SPtr t2,
     return layer->getOutputs()[0];
 }
 
-Tensor::SPtr add(Tensor::SPtr t1, Tensor::SPtr t2)
+Tensor::SPtr add(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
 {
     return createElementwise(t1, t2, layers::Elementwise::kADD);
 }
 
-Tensor::SPtr sub(Tensor::SPtr t1, Tensor::SPtr t2)
+Tensor::SPtr sub(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
 {
     return createElementwise(t1, t2, layers::Elementwise::kSUB);
 }
 
-Tensor::SPtr mul(Tensor::SPtr t1, Tensor::SPtr t2)
+Tensor::SPtr mul(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
 {
     return createElementwise(t1, t2, layers::Elementwise::kMUL);
 }
 
-Tensor::SPtr div(Tensor::SPtr t1, Tensor::SPtr t2)
+Tensor::SPtr div(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
 {
     return createElementwise(t1, t2, layers::Elementwise::kDIV);
 }
 
-Tensor::SPtr operator+(Tensor::SPtr t1, Tensor::SPtr t2) { return add(t1, t2); }
+Tensor::SPtr operator+(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
+{
+    return add(t1, t2);
+}
 
-Tensor::SPtr operator-(Tensor::SPtr t1, Tensor::SPtr t2) { return sub(t1, t2); }
+Tensor::SPtr operator-(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
+{
+    return sub(t1, t2);
+}
 
-Tensor::SPtr operator*(Tensor::SPtr t1, Tensor::SPtr t2) { return mul(t1, t2); }
+Tensor::SPtr operator*(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
+{
+    return mul(t1, t2);
+}
 
-Tensor::SPtr operator/(Tensor::SPtr t1, Tensor::SPtr t2) { return div(t1, t2); }
+Tensor::SPtr operator/(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
+{
+    return div(t1, t2);
+}
 
 }  // namespace core
 
-ITensorPtr add(ITensorPtr t1, ITensorPtr t2)
+ITensorPtr add(const ITensorPtr& t1, const ITensorPtr& t2)
 {
     core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
     core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
     return makeAbstractTensor(core::add(tensor1->get(), tensor2->get()));
 }
 
-ITensorPtr sub(ITensorPtr t1, ITensorPtr t2)
+ITensorPtr sub(const ITensorPtr& t1, const ITensorPtr& t2)
 {
     core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
     core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
     return makeAbstractTensor(core::sub(tensor1->get(), tensor2->get()));
 }
 
-ITensorPtr mul(ITensorPtr t1, ITensorPtr t2)
+ITensorPtr mul(const ITensorPtr& t1, const ITensorPtr& t2)
 {
     core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
     core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
     return makeAbstractTensor(core::mul(tensor1->get(), tensor2->get()));
 }
 
-ITensorPtr div(ITensorPtr t1, ITensorPtr t2)
+ITensorPtr div(const ITensorPtr& t1, const ITensorPtr& t2)
 {
     core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
     core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
     return makeAbstractTensor(core::div(tensor1->get(), tensor2->get()));
 }
 
-ITensorPtr operator+(ITensorPtr t1, ITensorPtr t2) { return add(t1, t2); }
+ITensorPtr operator+(const ITensorPtr& t1, const ITensorPtr& t2)
+{
+    return add(t1, t2);
+}
 
-ITensorPtr operator-(ITensorPtr t1, ITensorPtr t2) { return sub(t1, t2); }
+ITensorPtr operator-(const ITensorPtr& t1, const ITensorPtr& t2)
+{
+    return sub(t1, t2);
+}
 
-ITensorPtr operator*(ITensorPtr t1, ITensorPtr t2) { return mul(t1, t2); }
+ITensorPtr operator*(const ITensorPtr& t1, const ITensorPtr& t2)
+{
+    return mul(t1, t2);
+}
 
-ITensorPtr operator/(ITensorPtr t1, ITensorPtr t2) { return div(t1, t2); }
+ITensorPtr operator/(const ITensorPtr& t1, const ITensorPtr& t2)
+{
+    return div(t1, t2);
+}
 
 }  // namespace graphdl

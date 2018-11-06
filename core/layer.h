@@ -24,7 +24,7 @@ class Tensor
     using SPtr = std::shared_ptr<Tensor>;
     using WeakPtr = std::weak_ptr<Tensor>;
 
-    Tensor(ID id, const std::string& name, const TensorShape& shape);
+    Tensor(ID id, std::string name, const TensorShape& shape);
 
     //! \fn getID
     //!
@@ -49,7 +49,7 @@ class Tensor
 
     //! \fn setLayer
     //!
-    void setLayer(std::shared_ptr<Layer> layer);
+    void setLayer(const std::shared_ptr<Layer>& layer);
 
     //! \fn getGraph
     //! \brief Returns graph to which this tensor belongs to.
@@ -107,7 +107,7 @@ class Layer
     using TensorMap = std::map<Tensor::SPtr, Tensor::SPtr>;
 
     Layer(ID id, const std::vector<Tensor::SPtr>& inputs,
-          const std::vector<Tensor::SPtr>& outputs);
+          std::vector<Tensor::SPtr> outputs);
 
     //! \fn getID
     //!
@@ -119,7 +119,7 @@ class Layer
 
     //! \fn setGraph
     //!
-    void setGraph(std::shared_ptr<Graph> graph);
+    void setGraph(const std::shared_ptr<Graph>& graph);
 
     //! \fn getInputs
     //!

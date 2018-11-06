@@ -35,7 +35,7 @@ class AbstractTensor : public ITensor
 
 AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor);
 
-AbstractTensor::Ptr castITensorPtr(ITensorPtr tensor);
+AbstractTensor::Ptr castITensorPtr(const ITensorPtr& itensor);
 
 }  // namespace core
 }  // namespace graphdl

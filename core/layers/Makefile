@@ -43,5 +43,5 @@ format:
 
 #### clang-tidy
 tidy:
-	$(foreach src,$(CPP_SOURCES),\
-		$(CLANG_TIDY_EXEC) $(src) -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS);)
+	@$(foreach src,$(CPP_SOURCES),\
+		$(CLANG_TIDY_EXEC) --fix $(src) -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS);)

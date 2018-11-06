@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <cassert>
 #include <cstring>
 #include <stdexcept>
 
@@ -41,7 +41,7 @@ bool Memory::allocate()
     }
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
-        // TODO: allocate memory on device
+        // TODO(adam): allocate memory on device
         throw std::runtime_error("GPU support not implemented, please use CPU");
     }
 
@@ -59,7 +59,7 @@ void Memory::free()
     }
     else  // mType == MemoryType::kDEVICE_MEMORY
     {
-        // TODO: free memory on device
+        // TODO(adam): free memory on device
         throw std::runtime_error("GPU support not implemented, please use CPU");
     }
 }

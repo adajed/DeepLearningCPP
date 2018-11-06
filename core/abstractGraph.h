@@ -34,7 +34,7 @@ class AbstractGraph : public IGraph
 
 AbstractGraph::Ptr makeAbstractGraph(Graph::SPtr graph);
 
-AbstractGraph::Ptr castIGraphPtr(IGraphPtr graph);
+AbstractGraph::Ptr castIGraphPtr(const IGraphPtr& igraph);
 
 }  // namespace core
 }  // namespace graphdl

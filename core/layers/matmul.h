@@ -12,7 +12,7 @@ namespace layers
 class MatmulLayer : public DifferentiableLayer
 {
    public:
-    MatmulLayer(ID id, Tensor::SPtr m1, Tensor::SPtr m2);
+    MatmulLayer(ID id, const Tensor::SPtr& m1, const Tensor::SPtr& m2);
 
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
@@ -23,8 +23,8 @@ class MatmulLayer : public DifferentiableLayer
 class MatmulGradientLayer : public Layer
 {
    public:
-    MatmulGradientLayer(ID id, Tensor::SPtr m1, Tensor::SPtr m2,
-                        Tensor::SPtr out, Tensor::SPtr outGrad);
+    MatmulGradientLayer(ID id, const Tensor::SPtr& m1, const Tensor::SPtr& m2,
+                        const Tensor::SPtr& out, const Tensor::SPtr& outGrad);
 
    private:
     void execute(const InputDict&) override;
@@ -32,7 +32,7 @@ class MatmulGradientLayer : public Layer
 
 }  // namespace layers
 
-Tensor::SPtr matmul(Tensor::SPtr, Tensor::SPtr);
+Tensor::SPtr matmul(const Tensor::SPtr&, const Tensor::SPtr&);
 
 }  // namespace core
 }  // namespace graphdl

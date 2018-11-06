@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "graph.h"
 #include "layer.h"
 #include "memory.h"
@@ -6,12 +8,12 @@ namespace graphdl
 {
 namespace core
 {
-Tensor::Tensor(ID id, const std::string& name, const TensorShape& shape)
+Tensor::Tensor(ID id, std::string name, const TensorShape& shape)
     : mID(id),
-      mName(name),
+      mName(std::move(name)),
       mShape(shape),
       mIsEvaluated(false),
-      mLayer(),
+
       mMemory(MemoryType::kHOST_MEMORY, shape.getCount())
 {
 }
@@ -26,7 +28,10 @@ TensorShape Tensor::getShape() const { return mShape; }
 
 Layer::SPtr Tensor::getLayer() const { return mLayer.lock(); }
 
-void Tensor::setLayer(Layer::SPtr layer) { mLayer = Layer::WeakPtr(layer); }
+void Tensor::setLayer(const Layer::SPtr& layer)
+{
+    mLayer = Layer::WeakPtr(layer);
+}
 
 Graph::SPtr Tensor::getGraph() const { return mLayer.lock()->getGraph(); }
 

@@ -12,7 +12,7 @@ namespace layers
 class AssignLayer : public Layer
 {
    public:
-    AssignLayer(ID id, Tensor::SPtr dest, Tensor::SPtr src);
+    AssignLayer(ID id, const Tensor::SPtr& dest, const Tensor::SPtr& src);
 
    private:
     void execute(const InputDict& inputs) override;
@@ -22,7 +22,7 @@ class AssignLayer : public Layer
 
 }  // namespace layers
 
-Tensor::SPtr assign(Tensor::SPtr dest, Tensor::SPtr src);
+Tensor::SPtr assign(const Tensor::SPtr& dest, const Tensor::SPtr& src);
 
 }  // namespace core
 }  // namespace graphdl

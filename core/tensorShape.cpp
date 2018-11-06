@@ -1,20 +1,14 @@
 #include "tensorShape.h"
 
+#include <utility>
+
 namespace graphdl
 {
 namespace core
 {
-TensorShape::TensorShape(const Shape& shape) : mDims(shape) {}
-
-TensorShape::TensorShape(const TensorShape& other) : mDims(other.mDims) {}
+TensorShape::TensorShape(Shape shape) : mDims(std::move(shape)) {}
 
 TensorShape::TensorShape(std::initializer_list<unsigned> list) : mDims(list) {}
-
-TensorShape& TensorShape::operator=(const TensorShape& other)
-{
-    mDims = other.mDims;
-    return *this;
-}
 
 bool TensorShape::operator==(const TensorShape& other) const
 {

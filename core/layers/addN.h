@@ -24,8 +24,8 @@ class AddNLayer : public DifferentiableLayer
 class AddNGradientLayer : public Layer
 {
    public:
-    AddNGradientLayer(ID id, std::vector<Tensor::SPtr> ins, Tensor::SPtr out,
-                      Tensor::SPtr outGrad);
+    AddNGradientLayer(ID id, const std::vector<Tensor::SPtr>& ins,
+                      const Tensor::SPtr& out, const Tensor::SPtr& outGrad);
 
    private:
     void execute(const InputDict& inputs) override;

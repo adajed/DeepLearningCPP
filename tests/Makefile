@@ -57,8 +57,3 @@ $(OUTDIR_D):
 #### clang-format
 format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)
-
-#### clang-tidy
-tidy:
-	$(foreach src,$(CPP_SOURCES),\
-		$(CLANG_TIDY_EXEC) $(src) -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS);)

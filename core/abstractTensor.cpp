@@ -1,11 +1,15 @@
 #include "abstractTensor.h"
-#include <assert.h>
+#include <cassert>
+#include <utility>
 
 namespace graphdl
 {
 namespace core
 {
-AbstractTensor::AbstractTensor(Tensor::SPtr tensor) : mTensor(tensor) {}
+AbstractTensor::AbstractTensor(Tensor::SPtr tensor)
+    : mTensor(std::move(tensor))
+{
+}
 
 std::string AbstractTensor::getName() const { return mTensor->getName(); }
 
@@ -37,7 +41,7 @@ AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor)
     return sMap[tensor];
 }
 
-AbstractTensor::Ptr castITensorPtr(ITensorPtr itensor)
+AbstractTensor::Ptr castITensorPtr(const ITensorPtr& itensor)
 {
     return std::static_pointer_cast<AbstractTensor>(itensor);
 }

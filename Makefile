@@ -31,6 +31,5 @@ format:
 
 tidy:
 	@+make -C core tidy
-	@+make -C tests tidy
 	@+make -C samples/toySample tidy
 	@+make -C samples/mnist tidy

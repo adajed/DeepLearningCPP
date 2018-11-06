@@ -1,6 +1,8 @@
 #include "reduceSum.h"
-#include <assert.h>
 #include "abstractTensor.h"
+
+#include <cassert>
+#include <utility>
 #include "graph.h"
 #include "graphdl_ops.h"
 
@@ -11,7 +13,7 @@ namespace core
 namespace layers
 {
 ReduceSumLayer::ReduceSumLayer(ID id, Tensor::SPtr tensor)
-    : DifferentiableLayer(id, {tensor}, {createTensor("", {})})
+    : DifferentiableLayer(id, {std::move(tensor)}, {createTensor("", {})})
 {
 }
 
@@ -38,10 +40,11 @@ Layer::TensorMap ReduceSumLayer::gradients(Tensor::SPtr out,
     return {{in, layer->getOutputs()[0]}};
 }
 
-ReduceSumGradientLayer::ReduceSumGradientLayer(ID id, Tensor::SPtr in,
+ReduceSumGradientLayer::ReduceSumGradientLayer(ID id, const Tensor::SPtr& in,
                                                Tensor::SPtr out,
                                                Tensor::SPtr outGrad)
-    : Layer(id, {in, out, outGrad}, {createTensor("", in->getShape())})
+    : Layer(id, {in, std::move(out), std::move(outGrad)},
+            {createTensor("", in->getShape())})
 {
 }
 
@@ -61,13 +64,13 @@ void ReduceSumGradientLayer::execute(const InputDict& inputs)
 
 Tensor::SPtr reduceSum(Tensor::SPtr t)
 {
-    Layer::SPtr layer = createLayer<layers::ReduceSumLayer>(t);
+    Layer::SPtr layer = createLayer<layers::ReduceSumLayer>(std::move(t));
     return layer->getOutputs()[0];
 }
 
 }  // namespace core
 
-ITensorPtr reduceSum(ITensorPtr t)
+ITensorPtr reduceSum(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::reduceSum(tensor->get()));

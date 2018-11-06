@@ -23,7 +23,7 @@ class ReduceSumLayer : public DifferentiableLayer
 class ReduceSumGradientLayer : public Layer
 {
    public:
-    ReduceSumGradientLayer(ID id, Tensor::SPtr in, Tensor::SPtr out,
+    ReduceSumGradientLayer(ID id, const Tensor::SPtr& in, Tensor::SPtr out,
                            Tensor::SPtr outGrad);
 
    private:
@@ -32,7 +32,7 @@ class ReduceSumGradientLayer : public Layer
 
 }  // namespace layers
 
-Tensor::SPtr reduceSum(Tensor::SPtr tensor);
+Tensor::SPtr reduceSum(Tensor::SPtr t);
 
 }  // namespace core
 
