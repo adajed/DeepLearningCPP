@@ -17,10 +17,16 @@ CFLAGS_D=$(COMMON_CFLAGS) -g
 
 COMMON_LFLAGS +=-L$(OUTDIR) -L$(GTEST_LIB_PATH)
 ifeq ($(CUDA_AVAILABLE),1)
-	COMMON_LFLAGS += -L/usr/local/cuda-10.0/lib64 -lcuda -lcurand -lcudart
+	COMMON_LFLAGS += -L/usr/local/cuda-10.0/lib64
 endif
-LFLAGS_R=$(COMMON_LFLAGS) -ldll_static -pthread -lgtest
-LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug -pthread -lgtest
+LFLAGS_R=$(COMMON_LFLAGS) -ldll_static
+LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug
+ifeq ($(CUDA_AVAILABLE),1)
+	LFLAGS_R += -L/usr/local/cuda-10.0/lib64 -lcuda -lcurand -lcudart
+	LFLAGS_D += -L/usr/local/cuda-10.0/lib64 -lcuda -lcurand -lcudart
+endif
+LFLAGS_R += -pthread -lgtest
+LFLAGS_D += -pthread -lgtest
 
 
 .PHONY: release debug format
