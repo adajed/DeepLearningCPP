@@ -30,7 +30,7 @@ std::vector<TestCase> SHAPES = {
 class ReduceSumTest : public LayerTest,
                       public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         UniformGen gen(0);
@@ -85,13 +85,19 @@ class ReduceSumTest : public LayerTest,
     }
 };
 
-TEST_P(ReduceSumTest, testAPI) { test(GetParam()); }
+TEST_P(ReduceSumTest, testAPI)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumTest, ValuesIn(SHAPES));
 
 class ReduceSumGradientTest : public ReduceSumTest
 {
 };
-TEST_P(ReduceSumGradientTest, testAPI) { testGradient(GetParam()); }
+TEST_P(ReduceSumGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumGradientTest, ValuesIn(SHAPES));
 
 }  // namespace

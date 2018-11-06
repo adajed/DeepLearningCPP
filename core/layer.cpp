@@ -1,4 +1,5 @@
 #include "layer.h"
+
 #include "graph.h"
 
 namespace graphdl
@@ -12,11 +13,20 @@ Layer::Layer(ID id, const std::vector<Tensor::SPtr>& inputs,
     for (Tensor::SPtr in : inputs) mInputs.push_back(Tensor::WeakPtr(in));
 }
 
-Layer::ID Layer::getID() const { return mID; }
+Layer::ID Layer::getID() const
+{
+    return mID;
+}
 
-Graph::SPtr Layer::getGraph() const { return mGraph.lock(); }
+Graph::SPtr Layer::getGraph() const
+{
+    return mGraph.lock();
+}
 
-void Layer::setGraph(Graph::SPtr graph) { mGraph = Graph::WeakPtr(graph); }
+void Layer::setGraph(Graph::SPtr graph)
+{
+    mGraph = Graph::WeakPtr(graph);
+}
 
 std::vector<Tensor::SPtr> Layer::getInputs()
 {
@@ -25,7 +35,10 @@ std::vector<Tensor::SPtr> Layer::getInputs()
     return inputs;
 }
 
-std::vector<Tensor::SPtr> Layer::getOutputs() { return mOutputs; }
+std::vector<Tensor::SPtr> Layer::getOutputs()
+{
+    return mOutputs;
+}
 
 void Layer::eval(const InputDict& inputs)
 {

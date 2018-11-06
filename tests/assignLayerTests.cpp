@@ -39,7 +39,7 @@ std::vector<ErrorTestCase> ERROR_SHAPES = {
 class AssignTest : public LayerTest,
                    public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         UniformGen gen(0);
@@ -63,7 +63,7 @@ class AssignTest : public LayerTest,
 class AssignErrorTest : public LayerTest,
                         public testing::WithParamInterface<ErrorTestCase>
 {
-   public:
+  public:
     void test(const ErrorTestCase& testCase)
     {
         ITensorPtr in = createInput("in", std::get<0>(testCase));
@@ -73,10 +73,16 @@ class AssignErrorTest : public LayerTest,
     }
 };
 
-TEST_P(AssignTest, testAPI) { test(GetParam()); }
+TEST_P(AssignTest, testAPI)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, AssignTest, ValuesIn(SHAPES));
 
-TEST_P(AssignErrorTest, test) { test(GetParam()); }
+TEST_P(AssignErrorTest, test)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerErrorTest, AssignErrorTest,
                         ValuesIn(ERROR_SHAPES));
 

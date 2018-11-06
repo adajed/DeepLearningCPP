@@ -1,8 +1,10 @@
 #include "elementwise.h"
-#include <assert.h>
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+
+#include <assert.h>
 
 namespace graphdl
 {
@@ -32,18 +34,18 @@ ElementwiseLayer::ElementwiseLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
     assert(t1->getShape() == t2->getShape());
     switch (op)
     {
-        case Elementwise::kADD:
-            mFun = [](float f1, float f2) { return f1 + f2; };
-            break;
-        case Elementwise::kSUB:
-            mFun = [](float f1, float f2) { return f1 - f2; };
-            break;
-        case Elementwise::kMUL:
-            mFun = [](float f1, float f2) { return f1 * f2; };
-            break;
-        case Elementwise::kDIV:
-            mFun = [](float f1, float f2) { return f1 / f2; };
-            break;
+    case Elementwise::kADD:
+        mFun = [](float f1, float f2) { return f1 + f2; };
+        break;
+    case Elementwise::kSUB:
+        mFun = [](float f1, float f2) { return f1 - f2; };
+        break;
+    case Elementwise::kMUL:
+        mFun = [](float f1, float f2) { return f1 * f2; };
+        break;
+    case Elementwise::kDIV:
+        mFun = [](float f1, float f2) { return f1 / f2; };
+        break;
     }
 }
 
@@ -85,22 +87,22 @@ ElementwiseGradientLayer::ElementwiseGradientLayer(ID id, Tensor::SPtr t1,
 {
     switch (op)
     {
-        case Elementwise::kADD:
-            mFun1 = [](float f1, float f2) { return 1.; };
-            mFun2 = [](float f1, float f2) { return 1.; };
-            break;
-        case Elementwise::kSUB:
-            mFun1 = [](float f1, float f2) { return 1.; };
-            mFun2 = [](float f1, float f2) { return -1.; };
-            break;
-        case Elementwise::kMUL:
-            mFun1 = [](float f1, float f2) { return f2; };
-            mFun2 = [](float f1, float f2) { return f1; };
-            break;
-        case Elementwise::kDIV:
-            mFun1 = [](float f1, float f2) { return 1. / f2; };
-            mFun2 = [](float f1, float f2) { return -f1 / (f2 * f2); };
-            break;
+    case Elementwise::kADD:
+        mFun1 = [](float f1, float f2) { return 1.; };
+        mFun2 = [](float f1, float f2) { return 1.; };
+        break;
+    case Elementwise::kSUB:
+        mFun1 = [](float f1, float f2) { return 1.; };
+        mFun2 = [](float f1, float f2) { return -1.; };
+        break;
+    case Elementwise::kMUL:
+        mFun1 = [](float f1, float f2) { return f2; };
+        mFun2 = [](float f1, float f2) { return f1; };
+        break;
+    case Elementwise::kDIV:
+        mFun1 = [](float f1, float f2) { return 1. / f2; };
+        mFun2 = [](float f1, float f2) { return -f1 / (f2 * f2); };
+        break;
     }
 };
 
@@ -158,13 +160,25 @@ Tensor::SPtr div(Tensor::SPtr t1, Tensor::SPtr t2)
     return createElementwise(t1, t2, layers::Elementwise::kDIV);
 }
 
-Tensor::SPtr operator+(Tensor::SPtr t1, Tensor::SPtr t2) { return add(t1, t2); }
+Tensor::SPtr operator+(Tensor::SPtr t1, Tensor::SPtr t2)
+{
+    return add(t1, t2);
+}
 
-Tensor::SPtr operator-(Tensor::SPtr t1, Tensor::SPtr t2) { return sub(t1, t2); }
+Tensor::SPtr operator-(Tensor::SPtr t1, Tensor::SPtr t2)
+{
+    return sub(t1, t2);
+}
 
-Tensor::SPtr operator*(Tensor::SPtr t1, Tensor::SPtr t2) { return mul(t1, t2); }
+Tensor::SPtr operator*(Tensor::SPtr t1, Tensor::SPtr t2)
+{
+    return mul(t1, t2);
+}
 
-Tensor::SPtr operator/(Tensor::SPtr t1, Tensor::SPtr t2) { return div(t1, t2); }
+Tensor::SPtr operator/(Tensor::SPtr t1, Tensor::SPtr t2)
+{
+    return div(t1, t2);
+}
 
 }  // namespace core
 
@@ -196,12 +210,24 @@ ITensorPtr div(ITensorPtr t1, ITensorPtr t2)
     return makeAbstractTensor(core::div(tensor1->get(), tensor2->get()));
 }
 
-ITensorPtr operator+(ITensorPtr t1, ITensorPtr t2) { return add(t1, t2); }
+ITensorPtr operator+(ITensorPtr t1, ITensorPtr t2)
+{
+    return add(t1, t2);
+}
 
-ITensorPtr operator-(ITensorPtr t1, ITensorPtr t2) { return sub(t1, t2); }
+ITensorPtr operator-(ITensorPtr t1, ITensorPtr t2)
+{
+    return sub(t1, t2);
+}
 
-ITensorPtr operator*(ITensorPtr t1, ITensorPtr t2) { return mul(t1, t2); }
+ITensorPtr operator*(ITensorPtr t1, ITensorPtr t2)
+{
+    return mul(t1, t2);
+}
 
-ITensorPtr operator/(ITensorPtr t1, ITensorPtr t2) { return div(t1, t2); }
+ITensorPtr operator/(ITensorPtr t1, ITensorPtr t2)
+{
+    return div(t1, t2);
+}
 
 }  // namespace graphdl

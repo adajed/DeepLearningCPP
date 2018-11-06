@@ -11,10 +11,10 @@ namespace layers
 {
 class AssignLayer : public Layer
 {
-   public:
+  public:
     AssignLayer(ID id, Tensor::SPtr dest, Tensor::SPtr src);
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 
     Tensor::WeakPtr mDest;

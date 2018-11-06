@@ -1,4 +1,5 @@
 #include "readMNIST.h"
+
 #include <assert.h>
 #include <fstream>
 
@@ -80,7 +81,10 @@ MnistDataset::MnistDataset(int batchSize)
     parseLabels(LABELS_PATH, mY);
 }
 
-int MnistDataset::getNumBatches() const { return mX.size() / mBatchSize; }
+int MnistDataset::getNumBatches() const
+{
+    return mX.size() / mBatchSize;
+}
 
 std::vector<std::vector<float>> MnistDataset::getNextBatch()
 {
@@ -95,4 +99,7 @@ std::vector<std::vector<float>> MnistDataset::getNextBatch()
     return {batchX, batchY};
 }
 
-void MnistDataset::reset() { mPos = 0; }
+void MnistDataset::reset()
+{
+    mPos = 0;
+}

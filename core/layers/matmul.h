@@ -11,22 +11,22 @@ namespace layers
 {
 class MatmulLayer : public DifferentiableLayer
 {
-   public:
+  public:
     MatmulLayer(ID id, Tensor::SPtr m1, Tensor::SPtr m2);
 
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 
 class MatmulGradientLayer : public Layer
 {
-   public:
+  public:
     MatmulGradientLayer(ID id, Tensor::SPtr m1, Tensor::SPtr m2,
                         Tensor::SPtr out, Tensor::SPtr outGrad);
 
-   private:
+  private:
     void execute(const InputDict&) override;
 };
 

@@ -96,7 +96,8 @@ int main()
         for (int i = 0; i < mnist.getNumBatches(); ++i)
         {
             auto batch = mnist.getNextBatch();
-            auto outputs = eval({net.loss, net.output}, {{"X", batch[0]}, {"Y", batch[1]}});
+            auto outputs = eval({net.loss, net.output},
+                                {{"X", batch[0]}, {"Y", batch[1]}});
             (void)eval(net.modifiers, {{"X", batch[0]}, {"Y", batch[1]}});
             losses.push_back(outputs[0][0]);
             accs.push_back(numCorrect(batch[1], outputs[1]));
@@ -108,7 +109,8 @@ int main()
 
                 int acc = 0;
                 for (int i : accs) acc += i;
-                std::cout << "Loss " << mean << ", acc " << float(acc) / float(10 * BATCH_SIZE) << std::endl;
+                std::cout << "Loss " << mean << ", acc "
+                          << float(acc) / float(10 * BATCH_SIZE) << std::endl;
 
                 losses.clear();
                 accs.clear();

@@ -1,8 +1,8 @@
+#include "memory.h"
+
 #include <assert.h>
 #include <cstring>
 #include <stdexcept>
-
-#include "memory.h"
 
 namespace graphdl
 {
@@ -13,15 +13,30 @@ Memory::Memory(MemoryType type, size_t count)
 {
 }
 
-float* Memory::getValues() { return mValues; }
+float* Memory::getValues()
+{
+    return mValues;
+}
 
-const float* Memory::getValues() const { return mValues; }
+const float* Memory::getValues() const
+{
+    return mValues;
+}
 
-float& Memory::operator[](std::size_t pos) { return mValues[pos]; }
+float& Memory::operator[](std::size_t pos)
+{
+    return mValues[pos];
+}
 
-const float& Memory::operator[](std::size_t pos) const { return mValues[pos]; }
+const float& Memory::operator[](std::size_t pos) const
+{
+    return mValues[pos];
+}
 
-size_t Memory::getCount() const { return mCount; }
+size_t Memory::getCount() const
+{
+    return mCount;
+}
 
 void Memory::fill(float* memory) const
 {
@@ -29,7 +44,10 @@ void Memory::fill(float* memory) const
     std::memcpy(memory, mValues, sizeof(float) * getCount());
 }
 
-bool Memory::isAllocated() const { return mValues != nullptr; }
+bool Memory::isAllocated() const
+{
+    return mValues != nullptr;
+}
 
 bool Memory::allocate()
 {

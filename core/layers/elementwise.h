@@ -1,8 +1,9 @@
 #ifndef GRAPHDL_CORE_LAYERS_ELEMENTWISE_H_
 #define GRAPHDL_CORE_LAYERS_ELEMENTWISE_H_
 
-#include <functional>
 #include "differentiableLayer.h"
+
+#include <functional>
 
 namespace graphdl
 {
@@ -22,12 +23,12 @@ using ElementwiseFun = std::function<float(float, float)>;
 
 class ElementwiseLayer : public DifferentiableLayer
 {
-   public:
+  public:
     ElementwiseLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2, Elementwise op);
 
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 
     Elementwise mOp;
@@ -36,12 +37,12 @@ class ElementwiseLayer : public DifferentiableLayer
 
 class ElementwiseGradientLayer : public Layer
 {
-   public:
+  public:
     ElementwiseGradientLayer(ID id, Tensor::SPtr t1, Tensor::SPtr t2,
                              Tensor::SPtr out, Tensor::SPtr outGrad,
                              Elementwise op);
 
-   private:
+  private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr, Tensor::SPtr);
 
     void execute(const InputDict&) override;

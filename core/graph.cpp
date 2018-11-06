@@ -1,6 +1,6 @@
-#include <assert.h>
-
 #include "graph.h"
+
+#include <assert.h>
 
 namespace graphdl
 {
@@ -19,9 +19,15 @@ Graph::Graph(const std::string& name)
 {
 }
 
-std::string Graph::getName() const { return mName; }
+std::string Graph::getName() const
+{
+    return mName;
+}
 
-void Graph::setName(const std::string& name) { mName = name; }
+void Graph::setName(const std::string& name)
+{
+    mName = name;
+}
 
 std::map<std::string, Tensor::SPtr> Graph::getInputs() const
 {
@@ -99,9 +105,15 @@ void Graph::insertTensor(Tensor::SPtr tensor)
     mTensors.insert({tensorID, tensor});
 }
 
-Tensor::ID Graph::nextTensorID() { return mTensorCounter++; }
+Tensor::ID Graph::nextTensorID()
+{
+    return mTensorCounter++;
+}
 
-Layer::ID Graph::nextLayerID() { return mLayerCounter++; }
+Layer::ID Graph::nextLayerID()
+{
+    return mLayerCounter++;
+}
 
 GraphRegister& GraphRegister::getGlobalGraphRegister()
 {
@@ -126,7 +138,10 @@ bool GraphRegister::insert(Graph::SPtr graph)
     return true;
 }
 
-Graph::SPtr GraphRegister::getDefaultGraph() { return mDefaultGraph; }
+Graph::SPtr GraphRegister::getDefaultGraph()
+{
+    return mDefaultGraph;
+}
 
 void GraphRegister::setDefaultGraph(Graph::SPtr graph)
 {

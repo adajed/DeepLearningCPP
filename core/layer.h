@@ -1,10 +1,11 @@
 #ifndef GRAPHDL_CORE_LAYER_H_
 #define GRAPHDL_CORE_LAYER_H_
 
-#include <exception>
 #include "graphdl.h"
 #include "memory.h"
 #include "tensorShape.h"
+
+#include <exception>
 
 namespace graphdl
 {
@@ -18,7 +19,7 @@ class Layer;
 //!
 class Tensor
 {
-   public:
+  public:
     using ID = std::size_t;
     using UPtr = std::unique_ptr<Tensor>;
     using SPtr = std::shared_ptr<Tensor>;
@@ -82,9 +83,9 @@ class Tensor
 
     ~Tensor();
 
-   private:
+  private:
     ID mID;
-    std::string mName;   //!< Tensor name.
+    std::string mName;  //!< Tensor name.
     TensorShape mShape;  //< Tensor shape.
 
     bool mIsEvaluated;
@@ -99,7 +100,7 @@ Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape);
 //!
 class Layer
 {
-   public:
+  public:
     using ID = std::size_t;
     using UPtr = std::unique_ptr<Layer>;
     using SPtr = std::shared_ptr<Layer>;
@@ -158,7 +159,7 @@ class Layer
     //!
     void reset();
 
-   private:
+  private:
     //! \fn executeOper
     //!
     virtual void execute(const InputDict& inputs) = 0;
@@ -167,7 +168,7 @@ class Layer
     bool mIsEvaluated;
     std::weak_ptr<Graph> mGraph;
 
-   protected:
+  protected:
     std::vector<Tensor::WeakPtr> mInputs;
     std::vector<Tensor::SPtr> mOutputs;
 };

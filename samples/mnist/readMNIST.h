@@ -5,7 +5,7 @@
 
 class MnistDataset
 {
-   public:
+  public:
     MnistDataset(int batchSize);
 
     int getNumBatches() const;
@@ -14,7 +14,7 @@ class MnistDataset
 
     void reset();
 
-   private:
+  private:
     int mBatchSize;
     int mPos;
     std::vector<std::vector<float>> mX;

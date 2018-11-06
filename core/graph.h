@@ -14,7 +14,7 @@ namespace core
 //!
 class Graph
 {
-   public:
+  public:
     using UPtr = std::shared_ptr<Graph>;
     using SPtr = std::shared_ptr<Graph>;
     using WeakPtr = std::weak_ptr<Graph>;
@@ -84,7 +84,7 @@ class Graph
 
     Layer::ID nextLayerID();
 
-   private:
+  private:
     std::string mName;  //!< Name of the graph.
     std::vector<std::shared_ptr<Layer>> mInputLayers;
     std::vector<std::shared_ptr<Layer>> mWeightLayers;
@@ -99,7 +99,7 @@ class Graph
 //!
 class GraphRegister
 {
-   private:
+  private:
     // name of initial default graph
     static const std::string DEFAULT_GRAPH_NAME;
 
@@ -114,7 +114,7 @@ class GraphRegister
         mDefaultGraph = graph;
     }
 
-   public:
+  public:
     //! \fn getGlobalIGraphRegister
     //! \brief Returns the global register of graphs.
     //!
@@ -151,7 +151,7 @@ class GraphRegister
 
     void clear();
 
-   private:
+  private:
     std::map<std::string, Graph::SPtr> mGraphDict;
     Graph::SPtr mDefaultGraph;
 };

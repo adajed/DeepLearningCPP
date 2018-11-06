@@ -11,23 +11,23 @@ namespace layers
 {
 class AddNLayer : public DifferentiableLayer
 {
-   public:
+  public:
     AddNLayer(ID id, std::vector<Tensor::SPtr> tensors);
 
     DifferentiableLayer::TensorMap gradients(Tensor::SPtr out,
                                              Tensor::SPtr outGrad) override;
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 
 class AddNGradientLayer : public Layer
 {
-   public:
+  public:
     AddNGradientLayer(ID id, std::vector<Tensor::SPtr> ins, Tensor::SPtr out,
                       Tensor::SPtr outGrad);
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 

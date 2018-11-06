@@ -1,8 +1,9 @@
 #ifndef GRAPHDL_CORE_LAYERS_ACTIVATION_H_
 #define GRAPHDL_CORE_LAYERS_ACTIVATION_H_
 
-#include <functional>
 #include "differentiableLayer.h"
+
+#include <functional>
 
 namespace graphdl
 {
@@ -24,12 +25,12 @@ enum class Activation
 
 class ActivationLayer : public DifferentiableLayer
 {
-   public:
+  public:
     ActivationLayer(ID, Tensor::SPtr, Activation);
 
     TensorMap gradients(Tensor::SPtr, Tensor::SPtr) override;
 
-   private:
+  private:
     void execute(const InputDict&) override;
 
     Activation mOp;
@@ -38,11 +39,11 @@ class ActivationLayer : public DifferentiableLayer
 
 class ActivationGradientLayer : public Layer
 {
-   public:
+  public:
     ActivationGradientLayer(ID, Tensor::SPtr, Tensor::SPtr, Tensor::SPtr,
                             Activation);
 
-   private:
+  private:
     void execute(const InputDict&) override;
 
     Activation mOp;

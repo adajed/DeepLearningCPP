@@ -11,12 +11,12 @@ namespace layers
 {
 class ConstantLayer : public Layer
 {
-   public:
+  public:
     ConstantLayer(ID id, float value, const TensorShape& shape);
 
     void initialize() override;
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 
     float mValue;

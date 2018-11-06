@@ -1,8 +1,10 @@
 #include "assign.h"
-#include <assert.h>
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+
+#include <assert.h>
 
 namespace graphdl
 {
