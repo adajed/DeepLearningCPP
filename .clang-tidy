@@ -1,0 +1,6 @@
+Checks:  "*,
+-google-readability-braces-around-statements,\
+-hicpp-braces-around-statements,\
+-readability-braces-around-statements,\
+-fuchsia-default-arguments
+"

@@ -28,3 +28,9 @@ format:
 	@+make -C tests format
 	@+make -C samples/toySample format
 	@+make -C samples/mnist format
+
+tidy:
+	@+make -C core tidy
+	@+make -C tests tidy
+	@+make -C samples/toySample tidy
+	@+make -C samples/mnist tidy
