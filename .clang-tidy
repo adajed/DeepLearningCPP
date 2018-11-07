@@ -12,5 +12,6 @@ Checks:  "*,
 -google-build-using-namespace,\
 -cppcoreguidelines-pro-bounds-array-to-pointer-decay,\
 -hicpp-no-array-decay,\
--cppcoreguidelines-owning-memory
+-cppcoreguidelines-owning-memory,\
+-readability-else-after-return
 "

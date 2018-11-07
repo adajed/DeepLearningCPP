@@ -1,8 +1,9 @@
-#include <cassert>
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
 #include "matmul.h"
+
+#include <cassert>
 
 namespace graphdl
 {

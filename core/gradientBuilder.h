@@ -1,8 +1,9 @@
 #ifndef GRAPHDL_CORE_GRADIENT_BUILDER_H_
 #define GRAPHDL_CORE_GRADIENT_BUILDER_H_
 
-#include <set>
 #include "layer.h"
+
+#include <set>
 
 namespace graphdl
 {
@@ -10,14 +11,14 @@ namespace core
 {
 class GradientBuilder
 {
-   public:
+  public:
     using TensorMap = std::map<Tensor::SPtr, Tensor::SPtr>;
 
     GradientBuilder(const Tensor::SPtr& tensor);
 
     TensorMap createGradients();
 
-   private:
+  private:
     void findTensorOutputs(const Tensor::SPtr& tensor,
                            std::set<Tensor::SPtr>& visited);
     void modifyTensorGradient(Tensor::SPtr tensor,

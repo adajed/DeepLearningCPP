@@ -10,8 +10,14 @@ using namespace graphdl::core::layers;
 using TestCase = std::tuple<Vec, Elementwise>;
 using ErrorTestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise>;
 
-Shape shape(const TestCase& testCase) { return std::get<0>(testCase); }
-Elementwise op(const TestCase& testCase) { return std::get<1>(testCase); }
+Shape shape(const TestCase& testCase)
+{
+    return std::get<0>(testCase);
+}
+Elementwise op(const TestCase& testCase)
+{
+    return std::get<1>(testCase);
+}
 
 std::vector<Vec> SHAPES = {
     // clang-format off
@@ -53,7 +59,7 @@ std::vector<Elementwise> OPS = {
 class ElementwiseTest : public LayerTest,
                         public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         setup(testCase);
@@ -74,10 +80,10 @@ class ElementwiseTest : public LayerTest,
         EXPECT_TRUE(correct);
     }
 
-   protected:
+  protected:
     RefTensor mInput1, mInput2, mOutput, mOutputGrad, mGradient1, mGradient2;
 
-   private:
+  private:
     void setup(const TestCase& testCase)
     {
         UniformGen gen(0);
@@ -94,18 +100,18 @@ class ElementwiseTest : public LayerTest,
         std::function<float(float, float)> f;
         switch (op(testCase))
         {
-            case Elementwise::kADD:
-                f = [](float f1, float f2) { return f1 + f2; };
-                break;
-            case Elementwise::kSUB:
-                f = [](float f1, float f2) { return f1 - f2; };
-                break;
-            case Elementwise::kMUL:
-                f = [](float f1, float f2) { return f1 * f2; };
-                break;
-            case Elementwise::kDIV:
-                f = [](float f1, float f2) { return f1 / f2; };
-                break;
+        case Elementwise::kADD:
+            f = [](float f1, float f2) { return f1 + f2; };
+            break;
+        case Elementwise::kSUB:
+            f = [](float f1, float f2) { return f1 - f2; };
+            break;
+        case Elementwise::kMUL:
+            f = [](float f1, float f2) { return f1 * f2; };
+            break;
+        case Elementwise::kDIV:
+            f = [](float f1, float f2) { return f1 / f2; };
+            break;
         }
         // calculate reference output
         for (std::size_t i = 0; i < mInput1.getCount(); ++i)
@@ -130,22 +136,22 @@ class ElementwiseTest : public LayerTest,
         std::function<float(float, float)> fun2;
         switch (op(testCase))
         {
-            case Elementwise::kADD:
-                fun1 = [](float f1, float f2) { return 1.; };
-                fun2 = [](float f1, float f2) { return 1.; };
-                break;
-            case Elementwise::kSUB:
-                fun1 = [](float f1, float f2) { return 1.; };
-                fun2 = [](float f1, float f2) { return -1.; };
-                break;
-            case Elementwise::kMUL:
-                fun1 = [](float f1, float f2) { return f2; };
-                fun2 = [](float f1, float f2) { return f1; };
-                break;
-            case Elementwise::kDIV:
-                fun1 = [](float f1, float f2) { return 1. / f2; };
-                fun2 = [](float f1, float f2) { return -f1 / (f2 * f2); };
-                break;
+        case Elementwise::kADD:
+            fun1 = [](float f1, float f2) { return 1.; };
+            fun2 = [](float f1, float f2) { return 1.; };
+            break;
+        case Elementwise::kSUB:
+            fun1 = [](float f1, float f2) { return 1.; };
+            fun2 = [](float f1, float f2) { return -1.; };
+            break;
+        case Elementwise::kMUL:
+            fun1 = [](float f1, float f2) { return f2; };
+            fun2 = [](float f1, float f2) { return f1; };
+            break;
+        case Elementwise::kDIV:
+            fun1 = [](float f1, float f2) { return 1. / f2; };
+            fun2 = [](float f1, float f2) { return -f1 / (f2 * f2); };
+            break;
         }
 
         for (std::size_t i = 0; i < mInput1.getCount(); ++i)
@@ -165,18 +171,10 @@ class ElementwiseTest : public LayerTest,
             ITensorPtr output;
             switch (op(testCase))
             {
-                case Elementwise::kADD:
-                    output = input1 + input2;
-                    break;
-                case Elementwise::kSUB:
-                    output = input1 - input2;
-                    break;
-                case Elementwise::kMUL:
-                    output = input1 * input2;
-                    break;
-                case Elementwise::kDIV:
-                    output = input1 / input2;
-                    break;
+            case Elementwise::kADD: output = input1 + input2; break;
+            case Elementwise::kSUB: output = input1 - input2; break;
+            case Elementwise::kMUL: output = input1 * input2; break;
+            case Elementwise::kDIV: output = input1 / input2; break;
             }
             initializeGraph();
             return HostVec(
@@ -214,7 +212,7 @@ class ElementwiseGradientTest : public ElementwiseTest
 class ElementwiseErrorTest : public LayerTest,
                              public testing::WithParamInterface<ErrorTestCase>
 {
-   public:
+  public:
     void test(const ErrorTestCase& testCase)
     {
         std::tuple<Vec, Vec> shapes = std::get<0>(testCase);
@@ -225,33 +223,34 @@ class ElementwiseErrorTest : public LayerTest,
             {
                 switch (std::get<1>(testCase))
                 {
-                    case Elementwise::kADD:
-                        output = input1 + input2;
-                        break;
-                    case Elementwise::kSUB:
-                        output = input1 - input2;
-                        break;
-                    case Elementwise::kMUL:
-                        output = input1 * input2;
-                        break;
-                    case Elementwise::kDIV:
-                        output = input1 / input2;
-                        break;
+                case Elementwise::kADD: output = input1 + input2; break;
+                case Elementwise::kSUB: output = input1 - input2; break;
+                case Elementwise::kMUL: output = input1 * input2; break;
+                case Elementwise::kDIV: output = input1 / input2; break;
                 }
             },
             std::runtime_error);
     }
 };
 
-TEST_P(ElementwiseTest, testAPI) { test(GetParam()); }
+TEST_P(ElementwiseTest, testAPI)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
 
-TEST_P(ElementwiseErrorTest, test) { test(GetParam()); }
+TEST_P(ElementwiseErrorTest, test)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerErrorTest, ElementwiseErrorTest,
                         Combine(ValuesIn(ERROR_SHAPES), ValuesIn(OPS)));
 
-TEST_P(ElementwiseGradientTest, testAPI) { testGradient(GetParam()); }
+TEST_P(ElementwiseGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseGradientTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
 

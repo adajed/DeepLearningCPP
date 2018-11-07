@@ -9,12 +9,12 @@ namespace core
 {
 class WeightsLayer : public Layer
 {
-   public:
+  public:
     WeightsLayer(ID id, const std::string& name, const Shape& shape);
 
     void initialize() override;
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 

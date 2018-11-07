@@ -31,7 +31,7 @@ std::vector<TestCase> ERROR_SHAPES = {
 class MatmulTest : public LayerTest,
                    public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         setup(testCase);
@@ -86,7 +86,7 @@ class MatmulTest : public LayerTest,
         EXPECT_THROW({ output = matmul(input1, input2); }, std::runtime_error);
     }
 
-   private:
+  private:
     RefTensor mInput1, mInput2, mOutput, mOutputGrad, mGradient1, mGradient2;
 
     void setup(const TestCase& testCase)
@@ -158,19 +158,28 @@ class MatmulTest : public LayerTest,
     }
 };
 
-TEST_P(MatmulTest, testAPI) { test(GetParam()); }
+TEST_P(MatmulTest, testAPI)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, MatmulTest, ValuesIn(SHAPES));
 
 class MatmulErrorsTest : public MatmulTest
 {
 };
-TEST_P(MatmulErrorsTest, testWrongShapes) { testWrongShapes(GetParam()); }
+TEST_P(MatmulErrorsTest, testWrongShapes)
+{
+    testWrongShapes(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, MatmulErrorsTest, ValuesIn(ERROR_SHAPES));
 
 class MatmulGradientTest : public MatmulTest
 {
 };
-TEST_P(MatmulGradientTest, testAPI) { testGradient(GetParam()); }
+TEST_P(MatmulGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, MatmulGradientTest, ValuesIn(SHAPES));
 
 }  // namespace

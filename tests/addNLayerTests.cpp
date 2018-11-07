@@ -41,7 +41,7 @@ std::vector<std::vector<Vec>> ERROR_SHAPES = {
 
 class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         UniformGen gen(0);
@@ -134,7 +134,7 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
 class AddNErrorTest : public LayerTest,
                       public testing::WithParamInterface<ErrorTestCase>
 {
-   public:
+  public:
     void test(const ErrorTestCase& testCase)
     {
         std::vector<ITensorPtr> inputs;
@@ -152,15 +152,24 @@ class AddNGradientTest : public AddNTest
 {
 };
 
-TEST_P(AddNTest, testAPI) { test(GetParam()); }
+TEST_P(AddNTest, testAPI)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, AddNTest,
                         Combine(Range(1, 11), ValuesIn(SHAPES)));
 
-TEST_P(AddNGradientTest, testAPI) { testGradient(GetParam()); }
+TEST_P(AddNGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, AddNGradientTest,
                         Combine(Range(1, 11), ValuesIn(SHAPES)));
 
-TEST_P(AddNErrorTest, test) { test(GetParam()); }
+TEST_P(AddNErrorTest, test)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerErrorTest, AddNErrorTest, ValuesIn(ERROR_SHAPES));
 
 }  // namespace

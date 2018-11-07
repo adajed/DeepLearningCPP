@@ -9,10 +9,10 @@ namespace core
 {
 class InputLayer : public Layer
 {
-   public:
+  public:
     InputLayer(ID id, const std::string& name, const Shape& shape);
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 

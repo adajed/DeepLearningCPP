@@ -15,7 +15,7 @@ enum class MemoryType
 
 class Memory
 {
-   public:
+  public:
     Memory(MemoryType type, std::size_t count);
 
     float* getValues();
@@ -38,7 +38,7 @@ class Memory
 
     void free();
 
-   private:
+  private:
     MemoryType mType;
     float* mValues;
     std::size_t mCount;

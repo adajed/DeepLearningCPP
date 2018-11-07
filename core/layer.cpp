@@ -1,7 +1,8 @@
 #include "layer.h"
 
-#include <utility>
 #include "graph.h"
+
+#include <utility>
 
 namespace graphdl
 {
@@ -15,9 +16,15 @@ Layer::Layer(ID id, const std::vector<Tensor::SPtr>& inputs,
         mInputs.push_back(Tensor::WeakPtr(in));
 }
 
-Layer::ID Layer::getID() const { return mID; }
+Layer::ID Layer::getID() const
+{
+    return mID;
+}
 
-Graph::SPtr Layer::getGraph() const { return mGraph.lock(); }
+Graph::SPtr Layer::getGraph() const
+{
+    return mGraph.lock();
+}
 
 void Layer::setGraph(const Graph::SPtr& graph)
 {
@@ -31,7 +38,10 @@ std::vector<Tensor::SPtr> Layer::getInputs()
     return inputs;
 }
 
-std::vector<Tensor::SPtr> Layer::getOutputs() { return mOutputs; }
+std::vector<Tensor::SPtr> Layer::getOutputs()
+{
+    return mOutputs;
+}
 
 void Layer::eval(const InputDict& inputs)
 {

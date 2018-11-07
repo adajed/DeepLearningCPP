@@ -43,7 +43,7 @@ std::vector<Activation> OPS = {
 class ActivationTest : public LayerTest,
                        public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         setup(testCase);
@@ -61,7 +61,7 @@ class ActivationTest : public LayerTest,
         EXPECT_TRUE(correct);
     };
 
-   private:
+  private:
     void setup(const TestCase& testCase)
     {
         UniformGen gen(0);
@@ -72,40 +72,36 @@ class ActivationTest : public LayerTest,
         std::function<float(float)> fun;
         switch (std::get<1>(testCase))
         {
-            case Activation::kRELU:
-                fun = [](float x) {
-                    if (x > 0.)
-                        return x;
-                    else
-                        return 0.0f;
-                };
-                break;
-            case Activation::kSIGMOID:
-                fun = [](float x) { return 1. / (1. + std::exp(-x)); };
-                break;
-            case Activation::kTANH:
-                fun = [](float x) { return std::tanh(x); };
-                break;
-            case Activation::kSQUARE:
-                fun = [](float x) { return x * x; };
-                break;
-            case Activation::kABS:
-                fun = [](float x) {
-                    if (x > 0.)
-                        return x;
-                    else
-                        return -x;
-                };
-                break;
-            case Activation::kNEG:
-                fun = [](float x) { return -x; };
-                break;
-            case Activation::kRECIPROCAL:
-                fun = [](float x) { return 1. / x; };
-                break;
-            case Activation::kLOG:
-                fun = [](float x) { return std::log(std::abs(x)); };
-                break;
+        case Activation::kRELU:
+            fun = [](float x) {
+                if (x > 0.)
+                    return x;
+                else
+                    return 0.0f;
+            };
+            break;
+        case Activation::kSIGMOID:
+            fun = [](float x) { return 1. / (1. + std::exp(-x)); };
+            break;
+        case Activation::kTANH:
+            fun = [](float x) { return std::tanh(x); };
+            break;
+        case Activation::kSQUARE: fun = [](float x) { return x * x; }; break;
+        case Activation::kABS:
+            fun = [](float x) {
+                if (x > 0.)
+                    return x;
+                else
+                    return -x;
+            };
+            break;
+        case Activation::kNEG: fun = [](float x) { return -x; }; break;
+        case Activation::kRECIPROCAL:
+            fun = [](float x) { return 1. / x; };
+            break;
+        case Activation::kLOG:
+            fun = [](float x) { return std::log(std::abs(x)); };
+            break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -124,43 +120,39 @@ class ActivationTest : public LayerTest,
         std::function<float(float)> fun;
         switch (std::get<1>(testCase))
         {
-            case Activation::kRELU:
-                fun = [](float x) {
-                    if (x > 0.)
-                        return 1.;
-                    else
-                        return 0.;
-                };
-                break;
-            case Activation::kSIGMOID:
-                fun = [](float x) {
-                    return std::exp(-x) /
-                           ((1. + std::exp(-x)) * (1. + std::exp(-x)));
-                };
-                break;
-            case Activation::kTANH:
-                fun = [](float x) { return 1 - std::tanh(x) * std::tanh(x); };
-                break;
-            case Activation::kSQUARE:
-                fun = [](float x) { return 2 * x; };
-                break;
-            case Activation::kABS:
-                fun = [](float x) {
-                    if (x > 0.)
-                        return 1.;
-                    else
-                        return -1.;
-                };
-                break;
-            case Activation::kNEG:
-                fun = [](float x) { return -1; };
-                break;
-            case Activation::kRECIPROCAL:
-                fun = [](float x) { return -1 / (x * x); };
-                break;
-            case Activation::kLOG:
-                fun = [](float x) { return 1 / std::abs(x); };
-                break;
+        case Activation::kRELU:
+            fun = [](float x) {
+                if (x > 0.)
+                    return 1.;
+                else
+                    return 0.;
+            };
+            break;
+        case Activation::kSIGMOID:
+            fun = [](float x) {
+                return std::exp(-x) /
+                       ((1. + std::exp(-x)) * (1. + std::exp(-x)));
+            };
+            break;
+        case Activation::kTANH:
+            fun = [](float x) { return 1 - std::tanh(x) * std::tanh(x); };
+            break;
+        case Activation::kSQUARE: fun = [](float x) { return 2 * x; }; break;
+        case Activation::kABS:
+            fun = [](float x) {
+                if (x > 0.)
+                    return 1.;
+                else
+                    return -1.;
+            };
+            break;
+        case Activation::kNEG: fun = [](float x) { return -1; }; break;
+        case Activation::kRECIPROCAL:
+            fun = [](float x) { return -1 / (x * x); };
+            break;
+        case Activation::kLOG:
+            fun = [](float x) { return 1 / std::abs(x); };
+            break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -174,29 +166,14 @@ class ActivationTest : public LayerTest,
             ITensorPtr out;
             switch (std::get<1>(testCase))
             {
-                case Activation::kRELU:
-                    out = relu(in);
-                    break;
-                case Activation::kSIGMOID:
-                    out = sigmoid(in);
-                    break;
-                case Activation::kTANH:
-                    out = tanh(in);
-                    break;
-                case Activation::kSQUARE:
-                    out = square(in);
-                    break;
-                case Activation::kABS:
-                    out = abs(in);
-                    break;
-                case Activation::kNEG:
-                    out = neg(in);
-                    break;
-                case Activation::kRECIPROCAL:
-                    out = reciprocal(in);
-                    break;
-                case Activation::kLOG:
-                    out = log(abs(in));
+            case Activation::kRELU: out = relu(in); break;
+            case Activation::kSIGMOID: out = sigmoid(in); break;
+            case Activation::kTANH: out = tanh(in); break;
+            case Activation::kSQUARE: out = square(in); break;
+            case Activation::kABS: out = abs(in); break;
+            case Activation::kNEG: out = neg(in); break;
+            case Activation::kRECIPROCAL: out = reciprocal(in); break;
+            case Activation::kLOG: out = log(abs(in));
             }
             initializeGraph();
 
@@ -227,14 +204,20 @@ class ActivationTest : public LayerTest,
     RefTensor mInput, mOutput, mOutputGrad, mGradient;
 };
 
-TEST_P(ActivationTest, testAPI) { test(GetParam()); }
+TEST_P(ActivationTest, testAPI)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, ActivationTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
 
 class ActivationGradientTest : public ActivationTest
 {
 };
-TEST_P(ActivationGradientTest, testAPI) { testGradient(GetParam()); }
+TEST_P(ActivationGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, ActivationGradientTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(OPS)));
 }  // namespace

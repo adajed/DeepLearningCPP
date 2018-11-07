@@ -13,7 +13,7 @@ namespace core
 //!
 class AbstractGraph : public IGraph
 {
-   public:
+  public:
     using Ptr = std::shared_ptr<AbstractGraph>;
 
     AbstractGraph(Graph::SPtr graph);
@@ -28,7 +28,7 @@ class AbstractGraph : public IGraph
 
     Graph::SPtr get() const;
 
-   private:
+  private:
     Graph::SPtr mGraph;
 };
 

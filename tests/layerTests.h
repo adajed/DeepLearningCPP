@@ -1,12 +1,12 @@
 #ifndef TESTS_LAYER_TESTS_H_
 #define TESTS_LAYER_TESTS_H_
 
-#include <gtest/gtest.h>
-#include <functional>
-
 #include "graph.h"
 #include "graphdl.h"
 #include "refTensor.h"
+
+#include <functional>
+#include <gtest/gtest.h>
 
 using namespace graphdl;
 using namespace graphdl::core;
@@ -20,7 +20,7 @@ using HostVec = std::vector<HostTensor>;
 
 class LayerTest : public testing::Test
 {
-   protected:
+  protected:
     virtual void TearDown() override
     {
         getGraphRegister().clear();

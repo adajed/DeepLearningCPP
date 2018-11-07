@@ -49,9 +49,15 @@ const float& RefTensor::operator[](const std::vector<unsigned int>& point) const
     return at(pos);
 }
 
-std::size_t RefTensor::getCount() const { return mCount; }
+std::size_t RefTensor::getCount() const
+{
+    return mCount;
+}
 
-TensorShape RefTensor::shape() const { return mShape; }
+TensorShape RefTensor::shape() const
+{
+    return mShape;
+}
 
 void RefTensor::fillRandomly(RandGen& gen)
 {

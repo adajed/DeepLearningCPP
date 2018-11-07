@@ -1,10 +1,11 @@
 #include "elementwise.h"
+
 #include "abstractTensor.h"
+#include "graph.h"
+#include "graphdl_ops.h"
 
 #include <cassert>
 #include <utility>
-#include "graph.h"
-#include "graphdl_ops.h"
 
 namespace graphdl
 {
@@ -34,18 +35,18 @@ ElementwiseLayer::ElementwiseLayer(ID id, const Tensor::SPtr& t1,
     assert(t1->getShape() == t2->getShape());
     switch (op)
     {
-        case Elementwise::kADD:
-            mFun = [](float f1, float f2) { return f1 + f2; };
-            break;
-        case Elementwise::kSUB:
-            mFun = [](float f1, float f2) { return f1 - f2; };
-            break;
-        case Elementwise::kMUL:
-            mFun = [](float f1, float f2) { return f1 * f2; };
-            break;
-        case Elementwise::kDIV:
-            mFun = [](float f1, float f2) { return f1 / f2; };
-            break;
+    case Elementwise::kADD:
+        mFun = [](float f1, float f2) { return f1 + f2; };
+        break;
+    case Elementwise::kSUB:
+        mFun = [](float f1, float f2) { return f1 - f2; };
+        break;
+    case Elementwise::kMUL:
+        mFun = [](float f1, float f2) { return f1 * f2; };
+        break;
+    case Elementwise::kDIV:
+        mFun = [](float f1, float f2) { return f1 / f2; };
+        break;
     }
 }
 
@@ -87,22 +88,22 @@ ElementwiseGradientLayer::ElementwiseGradientLayer(
 {
     switch (op)
     {
-        case Elementwise::kADD:
-            mFun1 = [](float f1, float f2) { return 1.; };
-            mFun2 = [](float f1, float f2) { return 1.; };
-            break;
-        case Elementwise::kSUB:
-            mFun1 = [](float f1, float f2) { return 1.; };
-            mFun2 = [](float f1, float f2) { return -1.; };
-            break;
-        case Elementwise::kMUL:
-            mFun1 = [](float f1, float f2) { return f2; };
-            mFun2 = [](float f1, float f2) { return f1; };
-            break;
-        case Elementwise::kDIV:
-            mFun1 = [](float f1, float f2) { return 1. / f2; };
-            mFun2 = [](float f1, float f2) { return -f1 / (f2 * f2); };
-            break;
+    case Elementwise::kADD:
+        mFun1 = [](float f1, float f2) { return 1.; };
+        mFun2 = [](float f1, float f2) { return 1.; };
+        break;
+    case Elementwise::kSUB:
+        mFun1 = [](float f1, float f2) { return 1.; };
+        mFun2 = [](float f1, float f2) { return -1.; };
+        break;
+    case Elementwise::kMUL:
+        mFun1 = [](float f1, float f2) { return f2; };
+        mFun2 = [](float f1, float f2) { return f1; };
+        break;
+    case Elementwise::kDIV:
+        mFun1 = [](float f1, float f2) { return 1. / f2; };
+        mFun2 = [](float f1, float f2) { return -f1 / (f2 * f2); };
+        break;
     }
 };
 

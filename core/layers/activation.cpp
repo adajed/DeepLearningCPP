@@ -1,10 +1,12 @@
 #include "activation.h"
-#include <cassert>
-#include <cmath>
-#include <utility>
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+
+#include <cassert>
+#include <cmath>
+#include <utility>
 
 namespace graphdl
 {
@@ -17,30 +19,18 @@ ActivationLayer::ActivationLayer(ID id, const Tensor::SPtr& t, Activation op)
 {
     switch (op)
     {
-        case Activation::kRELU:
-            mFun = [](float x) { return x > 0. ? x : 0.; };
-            break;
-        case Activation::kSIGMOID:
-            mFun = [](float x) { return 1. / (1. + std::exp(-x)); };
-            break;
-        case Activation::kTANH:
-            mFun = [](float x) { return std::tanh(x); };
-            break;
-        case Activation::kSQUARE:
-            mFun = [](float x) { return x * x; };
-            break;
-        case Activation::kABS:
-            mFun = [](float x) { return std::abs(x); };
-            break;
-        case Activation::kNEG:
-            mFun = [](float x) { return -x; };
-            break;
-        case Activation::kRECIPROCAL:
-            mFun = [](float x) { return 1. / x; };
-            break;
-        case Activation::kLOG:
-            mFun = [](float x) { return std::log(x); };
-            break;
+    case Activation::kRELU:
+        mFun = [](float x) { return x > 0. ? x : 0.; };
+        break;
+    case Activation::kSIGMOID:
+        mFun = [](float x) { return 1. / (1. + std::exp(-x)); };
+        break;
+    case Activation::kTANH: mFun = [](float x) { return std::tanh(x); }; break;
+    case Activation::kSQUARE: mFun = [](float x) { return x * x; }; break;
+    case Activation::kABS: mFun = [](float x) { return std::abs(x); }; break;
+    case Activation::kNEG: mFun = [](float x) { return -x; }; break;
+    case Activation::kRECIPROCAL: mFun = [](float x) { return 1. / x; }; break;
+    case Activation::kLOG: mFun = [](float x) { return std::log(x); }; break;
     }
 }
 
@@ -80,30 +70,28 @@ ActivationGradientLayer::ActivationGradientLayer(ID id, const Tensor::SPtr& in,
 
     switch (op)
     {
-        case Activation::kRELU:
-            mFun = [](float x, float o) { return x > 0. ? 1. : 0.; };
-            break;
-        case Activation::kSIGMOID:
-            mFun = [](float x, float o) { return o * (1. - o); };
-            break;
-        case Activation::kTANH:
-            mFun = [](float x, float o) { return 1. - o * o; };
-            break;
-        case Activation::kSQUARE:
-            mFun = [](float x, float o) { return 2 * x; };
-            break;
-        case Activation::kABS:
-            mFun = [](float x, float o) { return x > 0 ? 1. : -1.; };
-            break;
-        case Activation::kNEG:
-            mFun = [](float x, float o) { return -1; };
-            break;
-        case Activation::kRECIPROCAL:
-            mFun = [](float x, float o) { return -1. * o * o; };
-            break;
-        case Activation::kLOG:
-            mFun = [](float x, float o) { return 1. / x; };
-            break;
+    case Activation::kRELU:
+        mFun = [](float x, float o) { return x > 0. ? 1. : 0.; };
+        break;
+    case Activation::kSIGMOID:
+        mFun = [](float x, float o) { return o * (1. - o); };
+        break;
+    case Activation::kTANH:
+        mFun = [](float x, float o) { return 1. - o * o; };
+        break;
+    case Activation::kSQUARE:
+        mFun = [](float x, float o) { return 2 * x; };
+        break;
+    case Activation::kABS:
+        mFun = [](float x, float o) { return x > 0 ? 1. : -1.; };
+        break;
+    case Activation::kNEG: mFun = [](float x, float o) { return -1; }; break;
+    case Activation::kRECIPROCAL:
+        mFun = [](float x, float o) { return -1. * o * o; };
+        break;
+    case Activation::kLOG:
+        mFun = [](float x, float o) { return 1. / x; };
+        break;
     }
 }
 

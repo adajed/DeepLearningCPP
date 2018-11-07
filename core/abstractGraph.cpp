@@ -1,4 +1,5 @@
 #include "abstractGraph.h"
+
 #include "abstractTensor.h"
 #include "graphdl.h"
 
@@ -9,14 +10,17 @@ namespace graphdl
 {
 namespace core
 {
-AbstractGraph::AbstractGraph(Graph::SPtr graph)
-    : mGraph(std::move(graph))
+AbstractGraph::AbstractGraph(Graph::SPtr graph) : mGraph(std::move(graph)) {}
+
+std::string AbstractGraph::getName() const
 {
+    return mGraph->getName();
 }
 
-std::string AbstractGraph::getName() const { return mGraph->getName(); }
-
-void AbstractGraph::setName(const std::string& name) { mGraph->setName(name); }
+void AbstractGraph::setName(const std::string& name)
+{
+    mGraph->setName(name);
+}
 
 std::map<std::string, ITensorPtr> AbstractGraph::getInputs() const
 {
@@ -38,7 +42,10 @@ std::map<std::string, ITensorPtr> AbstractGraph::getWeights() const
     return iWeights;
 }
 
-Graph::SPtr AbstractGraph::get() const { return mGraph; }
+Graph::SPtr AbstractGraph::get() const
+{
+    return mGraph;
+}
 
 AbstractGraph::Ptr makeAbstractGraph(Graph::SPtr graph)
 {

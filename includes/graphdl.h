@@ -30,7 +30,7 @@ using IGraphPtr = std::shared_ptr<IGraph>;
 //!
 class ITensor
 {
-   public:
+  public:
     //! \fn getName
     //! \brief Returns name of the tensor.
     //!
@@ -60,7 +60,7 @@ class ITensor
 //!
 class IGraph
 {
-   public:
+  public:
     //! \fn getName
     //! \brief Returns name of the graph.
     //!

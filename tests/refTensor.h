@@ -1,19 +1,18 @@
 #ifndef TESTS_REF_TENSOR_H_
 #define TESTS_REF_TENSOR_H_
 
-#include <ostream>
-
 #include "graphdl.h"
+#include "randGen.h"
 #include "tensorShape.h"
 
-#include "randGen.h"
+#include <ostream>
 
 using namespace graphdl;
 using namespace graphdl::core;
 
 class RefTensor
 {
-   public:
+  public:
     RefTensor();
     RefTensor(const TensorShape& shape);
 
@@ -41,7 +40,7 @@ class RefTensor
     //! \fn toHostTensor
     HostTensor toHostTensor();
 
-   private:
+  private:
     std::vector<float> mValues;
     std::size_t mCount;
     TensorShape mShape;
