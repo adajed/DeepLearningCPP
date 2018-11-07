@@ -104,22 +104,22 @@ void runElementwiseDevice(std::size_t size, float* x1, float* x2, float* y,
 
     switch (op)
     {
-        case Elementwise::kADD:
-            elementwiseKernel<Elementwise::kADD>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
-            break;
-        case Elementwise::kSUB:
-            elementwiseKernel<Elementwise::kSUB>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
-            break;
-        case Elementwise::kMUL:
-            elementwiseKernel<Elementwise::kMUL>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
-            break;
-        case Elementwise::kDIV:
-            elementwiseKernel<Elementwise::kDIV>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
-            break;
+    case Elementwise::kADD:
+        elementwiseKernel<Elementwise::kADD>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
+        break;
+    case Elementwise::kSUB:
+        elementwiseKernel<Elementwise::kSUB>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
+        break;
+    case Elementwise::kMUL:
+        elementwiseKernel<Elementwise::kMUL>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
+        break;
+    case Elementwise::kDIV:
+        elementwiseKernel<Elementwise::kDIV>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, y);
+        break;
     }
     cudaDeviceSynchronize();
 }
@@ -133,22 +133,22 @@ void runElementwiseGradientDevice(std::size_t size, float* x1, float* x2,
 
     switch (op)
     {
-        case Elementwise::kADD:
-            elementwiseGradientKernel<Elementwise::kADD>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
-            break;
-        case Elementwise::kSUB:
-            elementwiseGradientKernel<Elementwise::kSUB>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
-            break;
-        case Elementwise::kMUL:
-            elementwiseGradientKernel<Elementwise::kMUL>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
-            break;
-        case Elementwise::kDIV:
-            elementwiseGradientKernel<Elementwise::kDIV>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
-            break;
+    case Elementwise::kADD:
+        elementwiseGradientKernel<Elementwise::kADD>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
+        break;
+    case Elementwise::kSUB:
+        elementwiseGradientKernel<Elementwise::kSUB>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
+        break;
+    case Elementwise::kMUL:
+        elementwiseGradientKernel<Elementwise::kMUL>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
+        break;
+    case Elementwise::kDIV:
+        elementwiseGradientKernel<Elementwise::kDIV>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x1, x2, yG, x1G, x2G);
+        break;
     }
     cudaDeviceSynchronize();
 }

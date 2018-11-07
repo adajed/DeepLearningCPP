@@ -1,8 +1,9 @@
-#include <assert.h>
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
 #include "matmul.h"
+
+#include <cassert>
 
 namespace graphdl
 {
@@ -12,7 +13,8 @@ namespace layers
 {
 namespace
 {
-void runMatmulHost(int n, int m, int k, float* X1, float* X2, float* Y)
+void runMatmulHost(int n, int m, int k, const float* X1, const float* X2,
+                   float* Y)
 {
     for (int x = 0; x < n; ++x)
         for (int y = 0; y < k; ++y)
@@ -23,8 +25,9 @@ void runMatmulHost(int n, int m, int k, float* X1, float* X2, float* Y)
         }
 }
 
-void runMatmulGradientHost(int n, int m, int k, float* X1, float* X2,
-                           float* Ygrad, float* X1grad, float* X2grad)
+void runMatmulGradientHost(int n, int m, int k, const float* X1,
+                           const float* X2, const float* Ygrad, float* X1grad,
+                           float* X2grad)
 {
     for (int x = 0; x < n; ++x)
         for (int y = 0; y < m; ++y)
@@ -42,15 +45,16 @@ void runMatmulGradientHost(int n, int m, int k, float* X1, float* X2,
         }
 }
 
-std::vector<Tensor::SPtr> createOutput(Tensor::SPtr m1, Tensor::SPtr m2)
+std::vector<Tensor::SPtr> createOutput(const Tensor::SPtr& m1,
+                                       const Tensor::SPtr& m2)
 {
     assert(m1->getType() == m2->getType());
     return {createTensor("", {m1->getShape()[0], m2->getShape()[1]},
                          m1->getType())};
 }
 
-std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr m1,
-                                                Tensor::SPtr m2)
+std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& m1,
+                                                const Tensor::SPtr& m2)
 {
     assert(m1->getType() == m2->getType());
     return {createTensor("", m1->getShape(), m1->getType()),
@@ -59,7 +63,7 @@ std::vector<Tensor::SPtr> createGradientOutputs(Tensor::SPtr m1,
 
 }  // namespace
 
-MatmulLayer::MatmulLayer(ID id, Tensor::SPtr m1, Tensor::SPtr m2)
+MatmulLayer::MatmulLayer(ID id, const Tensor::SPtr& m1, const Tensor::SPtr& m2)
     : DifferentiableLayer(id, {m1, m2}, createOutput(m1, m2))
 {
     assert(m1->getShape().size() == 2);
@@ -102,16 +106,17 @@ Layer::TensorMap MatmulLayer::gradients(Tensor::SPtr output,
     return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
 }
 
-MatmulGradientLayer::MatmulGradientLayer(ID id, Tensor::SPtr m1,
-                                         Tensor::SPtr m2, Tensor::SPtr out,
-                                         Tensor::SPtr outGrad)
+MatmulGradientLayer::MatmulGradientLayer(ID id, const Tensor::SPtr& m1,
+                                         const Tensor::SPtr& m2,
+                                         const Tensor::SPtr& out,
+                                         const Tensor::SPtr& outGrad)
     : Layer(id, {m1, m2, out, outGrad}, createGradientOutputs(m1, m2))
 {
     assert(m1->getShape().size() == 2);
     assert(m2->getShape().size() == 2);
     assert(m1->getShape()[1] == m2->getShape()[0]);
-    assert(out->getShape()[0] =
-               m1->getShape()[0] && out->getShape()[1] == m2->getShape()[1]);
+    assert(out->getShape()[0] == m1->getShape()[0] &&
+           out->getShape()[1] == m2->getShape()[1]);
     assert(out->getShape() == outGrad->getShape());
 }
 
@@ -144,11 +149,11 @@ void MatmulGradientLayer::execute(const InputDict& inputs)
 
 }  // namespace layers
 
-Tensor::SPtr matmul(Tensor::SPtr m1, Tensor::SPtr m2)
+Tensor::SPtr matmul(const Tensor::SPtr& m1, const Tensor::SPtr& m2)
 {
     if (m1->getShape().size() != 2 || m2->getShape().size() != 2)
         throw std::runtime_error("Shapes don\'t match");
-    else if (m1->getShape()[1] != m2->getShape()[0])
+    if (m1->getShape()[1] != m2->getShape()[0])
         throw std::runtime_error("Shapes don\'t match");
 
     Layer::SPtr layer = createLayer<layers::MatmulLayer>(m1, m2);
@@ -157,7 +162,7 @@ Tensor::SPtr matmul(Tensor::SPtr m1, Tensor::SPtr m2)
 
 }  // namespace core
 
-ITensorPtr matmul(ITensorPtr m1, ITensorPtr m2)
+ITensorPtr matmul(const ITensorPtr& m1, const ITensorPtr& m2)
 {
     core::AbstractTensor::Ptr mat1 = core::castITensorPtr(m1);
     core::AbstractTensor::Ptr mat2 = core::castITensorPtr(m2);

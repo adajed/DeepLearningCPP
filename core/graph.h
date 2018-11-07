@@ -14,12 +14,12 @@ namespace core
 //!
 class Graph
 {
-   public:
+  public:
     using UPtr = std::shared_ptr<Graph>;
     using SPtr = std::shared_ptr<Graph>;
     using WeakPtr = std::weak_ptr<Graph>;
 
-    Graph(const std::string& name);
+    Graph(std::string name);
 
     std::string getName() const;
     void setName(const std::string& name);
@@ -61,7 +61,7 @@ class Graph
     //!
     //! \return Pointer to tensor representing new input.
     Tensor::SPtr addInput(const std::string& name,
-                          std::shared_ptr<Layer> layer);
+                          const std::shared_ptr<Layer>& layer);
 
     //! \fn addWeights
     //! \brief Adds new weights to the graph.
@@ -70,7 +70,7 @@ class Graph
     //!
     //! \return Pointer to tensor representing new weights.
     Tensor::SPtr addWeights(const std::string& name,
-                            std::shared_ptr<Layer> layer);
+                            const std::shared_ptr<Layer>& layer);
 
     //! \fn insertLayer
     //!
@@ -84,7 +84,7 @@ class Graph
 
     Layer::ID nextLayerID();
 
-   private:
+  private:
     std::string mName;  //!< Name of the graph.
     std::vector<std::shared_ptr<Layer>> mInputLayers;
     std::vector<std::shared_ptr<Layer>> mWeightLayers;
@@ -99,7 +99,7 @@ class Graph
 //!
 class GraphRegister
 {
-   private:
+  private:
     // name of initial default graph
     static const std::string DEFAULT_GRAPH_NAME;
 
@@ -114,7 +114,7 @@ class GraphRegister
         mDefaultGraph = graph;
     }
 
-   public:
+  public:
     //! \fn getGlobalIGraphRegister
     //! \brief Returns the global register of graphs.
     //!
@@ -135,7 +135,7 @@ class GraphRegister
     //! If there is already a graph with the same name,
     //!     this will return false and won't change the register.
     //!
-    bool insert(Graph::SPtr graph);
+    bool insert(const Graph::SPtr& graph);
 
     //! \fn getDefaultGraph
     //! \brief Returns the default graph.
@@ -151,7 +151,7 @@ class GraphRegister
 
     void clear();
 
-   private:
+  private:
     std::map<std::string, Graph::SPtr> mGraphDict;
     Graph::SPtr mDefaultGraph;
 };

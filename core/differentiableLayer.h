@@ -9,7 +9,7 @@ namespace core
 {
 class DifferentiableLayer : public Layer
 {
-   public:
+  public:
     DifferentiableLayer(ID id, const std::vector<Tensor::SPtr>& inputs,
                         std::vector<Tensor::SPtr> outputs)
         : Layer(id, inputs, outputs)

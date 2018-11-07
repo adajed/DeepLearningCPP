@@ -1,8 +1,9 @@
 #ifndef GRAPHDL_CORE_MEMORY_H_
 #define GRAPHDL_CORE_MEMORY_H_
 
-#include <cstddef>
 #include "graphdl.h"
+
+#include <cstddef>
 
 namespace graphdl
 {
@@ -16,7 +17,7 @@ enum class MemoryType
 
 class Memory
 {
-   public:
+  public:
     Memory(MemoryType type, std::size_t count);
 
     MemoryType getType() const;
@@ -38,7 +39,7 @@ class Memory
 
     void free();
 
-   private:
+  private:
     MemoryType mType;
     float* mValues;
     std::size_t mCount;

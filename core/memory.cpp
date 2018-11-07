@@ -1,5 +1,6 @@
 #include "memory.h"
-#include <assert.h>
+
+#include <cassert>
 #include <cstring>
 #include <stdexcept>
 
@@ -26,13 +27,25 @@ Memory::Memory(MemoryType type, size_t count)
 {
 }
 
-MemoryType Memory::getType() const { return mType; }
+MemoryType Memory::getType() const
+{
+    return mType;
+}
 
-float* Memory::getValues() { return mValues; }
+float* Memory::getValues()
+{
+    return mValues;
+}
 
-const float* Memory::getValues() const { return mValues; }
+const float* Memory::getValues() const
+{
+    return mValues;
+}
 
-size_t Memory::getCount() const { return mCount; }
+size_t Memory::getCount() const
+{
+    return mCount;
+}
 
 void Memory::fill(float* memory) const
 {
@@ -53,7 +66,10 @@ void Memory::fill(float* memory) const
     }
 }
 
-bool Memory::isAllocated() const { return mValues != nullptr; }
+bool Memory::isAllocated() const
+{
+    return mValues != nullptr;
+}
 
 bool Memory::allocate()
 {
@@ -100,10 +116,8 @@ MemoryType memoryLocationToType(MemoryLocation location)
 {
     switch (location)
     {
-        case MemoryLocation::kHOST:
-            return MemoryType::kHOST_MEMORY;
-        case MemoryLocation::kDEVICE:
-            return MemoryType::kDEVICE_MEMORY;
+    case MemoryLocation::kHOST: return MemoryType::kHOST_MEMORY;
+    case MemoryLocation::kDEVICE: return MemoryType::kDEVICE_MEMORY;
     }
 
     // you shoudn't be here

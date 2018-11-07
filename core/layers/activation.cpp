@@ -1,9 +1,12 @@
 #include "activation.h"
-#include <assert.h>
-#include <cmath>
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+
+#include <cassert>
+#include <cmath>
+#include <utility>
 
 namespace graphdl
 {
@@ -66,30 +69,20 @@ void runActivationHost(std::size_t size, float* x, float* y, Activation op)
 {
     switch (op)
     {
-        case Activation::kRELU:
-            activation<Activation::kRELU>(size, x, y);
-            return;
-        case Activation::kSIGMOID:
-            activation<Activation::kSIGMOID>(size, x, y);
-            return;
-        case Activation::kTANH:
-            activation<Activation::kTANH>(size, x, y);
-            return;
-        case Activation::kSQUARE:
-            activation<Activation::kSQUARE>(size, x, y);
-            return;
-        case Activation::kABS:
-            activation<Activation::kABS>(size, x, y);
-            return;
-        case Activation::kNEG:
-            activation<Activation::kNEG>(size, x, y);
-            return;
-        case Activation::kRECIPROCAL:
-            activation<Activation::kRECIPROCAL>(size, x, y);
-            return;
-        case Activation::kLOG:
-            activation<Activation::kLOG>(size, x, y);
-            return;
+    case Activation::kRELU: activation<Activation::kRELU>(size, x, y); return;
+    case Activation::kSIGMOID:
+        activation<Activation::kSIGMOID>(size, x, y);
+        return;
+    case Activation::kTANH: activation<Activation::kTANH>(size, x, y); return;
+    case Activation::kSQUARE:
+        activation<Activation::kSQUARE>(size, x, y);
+        return;
+    case Activation::kABS: activation<Activation::kABS>(size, x, y); return;
+    case Activation::kNEG: activation<Activation::kNEG>(size, x, y); return;
+    case Activation::kRECIPROCAL:
+        activation<Activation::kRECIPROCAL>(size, x, y);
+        return;
+    case Activation::kLOG: activation<Activation::kLOG>(size, x, y); return;
     }
 }
 
@@ -149,37 +142,36 @@ void runActivationGradientHost(std::size_t size, float* x, float* y,
 {
     switch (op)
     {
-        case Activation::kRELU:
-            activationGradient<Activation::kRELU>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kSIGMOID:
-            activationGradient<Activation::kSIGMOID>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kTANH:
-            activationGradient<Activation::kTANH>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kSQUARE:
-            activationGradient<Activation::kSQUARE>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kABS:
-            activationGradient<Activation::kABS>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kNEG:
-            activationGradient<Activation::kNEG>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kRECIPROCAL:
-            activationGradient<Activation::kRECIPROCAL>(size, x, y, yGrad,
-                                                        xGrad);
-            return;
-        case Activation::kLOG:
-            activationGradient<Activation::kLOG>(size, x, y, yGrad, xGrad);
-            return;
+    case Activation::kRELU:
+        activationGradient<Activation::kRELU>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kSIGMOID:
+        activationGradient<Activation::kSIGMOID>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kTANH:
+        activationGradient<Activation::kTANH>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kSQUARE:
+        activationGradient<Activation::kSQUARE>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kABS:
+        activationGradient<Activation::kABS>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kNEG:
+        activationGradient<Activation::kNEG>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kRECIPROCAL:
+        activationGradient<Activation::kRECIPROCAL>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kLOG:
+        activationGradient<Activation::kLOG>(size, x, y, yGrad, xGrad);
+        return;
     }
 }
 
 }  // namespace
 
-ActivationLayer::ActivationLayer(ID id, Tensor::SPtr t, Activation op)
+ActivationLayer::ActivationLayer(ID id, const Tensor::SPtr& t, Activation op)
     : DifferentiableLayer(id, {t},
                           {createTensor("", t->getShape(), t->getType())}),
       mOp(op)
@@ -216,12 +208,12 @@ Layer::TensorMap ActivationLayer::gradients(Tensor::SPtr out,
     return {{inputs[0], grads[0]}};
 }
 
-ActivationGradientLayer::ActivationGradientLayer(ID id, Tensor::SPtr in,
-                                                 Tensor::SPtr out,
-                                                 Tensor::SPtr outGrad,
+ActivationGradientLayer::ActivationGradientLayer(ID id, const Tensor::SPtr& in,
+                                                 const Tensor::SPtr& out,
+                                                 const Tensor::SPtr& outGrad,
                                                  Activation op)
     : Layer(id, {in, out, outGrad},
-            {createTensor("", in->getShape(), outGrad->getType())}),
+            {createTensor("", in->getShape(), in->getType())}),
       mOp(op)
 {
     assert(in->getShape() == out->getShape());
@@ -260,88 +252,88 @@ void ActivationGradientLayer::execute(const InputDict& inputs)
 
 Tensor::SPtr createActivation(Tensor::SPtr t, layers::Activation op)
 {
-    Layer::SPtr layer = createLayer<layers::ActivationLayer>(t, op);
+    Layer::SPtr layer = createLayer<layers::ActivationLayer>(std::move(t), op);
     return layer->getOutputs()[0];
 }
 
 Tensor::SPtr relu(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kRELU);
+    return createActivation(std::move(t), layers::Activation::kRELU);
 }
 Tensor::SPtr sigmoid(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kSIGMOID);
+    return createActivation(std::move(t), layers::Activation::kSIGMOID);
 }
 Tensor::SPtr tanh(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kTANH);
+    return createActivation(std::move(t), layers::Activation::kTANH);
 }
 Tensor::SPtr square(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kSQUARE);
+    return createActivation(std::move(t), layers::Activation::kSQUARE);
 }
 Tensor::SPtr abs(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kABS);
+    return createActivation(std::move(t), layers::Activation::kABS);
 }
 Tensor::SPtr neg(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kNEG);
+    return createActivation(std::move(t), layers::Activation::kNEG);
 }
 Tensor::SPtr reciprocal(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kRECIPROCAL);
+    return createActivation(std::move(t), layers::Activation::kRECIPROCAL);
 }
 Tensor::SPtr log(Tensor::SPtr t)
 {
-    return createActivation(t, layers::Activation::kLOG);
+    return createActivation(std::move(t), layers::Activation::kLOG);
 }
 
 }  // namespace core
 
-ITensorPtr relu(ITensorPtr t)
+ITensorPtr relu(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::relu(tensor->get()));
 }
 
-ITensorPtr sigmoid(ITensorPtr t)
+ITensorPtr sigmoid(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::sigmoid(tensor->get()));
 }
 
-ITensorPtr tanh(ITensorPtr t)
+ITensorPtr tanh(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::tanh(tensor->get()));
 }
 
-ITensorPtr square(ITensorPtr t)
+ITensorPtr square(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::square(tensor->get()));
 }
 
-ITensorPtr abs(ITensorPtr t)
+ITensorPtr abs(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::abs(tensor->get()));
 }
 
-ITensorPtr neg(ITensorPtr t)
+ITensorPtr neg(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::neg(tensor->get()));
 }
 
-ITensorPtr reciprocal(ITensorPtr t)
+ITensorPtr reciprocal(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::reciprocal(tensor->get()));
 }
 
-ITensorPtr log(ITensorPtr t)
+ITensorPtr log(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::log(tensor->get()));

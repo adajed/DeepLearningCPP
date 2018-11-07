@@ -1,4 +1,5 @@
 #include "constant.h"
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
@@ -31,7 +32,7 @@ void ConstantLayer::initialize()
 
 //! This method does nothing, because tensor is already
 //!     filled during initialize.
-void ConstantLayer::execute(const InputDict& inputs) {}
+void ConstantLayer::execute(const InputDict& /*inputs*/) {}
 
 }  // namespace layers
 

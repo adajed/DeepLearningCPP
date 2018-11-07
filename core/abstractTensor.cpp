@@ -1,20 +1,30 @@
 #include "abstractTensor.h"
-#include <assert.h>
+
+#include <cassert>
+#include <utility>
 
 namespace graphdl
 {
 namespace core
 {
-AbstractTensor::AbstractTensor(Tensor::SPtr tensor) : mTensor(tensor) {}
+AbstractTensor::AbstractTensor(Tensor::SPtr tensor) : mTensor(std::move(tensor))
+{
+}
 
-std::string AbstractTensor::getName() const { return mTensor->getName(); }
+std::string AbstractTensor::getName() const
+{
+    return mTensor->getName();
+}
 
 void AbstractTensor::setName(const std::string& name)
 {
     mTensor->setName(name);
 }
 
-Shape AbstractTensor::getShape() const { return mTensor->getShape(); }
+Shape AbstractTensor::getShape() const
+{
+    return mTensor->getShape();
+}
 
 HostTensor AbstractTensor::eval(const InputDict& inputs)
 {
@@ -25,7 +35,10 @@ HostTensor AbstractTensor::eval(const InputDict& inputs)
     return output;
 }
 
-Tensor::SPtr AbstractTensor::get() const { return mTensor; }
+Tensor::SPtr AbstractTensor::get() const
+{
+    return mTensor;
+}
 
 AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor)
 {
@@ -37,7 +50,7 @@ AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor)
     return sMap[tensor];
 }
 
-AbstractTensor::Ptr castITensorPtr(ITensorPtr itensor)
+AbstractTensor::Ptr castITensorPtr(const ITensorPtr& itensor)
 {
     return std::static_pointer_cast<AbstractTensor>(itensor);
 }

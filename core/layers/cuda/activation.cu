@@ -139,38 +139,38 @@ extern "C" void runActivationDevice(std::size_t size, float* x, float* y,
 
     switch (op)
     {
-        case Activation::kRELU:
-            activationKernel<Activation::kRELU>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
-        case Activation::kSIGMOID:
-            activationKernel<Activation::kSIGMOID>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
-        case Activation::kTANH:
-            activationKernel<Activation::kTANH>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
-        case Activation::kSQUARE:
-            activationKernel<Activation::kSQUARE>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
-        case Activation::kABS:
-            activationKernel<Activation::kABS>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
-        case Activation::kNEG:
-            activationKernel<Activation::kNEG>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
-        case Activation::kRECIPROCAL:
-            activationKernel<Activation::kRECIPROCAL>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
-        case Activation::kLOG:
-            activationKernel<Activation::kLOG>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-            return;
+    case Activation::kRELU:
+        activationKernel<Activation::kRELU>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
+    case Activation::kSIGMOID:
+        activationKernel<Activation::kSIGMOID>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
+    case Activation::kTANH:
+        activationKernel<Activation::kTANH>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
+    case Activation::kSQUARE:
+        activationKernel<Activation::kSQUARE>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
+    case Activation::kABS:
+        activationKernel<Activation::kABS>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
+    case Activation::kNEG:
+        activationKernel<Activation::kNEG>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
+    case Activation::kRECIPROCAL:
+        activationKernel<Activation::kRECIPROCAL>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
+    case Activation::kLOG:
+        activationKernel<Activation::kLOG>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        return;
     }
     cudaDeviceSynchronize();
     return;
@@ -185,38 +185,38 @@ extern "C" void runActivationGradientDevice(std::size_t size, float* x,
 
     switch (op)
     {
-        case Activation::kRELU:
-            activationGradientKernel<Activation::kRELU>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kSIGMOID:
-            activationGradientKernel<Activation::kSIGMOID>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kTANH:
-            activationGradientKernel<Activation::kTANH>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kSQUARE:
-            activationGradientKernel<Activation::kSQUARE>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kABS:
-            activationGradientKernel<Activation::kABS>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kNEG:
-            activationGradientKernel<Activation::kNEG>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kRECIPROCAL:
-            activationGradientKernel<Activation::kRECIPROCAL>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
-        case Activation::kLOG:
-            activationGradientKernel<Activation::kLOG>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-            return;
+    case Activation::kRELU:
+        activationGradientKernel<Activation::kRELU>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kSIGMOID:
+        activationGradientKernel<Activation::kSIGMOID>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kTANH:
+        activationGradientKernel<Activation::kTANH>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kSQUARE:
+        activationGradientKernel<Activation::kSQUARE>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kABS:
+        activationGradientKernel<Activation::kABS>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kNEG:
+        activationGradientKernel<Activation::kNEG>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kRECIPROCAL:
+        activationGradientKernel<Activation::kRECIPROCAL>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kLOG:
+        activationGradientKernel<Activation::kLOG>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        return;
     }
     cudaDeviceSynchronize();
     return;

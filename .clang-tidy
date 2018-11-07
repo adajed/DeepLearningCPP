@@ -1,0 +1,18 @@
+Checks:  "*,
+-google-readability-braces-around-statements,\
+-hicpp-braces-around-statements,\
+-readability-braces-around-statements,\
+-fuchsia-default-arguments,\
+-fuchsia-overloaded-operator,\
+-cppcoreguidelines-pro-type-reinterpret-cast,\
+-cppcoreguidelines-pro-bounds-pointer-arithmetic,\
+-cert-err58-cpp,\
+-google-runtime-references,
+-hicpp-signed-bitwise,\
+-google-build-using-namespace,\
+-cppcoreguidelines-pro-bounds-array-to-pointer-decay,\
+-hicpp-no-array-decay,\
+-cppcoreguidelines-owning-memory,\
+-readability-else-after-return,\
+-misc-unused-parameters
+"

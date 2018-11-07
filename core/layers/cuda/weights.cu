@@ -1,7 +1,8 @@
+#include "weights.h"
+
 #include <cuda.h>
 #include <curand.h>
 #include <curand_kernel.h>
-#include "weights.h"
 
 namespace graphdl
 {

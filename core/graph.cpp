@@ -1,6 +1,7 @@
-#include <assert.h>
-
 #include "graph.h"
+
+#include <cassert>
+#include <utility>
 
 namespace graphdl
 {
@@ -8,25 +9,28 @@ namespace core
 {
 const std::string GraphRegister::DEFAULT_GRAPH_NAME = "default_graph";
 
-Graph::Graph(const std::string& name)
-    : mName(name),
-      mInputLayers(),
-      mWeightLayers(),
-      mLayers(),
-      mTensors(),
+Graph::Graph(std::string name)
+    : mName(std::move(name)),
+
       mTensorCounter(0),
       mLayerCounter(0)
 {
 }
 
-std::string Graph::getName() const { return mName; }
+std::string Graph::getName() const
+{
+    return mName;
+}
 
-void Graph::setName(const std::string& name) { mName = name; }
+void Graph::setName(const std::string& name)
+{
+    mName = name;
+}
 
 std::map<std::string, Tensor::SPtr> Graph::getInputs() const
 {
     std::map<std::string, Tensor::SPtr> inputTensors;
-    for (auto input : mInputLayers)
+    for (const auto& input : mInputLayers)
     {
         Tensor::SPtr tensor = input->getOutputs()[0];
         inputTensors.insert({tensor->getName(), tensor});
@@ -37,7 +41,7 @@ std::map<std::string, Tensor::SPtr> Graph::getInputs() const
 std::map<std::string, Tensor::SPtr> Graph::getWeights() const
 {
     std::map<std::string, Tensor::SPtr> weightTensors;
-    for (auto weight : mWeightLayers)
+    for (const auto& weight : mWeightLayers)
     {
         Tensor::SPtr tensor = weight->getOutputs()[0];
         weightTensors.insert({tensor->getName(), tensor});
@@ -57,7 +61,7 @@ bool Graph::allocateMemory()
     {
         if (!pair.second->allocateMemory())
         {
-            for (Tensor::SPtr t : allocatedTensors) t->freeMemory();
+            for (const Tensor::SPtr& t : allocatedTensors) t->freeMemory();
             return false;
         }
         allocatedTensors.push_back(pair.second);
@@ -75,13 +79,15 @@ void Graph::freeMemory()
     for (auto pair : mTensors) pair.second->freeMemory();
 }
 
-Tensor::SPtr Graph::addInput(const std::string& name, Layer::SPtr layer)
+Tensor::SPtr Graph::addInput(const std::string& /*name*/,
+                             const Layer::SPtr& layer)
 {
     mInputLayers.push_back(layer);
     return layer->getOutputs()[0];
 }
 
-Tensor::SPtr Graph::addWeights(const std::string& name, Layer::SPtr layer)
+Tensor::SPtr Graph::addWeights(const std::string& /*name*/,
+                               const Layer::SPtr& layer)
 {
     mWeightLayers.push_back(layer);
     return layer->getOutputs()[0];
@@ -99,9 +105,15 @@ void Graph::insertTensor(Tensor::SPtr tensor)
     mTensors.insert({tensorID, tensor});
 }
 
-Tensor::ID Graph::nextTensorID() { return mTensorCounter++; }
+Tensor::ID Graph::nextTensorID()
+{
+    return mTensorCounter++;
+}
 
-Layer::ID Graph::nextLayerID() { return mLayerCounter++; }
+Layer::ID Graph::nextLayerID()
+{
+    return mLayerCounter++;
+}
 
 GraphRegister& GraphRegister::getGlobalGraphRegister()
 {
@@ -111,7 +123,7 @@ GraphRegister& GraphRegister::getGlobalGraphRegister()
 
 bool GraphRegister::hasKey(const std::string& name) const
 {
-    return mGraphDict.count(name);
+    return mGraphDict.count(name) != 0u;
 }
 
 Graph::SPtr GraphRegister::at(const std::string& name)
@@ -119,18 +131,21 @@ Graph::SPtr GraphRegister::at(const std::string& name)
     return mGraphDict.at(name);
 }
 
-bool GraphRegister::insert(Graph::SPtr graph)
+bool GraphRegister::insert(const Graph::SPtr& graph)
 {
     if (hasKey(graph->getName())) return false;
     mGraphDict[graph->getName()] = graph;
     return true;
 }
 
-Graph::SPtr GraphRegister::getDefaultGraph() { return mDefaultGraph; }
+Graph::SPtr GraphRegister::getDefaultGraph()
+{
+    return mDefaultGraph;
+}
 
 void GraphRegister::setDefaultGraph(Graph::SPtr graph)
 {
-    mDefaultGraph = graph;
+    mDefaultGraph = std::move(graph);
 }
 
 void GraphRegister::clear()

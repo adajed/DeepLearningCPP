@@ -1,17 +1,26 @@
 #include "abstractGraph.h"
-#include <assert.h>
+
 #include "abstractTensor.h"
 #include "graphdl.h"
+
+#include <cassert>
+#include <utility>
 
 namespace graphdl
 {
 namespace core
 {
-AbstractGraph::AbstractGraph(Graph::SPtr graph) : mGraph(graph) {}
+AbstractGraph::AbstractGraph(Graph::SPtr graph) : mGraph(std::move(graph)) {}
 
-std::string AbstractGraph::getName() const { return mGraph->getName(); }
+std::string AbstractGraph::getName() const
+{
+    return mGraph->getName();
+}
 
-void AbstractGraph::setName(const std::string& name) { mGraph->setName(name); }
+void AbstractGraph::setName(const std::string& name)
+{
+    mGraph->setName(name);
+}
 
 std::map<std::string, ITensorPtr> AbstractGraph::getInputs() const
 {
@@ -33,7 +42,10 @@ std::map<std::string, ITensorPtr> AbstractGraph::getWeights() const
     return iWeights;
 }
 
-Graph::SPtr AbstractGraph::get() const { return mGraph; }
+Graph::SPtr AbstractGraph::get() const
+{
+    return mGraph;
+}
 
 AbstractGraph::Ptr makeAbstractGraph(Graph::SPtr graph)
 {
@@ -45,7 +57,7 @@ AbstractGraph::Ptr makeAbstractGraph(Graph::SPtr graph)
     return sMap[graph];
 }
 
-AbstractGraph::Ptr castIGraphPtr(IGraphPtr igraph)
+AbstractGraph::Ptr castIGraphPtr(const IGraphPtr& igraph)
 {
     return std::static_pointer_cast<AbstractGraph>(igraph);
 }
@@ -62,7 +74,7 @@ IGraphPtr createGraph(const std::string& name)
     return core::makeAbstractGraph(graph);
 }
 
-void setDefaultGraph(IGraphPtr graph)
+void setDefaultGraph(const IGraphPtr& graph)
 {
     core::AbstractGraph::Ptr aGraph = core::castIGraphPtr(graph);
     core::getGraphRegister().setDefaultGraph(aGraph->get());
@@ -132,8 +144,8 @@ std::vector<HostTensor> eval(const std::vector<ITensorPtr>& tensors,
     graph->prepareForNextComputation();
 
     std::vector<HostTensor> outputs;
-    for (std::size_t i = 0; i < tensors.size(); ++i)
-        outputs.push_back(tensors[i]->eval(inputs));
+    outputs.reserve(tensors.size());
+    for (const auto& tensor : tensors) outputs.push_back(tensor->eval(inputs));
     return outputs;
 }
 

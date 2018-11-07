@@ -1,9 +1,10 @@
 #ifndef GRAPHDL_CORE_ABSTRACT_TENSOR_H_
 #define GRAPHDL_CORE_ABSTRACT_TENSOR_H_
 
-#include <memory>
 #include "graphdl.h"
 #include "layer.h"
+
+#include <memory>
 
 namespace graphdl
 {
@@ -14,7 +15,7 @@ namespace core
 //!
 class AbstractTensor : public ITensor
 {
-   public:
+  public:
     using Ptr = std::shared_ptr<AbstractTensor>;
 
     AbstractTensor(Tensor::SPtr tensor);
@@ -29,13 +30,13 @@ class AbstractTensor : public ITensor
 
     Tensor::SPtr get() const;
 
-   private:
+  private:
     Tensor::SPtr mTensor;
 };
 
 AbstractTensor::Ptr makeAbstractTensor(Tensor::SPtr tensor);
 
-AbstractTensor::Ptr castITensorPtr(ITensorPtr tensor);
+AbstractTensor::Ptr castITensorPtr(const ITensorPtr& itensor);
 
 }  // namespace core
 }  // namespace graphdl

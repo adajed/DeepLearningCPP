@@ -76,3 +76,9 @@ $(OUTDIR_D):
 format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)
 	@+make -C layers format
+
+#### clang-tidy
+tidy:
+	@$(foreach src,$(CPP_SOURCES),\
+		$(CLANG_TIDY_EXEC) --fix $(src) -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS);)
+	@+make -C layers tidy

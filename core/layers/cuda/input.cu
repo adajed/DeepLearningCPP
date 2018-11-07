@@ -1,5 +1,6 @@
-#include <cuda.h>
 #include "input.h"
+
+#include <cuda.h>
 
 namespace graphdl
 {

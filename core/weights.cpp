@@ -33,7 +33,7 @@ void WeightsLayer::initialize()
 }
 
 // This does nothing, because weights are already in memory.
-void WeightsLayer::execute(const InputDict& inputs) {}
+void WeightsLayer::execute(const InputDict& /*inputs*/) {}
 
 }  // namespace core
 }  // namespace graphdl

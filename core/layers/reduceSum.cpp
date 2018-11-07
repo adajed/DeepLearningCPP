@@ -1,8 +1,11 @@
 #include "reduceSum.h"
-#include <assert.h>
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+
+#include <cassert>
+#include <utility>
 
 namespace graphdl
 {
@@ -12,20 +15,21 @@ namespace layers
 {
 namespace
 {
-void runReduceSumHost(std::size_t size, float* x, float* y)
+void runReduceSumHost(std::size_t size, const float* x, float* y)
 {
     y[0] = 0.;
     for (std::size_t pos = 0; pos < size; ++pos) y[0] += x[pos];
 }
 
-void runReduceSumGradientHost(std::size_t size, float* yGrad, float* xGrad)
+void runReduceSumGradientHost(std::size_t size, const float* yGrad,
+                              float* xGrad)
 {
     for (std::size_t pos = 0; pos < size; ++pos) xGrad[pos] = yGrad[0];
 }
 
 }  // namespace
 
-ReduceSumLayer::ReduceSumLayer(ID id, Tensor::SPtr tensor)
+ReduceSumLayer::ReduceSumLayer(ID id, const Tensor::SPtr& tensor)
     : DifferentiableLayer(id, {tensor},
                           {createTensor("", {}, tensor->getType())})
 {
@@ -58,11 +62,11 @@ Layer::TensorMap ReduceSumLayer::gradients(Tensor::SPtr out,
     return {{in, layer->getOutputs()[0]}};
 }
 
-ReduceSumGradientLayer::ReduceSumGradientLayer(ID id, Tensor::SPtr in,
+ReduceSumGradientLayer::ReduceSumGradientLayer(ID id, const Tensor::SPtr& in,
                                                Tensor::SPtr out,
                                                Tensor::SPtr outGrad)
-    : Layer(id, {in, out, outGrad},
-            {createTensor("", in->getShape(), outGrad->getType())})
+    : Layer(id, {in, std::move(out), std::move(outGrad)},
+            {createTensor("", in->getShape(), in->getType())})
 {
 }
 
@@ -87,13 +91,13 @@ void ReduceSumGradientLayer::execute(const InputDict& inputs)
 
 Tensor::SPtr reduceSum(Tensor::SPtr t)
 {
-    Layer::SPtr layer = createLayer<layers::ReduceSumLayer>(t);
+    Layer::SPtr layer = createLayer<layers::ReduceSumLayer>(std::move(t));
     return layer->getOutputs()[0];
 }
 
 }  // namespace core
 
-ITensorPtr reduceSum(ITensorPtr t)
+ITensorPtr reduceSum(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::reduceSum(tensor->get()));

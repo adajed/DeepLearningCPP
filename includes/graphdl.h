@@ -36,7 +36,7 @@ using IGraphPtr = std::shared_ptr<IGraph>;
 //!
 class ITensor
 {
-   public:
+  public:
     //! \fn getName
     //! \brief Returns name of the tensor.
     //!
@@ -66,7 +66,7 @@ class ITensor
 //!
 class IGraph
 {
-   public:
+  public:
     //! \fn getName
     //! \brief Returns name of the graph.
     //!
@@ -103,7 +103,7 @@ IGraphPtr createGraph(const std::string& name);
 //! \param graph Graph to be set as the default.
 //! Later all new operations will be added to this graph.
 //!
-void setDefaultGraph(IGraphPtr graph);
+void setDefaultGraph(const IGraphPtr& graph);
 
 //! \fn getDefaultGraph
 //! \brief This function returns current default graph.
@@ -147,7 +147,7 @@ std::vector<HostTensor> eval(const std::vector<ITensorPtr>& tensors,
 //! \param tensor Tensor for which gradients will be calculated (i.e. loss).
 //! \return Map from weights name to tensor representing gradient.
 //!
-std::map<ITensorPtr, ITensorPtr> gradients(ITensorPtr tensor);
+std::map<ITensorPtr, ITensorPtr> gradients(const ITensorPtr& iTensor);
 
 }  // namespace graphdl
 

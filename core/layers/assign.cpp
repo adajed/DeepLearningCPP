@@ -1,8 +1,10 @@
 #include "assign.h"
-#include <assert.h>
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+
+#include <cassert>
 
 namespace graphdl
 {
@@ -10,7 +12,8 @@ namespace core
 {
 namespace layers
 {
-AssignLayer::AssignLayer(ID id, Tensor::SPtr dest, Tensor::SPtr src)
+AssignLayer::AssignLayer(ID id, const Tensor::SPtr& dest,
+                         const Tensor::SPtr& src)
     : Layer(id, {src}, {createTensor("", {0}, MemoryType::kHOST_MEMORY)}),
       mDest(dest)
 {
@@ -39,7 +42,7 @@ void AssignLayer::execute(const InputDict& inputs)
 
 }  // namespace layers
 
-Tensor::SPtr assign(Tensor::SPtr dest, Tensor::SPtr src)
+Tensor::SPtr assign(const Tensor::SPtr& dest, const Tensor::SPtr& src)
 {
     if (dest->getShape() != src->getShape())
         throw std::runtime_error("Shapes don\'t match");
@@ -52,7 +55,7 @@ Tensor::SPtr assign(Tensor::SPtr dest, Tensor::SPtr src)
 
 }  // namespace core
 
-ITensorPtr assign(ITensorPtr dest, ITensorPtr src)
+ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src)
 {
     core::AbstractTensor::Ptr aDest = core::castITensorPtr(dest);
     core::AbstractTensor::Ptr aSrc = core::castITensorPtr(src);

@@ -1,9 +1,9 @@
 #ifndef GRAPHDL_CORE_TENSOR_SHAPE_H_
 #define GRAPHDL_CORE_TENSOR_SHAPE_H_
 
-#include <initializer_list>
-
 #include "graphdl.h"
+
+#include <initializer_list>
 
 namespace graphdl
 {
@@ -11,14 +11,14 @@ namespace core
 {
 class TensorShape
 {
-   public:
+  public:
     using iterator = std::vector<unsigned int>::iterator;
 
-    TensorShape(const Shape& shape);
-    TensorShape(const TensorShape& other);
+    TensorShape(Shape shape);
+    TensorShape(const TensorShape& other) = default;
     TensorShape(std::initializer_list<unsigned> list);
 
-    TensorShape& operator=(const TensorShape& other);
+    TensorShape& operator=(const TensorShape& other) = default;
 
     bool operator==(const TensorShape& other) const;
     bool operator!=(const TensorShape& other) const;
@@ -35,7 +35,7 @@ class TensorShape
     iterator begin();
     iterator end();
 
-   private:
+  private:
     std::vector<unsigned int> mDims;
 };
 

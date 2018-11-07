@@ -1,8 +1,8 @@
-#include <gtest/gtest.h>
 #include "graph.h"
 #include "graphdl.h"
 #include "graphdl_ops.h"
 
+#include <gtest/gtest.h>
 #include <random>
 
 std::random_device rd;
@@ -11,7 +11,7 @@ std::uniform_real_distribution<> dist(-5., 5.);
 
 class CoreTest : public testing::Test
 {
-   protected:
+  protected:
     void SetUp() override { testing::Test::SetUp(); }
 
     void TearDown() override

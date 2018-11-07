@@ -16,7 +16,7 @@ std::vector<Vec> SHAPES = {
 
 class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         setup(testCase);
@@ -32,7 +32,7 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
         EXPECT_TRUE(correct);
     }
 
-   private:
+  private:
     RefTensor mInput, mOutput;
 
     void setup(const TestCase& testCase)
@@ -50,7 +50,10 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
     }
 };
 
-TEST_P(InputTest, test) { test(GetParam()); }
+TEST_P(InputTest, test)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, InputTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 }  // namespace

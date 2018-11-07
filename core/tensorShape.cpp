@@ -1,20 +1,14 @@
 #include "tensorShape.h"
 
+#include <utility>
+
 namespace graphdl
 {
 namespace core
 {
-TensorShape::TensorShape(const Shape& shape) : mDims(shape) {}
-
-TensorShape::TensorShape(const TensorShape& other) : mDims(other.mDims) {}
+TensorShape::TensorShape(Shape shape) : mDims(std::move(shape)) {}
 
 TensorShape::TensorShape(std::initializer_list<unsigned> list) : mDims(list) {}
-
-TensorShape& TensorShape::operator=(const TensorShape& other)
-{
-    mDims = other.mDims;
-    return *this;
-}
 
 bool TensorShape::operator==(const TensorShape& other) const
 {
@@ -29,14 +23,20 @@ bool TensorShape::operator!=(const TensorShape& other) const
     return !operator==(other);
 }
 
-unsigned& TensorShape::operator[](std::size_t pos) { return mDims[pos]; }
+unsigned& TensorShape::operator[](std::size_t pos)
+{
+    return mDims[pos];
+}
 
 const unsigned& TensorShape::operator[](std::size_t pos) const
 {
     return mDims[pos];
 }
 
-unsigned TensorShape::size() const { return mDims.size(); }
+unsigned TensorShape::size() const
+{
+    return mDims.size();
+}
 
 std::size_t TensorShape::getCount() const
 {
@@ -45,11 +45,20 @@ std::size_t TensorShape::getCount() const
     return count;
 }
 
-TensorShape::operator Shape() const { return mDims; }
+TensorShape::operator Shape() const
+{
+    return mDims;
+}
 
-TensorShape::iterator TensorShape::begin() { return mDims.begin(); }
+TensorShape::iterator TensorShape::begin()
+{
+    return mDims.begin();
+}
 
-TensorShape::iterator TensorShape::end() { return mDims.end(); }
+TensorShape::iterator TensorShape::end()
+{
+    return mDims.end();
+}
 
 }  // namespace core
 }  // namespace graphdl

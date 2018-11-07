@@ -26,3 +26,8 @@ NVCC=nvcc
 # clang-format
 CLANG_FORMAT=clang-format
 CLANG_FORMAT_ARGS=-style=file -i
+
+# clang-tidy
+CLANG_TIDY_EXEC=clang-tidy
+CLANG_TIDY_INCLUDES=$(foreach dir,includes core core/layers,-I$(ROOT_DIR)/$(dir))
+CLANG_TIDY_ARGS=-std=c++14

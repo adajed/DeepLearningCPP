@@ -11,22 +11,22 @@ namespace layers
 {
 class ReduceSumLayer : public DifferentiableLayer
 {
-   public:
-    ReduceSumLayer(ID id, Tensor::SPtr tensor);
+  public:
+    ReduceSumLayer(ID id, const Tensor::SPtr& tensor);
 
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 
 class ReduceSumGradientLayer : public Layer
 {
-   public:
-    ReduceSumGradientLayer(ID id, Tensor::SPtr in, Tensor::SPtr out,
+  public:
+    ReduceSumGradientLayer(ID id, const Tensor::SPtr& in, Tensor::SPtr out,
                            Tensor::SPtr outGrad);
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 
@@ -42,7 +42,7 @@ extern "C" void runReduceSumGradientDevice(std::size_t, float* yGrad,
 #endif
 }  // namespace layers
 
-Tensor::SPtr reduceSum(Tensor::SPtr tensor);
+Tensor::SPtr reduceSum(Tensor::SPtr t);
 
 }  // namespace core
 

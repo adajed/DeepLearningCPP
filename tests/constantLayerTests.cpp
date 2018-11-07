@@ -25,7 +25,7 @@ std::vector<Vec> SHAPES = {
 class ConstantTest : public LayerTest,
                      public testing::WithParamInterface<TestCase>
 {
-   public:
+  public:
     void test(const TestCase& testCase)
     {
         RefTensor tensor(std::get<0>(testCase));
@@ -45,7 +45,10 @@ class ConstantTest : public LayerTest,
     }
 };
 
-TEST_P(ConstantTest, testAPI) { test(GetParam()); }
+TEST_P(ConstantTest, testAPI)
+{
+    test(GetParam());
+}
 INSTANTIATE_TEST_CASE_P(LayerTest, ConstantTest,
                         Combine(ValuesIn(SHAPES), ValuesIn({3.14f}),
                                 ValuesIn(LOCATIONS)));

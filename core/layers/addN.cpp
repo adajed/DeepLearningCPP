@@ -1,8 +1,11 @@
 #include "addN.h"
-#include <assert.h>
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
+
+#include <cassert>
+#include <utility>
 
 namespace graphdl
 {
@@ -21,7 +24,8 @@ void runAddNHost(int n, std::size_t size, float** xs, float* y)
     }
 }
 
-void runAddNGradientHost(int n, std::size_t size, float* yGrad, float** xGrads)
+void runAddNGradientHost(int n, std::size_t size, const float* yGrad,
+                         float** xGrads)
 {
     for (std::size_t pos = 0; pos < size; ++pos)
     {
@@ -30,8 +34,8 @@ void runAddNGradientHost(int n, std::size_t size, float* yGrad, float** xGrads)
 }
 
 std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
-                                               Tensor::SPtr out,
-                                               Tensor::SPtr outGrad)
+                                               const Tensor::SPtr& out,
+                                               const Tensor::SPtr& outGrad)
 {
     ins.push_back(out);
     ins.push_back(outGrad);
@@ -41,7 +45,8 @@ std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
 std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
 {
     std::vector<Tensor::SPtr> outs;
-    for (Tensor::SPtr i : ins)
+    outs.reserve(ins.size());
+    for (const Tensor::SPtr& i : ins)
         outs.push_back(createTensor("", i->getShape(), i->getType()));
     return outs;
 }
@@ -59,7 +64,8 @@ void AddNLayer::execute(const InputDict& inputs)
 {
     std::vector<Tensor::SPtr> ins = getInputs();
     std::vector<float*> xs;
-    for (Tensor::SPtr in : ins)
+    xs.reserve(ins.size());
+    for (const Tensor::SPtr& in : ins)
     {
         in->eval(inputs);
         xs.push_back(in->getMemory().getValues());
@@ -89,8 +95,10 @@ Layer::TensorMap AddNLayer::gradients(Tensor::SPtr out, Tensor::SPtr outGrad)
     return gradMap;
 }
 
-AddNGradientLayer::AddNGradientLayer(ID id, std::vector<Tensor::SPtr> ins,
-                                     Tensor::SPtr out, Tensor::SPtr outGrad)
+AddNGradientLayer::AddNGradientLayer(ID id,
+                                     const std::vector<Tensor::SPtr>& ins,
+                                     const Tensor::SPtr& out,
+                                     const Tensor::SPtr& outGrad)
     : Layer(id, createGradientInputs(ins, out, outGrad),
             createGradientOutputs(ins))
 {
@@ -108,7 +116,8 @@ void AddNGradientLayer::execute(const InputDict& inputs)
     std::size_t size = outputGrad->getMemory().getCount();
     float* yGrad = outputGrad->getMemory().getValues();
     std::vector<float*> xGrads;
-    for (Tensor::SPtr xG : mOutputs)
+    xGrads.reserve(mOutputs.size());
+    for (const Tensor::SPtr& xG : mOutputs)
         xGrads.push_back(xG->getMemory().getValues());
 
     if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
@@ -123,7 +132,7 @@ void AddNGradientLayer::execute(const InputDict& inputs)
 
 Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors)
 {
-    if (tensors.size() == 0)
+    if (tensors.empty())
         throw std::runtime_error("List of input tensors cannot be empty");
     for (unsigned i = 1; i < tensors.size(); ++i)
     {
@@ -143,7 +152,8 @@ Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors)
 ITensorPtr addN(std::vector<ITensorPtr> tensors)
 {
     std::vector<core::Tensor::SPtr> inputs;
-    for (ITensorPtr t : tensors)
+    inputs.reserve(tensors.size());
+    for (const ITensorPtr& t : tensors)
         inputs.push_back(core::castITensorPtr(t)->get());
 
     return makeAbstractTensor(core::addN(inputs));

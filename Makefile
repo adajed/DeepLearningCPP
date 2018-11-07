@@ -29,6 +29,11 @@ format:
 	@+make -C samples/toySample format
 	@+make -C samples/mnist format
 
+tidy:
+	@+make -C core tidy
+	@+make -C samples/toySample tidy
+	@+make -C samples/mnist tidy
+
 help:
 	@echo "Possible commands:"
 	@echo "\tall     - release + debug"

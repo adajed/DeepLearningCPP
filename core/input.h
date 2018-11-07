@@ -14,11 +14,11 @@ extern "C" void copyInput(float* dest, float* src, size_t count);
 
 class InputLayer : public Layer
 {
-   public:
+  public:
     InputLayer(ID id, const std::string& name, const Shape& shape,
                MemoryType type);
 
-   private:
+  private:
     void execute(const InputDict& inputs) override;
 };
 
