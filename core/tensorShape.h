@@ -14,6 +14,7 @@ class TensorShape
   public:
     using iterator = std::vector<unsigned int>::iterator;
 
+    TensorShape() = default;
     TensorShape(Shape shape);
     TensorShape(const TensorShape& other) = default;
     TensorShape(std::initializer_list<unsigned> list);

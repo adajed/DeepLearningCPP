@@ -36,14 +36,9 @@ std::vector<Vec> SHAPES = {
 
 std::vector<std::tuple<Vec, Vec>> ERROR_SHAPES = {
     // clang-format off
-    {{}, {2}},
     {{2}, {5}},
     {{2, 3}, {2, 5}},
     {{3, 4}, {4, 3}},
-    {{2, 2}, {2}},
-    {{2}, {2, 2}},
-    {{2, 2}, {2, 2, 2}},
-    {{2, 2, 2}, {2, 2, 2, 2}}
     // clang-format on
 };
 
