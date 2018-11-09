@@ -4,6 +4,7 @@
 #include "input.h"
 #include "layer.h"
 #include "weights.h"
+#include "weightsNamespaces.h"
 
 namespace graphdl
 {
@@ -60,8 +61,7 @@ class Graph
     //! \param shape Shape of the new input.
     //!
     //! \return Pointer to tensor representing new input.
-    Tensor::SPtr addInput(const std::string& name,
-                          const std::shared_ptr<Layer>& layer);
+    Tensor::SPtr addInput(const std::string& name, const Layer::SPtr& layer);
 
     //! \fn addWeights
     //! \brief Adds new weights to the graph.
@@ -69,8 +69,7 @@ class Graph
     //! \param shape Shape of new weights.
     //!
     //! \return Pointer to tensor representing new weights.
-    Tensor::SPtr addWeights(const std::string& name,
-                            const std::shared_ptr<Layer>& layer);
+    Tensor::SPtr addWeights(const std::string& name, const Layer::SPtr& layer);
 
     //! \fn insertLayer
     //!
@@ -86,8 +85,8 @@ class Graph
 
   private:
     std::string mName;  //!< Name of the graph.
-    std::vector<std::shared_ptr<Layer>> mInputLayers;
-    std::vector<std::shared_ptr<Layer>> mWeightLayers;
+    std::vector<Layer::SPtr> mInputLayers;
+    WeightsNamespaces mWeights;
     std::map<Layer::ID, Layer::SPtr> mLayers;
     std::map<Tensor::ID, Tensor::SPtr> mTensors;
     Tensor::ID mTensorCounter;
