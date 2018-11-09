@@ -89,42 +89,42 @@ void runActivationHost(std::size_t size, float* x, float* y, Activation op)
 template <Activation act>
 float opGrad(float x, float o);
 template <>
-float opGrad<Activation::kRELU>(float x, float o)
+float opGrad<Activation::kRELU>(float x, float /* o */)
 {
     return x >= 0. ? 1. : 0.;
 }
 template <>
-float opGrad<Activation::kSIGMOID>(float x, float o)
+float opGrad<Activation::kSIGMOID>(float /* x */, float o)
 {
     return o * (1. - o);
 }
 template <>
-float opGrad<Activation::kTANH>(float x, float o)
+float opGrad<Activation::kTANH>(float /* x */, float o)
 {
     return 1. - o * o;
 }
 template <>
-float opGrad<Activation::kSQUARE>(float x, float o)
+float opGrad<Activation::kSQUARE>(float x, float /* o */)
 {
     return 2. * x;
 }
 template <>
-float opGrad<Activation::kABS>(float x, float o)
+float opGrad<Activation::kABS>(float x, float /* o */)
 {
     return x >= 0. ? 1. : -1;
 }
 template <>
-float opGrad<Activation::kNEG>(float x, float o)
+float opGrad<Activation::kNEG>(float /* x */, float /* o */)
 {
     return -1;
 }
 template <>
-float opGrad<Activation::kRECIPROCAL>(float x, float o)
+float opGrad<Activation::kRECIPROCAL>(float /* x */, float o)
 {
     return -1. * o * o;
 }
 template <>
-float opGrad<Activation::kLOG>(float x, float o)
+float opGrad<Activation::kLOG>(float x, float /* o */)
 {
     return 1. / x;
 }

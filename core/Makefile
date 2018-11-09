@@ -13,7 +13,7 @@ CPP_HEADERS=$(wildcard *.h)
 OBJS_R=$(patsubst %.cpp,$(OUTDIR_R)/%.o,$(CPP_SOURCES))
 OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
-COMMON_CFLAGS += -I$(ROOT_DIR)/core -I$(ROOT_DIR)/core/layers -fPIC
+COMMON_CFLAGS += -Wunused-parameter -I$(ROOT_DIR)/core -I$(ROOT_DIR)/core/layers -fPIC
 CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
 

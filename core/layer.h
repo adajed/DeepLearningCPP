@@ -148,7 +148,8 @@ class Layer
     //! \fn gradients
     //! \brief Returns gradients of this tensor with respect to weights.
     //!
-    virtual TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad)
+    virtual TensorMap gradients(Tensor::SPtr /* output */,
+                                Tensor::SPtr /* outputGrad */)
     {
         throw std::runtime_error("Gradients not implemented");
     }

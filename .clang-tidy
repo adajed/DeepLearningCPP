@@ -13,6 +13,5 @@ Checks:  "*,
 -cppcoreguidelines-pro-bounds-array-to-pointer-decay,\
 -hicpp-no-array-decay,\
 -cppcoreguidelines-owning-memory,\
--readability-else-after-return,\
--misc-unused-parameters
+-readability-else-after-return
 "

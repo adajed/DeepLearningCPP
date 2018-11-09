@@ -68,22 +68,22 @@ void runElementwiseHost(std::size_t size, float* x1, float* x2, float* y,
 template <Elementwise elem>
 float opGrad1(float f1, float f2);
 template <>
-float opGrad1<Elementwise::kADD>(float f1, float f2)
+float opGrad1<Elementwise::kADD>(float /* f1 */, float /* f2 */)
 {
     return 1.;
 }
 template <>
-float opGrad1<Elementwise::kSUB>(float f1, float f2)
+float opGrad1<Elementwise::kSUB>(float /* f1 */, float /* f2 */)
 {
     return 1.;
 }
 template <>
-float opGrad1<Elementwise::kMUL>(float f1, float f2)
+float opGrad1<Elementwise::kMUL>(float /* f1 */, float f2)
 {
     return f2;
 }
 template <>
-float opGrad1<Elementwise::kDIV>(float f1, float f2)
+float opGrad1<Elementwise::kDIV>(float /* f1 */, float f2)
 {
     return 1. / f2;
 }
@@ -91,17 +91,17 @@ float opGrad1<Elementwise::kDIV>(float f1, float f2)
 template <Elementwise elem>
 float opGrad2(float f1, float f2);
 template <>
-float opGrad2<Elementwise::kADD>(float f1, float f2)
+float opGrad2<Elementwise::kADD>(float /* f1 */, float /* f2 */)
 {
     return 1.;
 }
 template <>
-float opGrad2<Elementwise::kSUB>(float f1, float f2)
+float opGrad2<Elementwise::kSUB>(float /* f1 */, float /* f2 */)
 {
     return -1.;
 }
 template <>
-float opGrad2<Elementwise::kMUL>(float f1, float f2)
+float opGrad2<Elementwise::kMUL>(float f1, float /* f2 */)
 {
     return f1;
 }
