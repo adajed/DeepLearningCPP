@@ -41,7 +41,7 @@ std::map<std::string, Tensor::SPtr> Graph::getInputs() const
 std::map<std::string, Tensor::SPtr> Graph::getWeights() const
 {
     std::map<std::string, Tensor::SPtr> weightTensors;
-    for (const auto& weight : mWeightLayers)
+    for (const auto& weight : mWeights.at(GRAPH_WEIGHTS_NAMESPACE))
     {
         Tensor::SPtr tensor = weight->getOutputs()[0];
         weightTensors.insert({tensor->getName(), tensor});
@@ -89,7 +89,7 @@ Tensor::SPtr Graph::addInput(const std::string& /*name*/,
 Tensor::SPtr Graph::addWeights(const std::string& /*name*/,
                                const Layer::SPtr& layer)
 {
-    mWeightLayers.push_back(layer);
+    mWeights[GRAPH_WEIGHTS_NAMESPACE].push_back(layer);
     return layer->getOutputs()[0];
 }
 

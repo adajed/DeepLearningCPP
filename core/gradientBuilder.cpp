@@ -12,7 +12,9 @@ namespace graphdl
 {
 namespace core
 {
-GradientBuilder::GradientBuilder(const Tensor::SPtr& tensor) : mTensor(tensor)
+GradientBuilder::GradientBuilder(const Tensor::SPtr& tensor,
+                                 const std::vector<Tensor::SPtr>& weights)
+    : mTensor(tensor), mWeights(weights.begin(), weights.end())
 {
     if (tensor->getShape().getCount() != 1)
         throw std::runtime_error("Not scalar gradient calculation");
@@ -52,19 +54,20 @@ GradientBuilder::TensorMap GradientBuilder::createGradients()
     calculateGradientsForTensor(mTensor);
 
     TensorMap gradients;
-    for (auto pair : getDefaultGraph()->getWeights())
+    for (const Tensor::SPtr& weights : mWeights)
     {
-        Tensor::SPtr weights = pair.second;
         if (mCalculatedTensors.count(weights) == 0)
-            mCalculatedTensors.insert(
-                {weights,
-                 constant(0., weights->getShape(), weights->getType())});
+        {
+            Tensor::SPtr nullGradient =
+                constant(0., weights->getShape(), weights->getType());
+            mCalculatedTensors.insert({weights, nullGradient});
+        }
         gradients.insert({weights, mCalculatedTensors[weights]});
     }
     return gradients;
 }
 
-void GradientBuilder::modifyTensorGradient(Tensor::SPtr tensor,
+void GradientBuilder::modifyTensorGradient(const Tensor::SPtr& tensor,
                                            const Tensor::SPtr& tensorGrad)
 {
     if (mTensorGradients.count(tensor) == 0)
@@ -101,7 +104,11 @@ void GradientBuilder::calculateGradientsForTensor(const Tensor::SPtr& tensor)
 std::map<ITensorPtr, ITensorPtr> gradients(const ITensorPtr& iTensor)
 {
     core::AbstractTensor::Ptr aTensor = core::castITensorPtr(iTensor);
-    core::GradientBuilder builder(aTensor->get());
+    std::vector<core::Tensor::SPtr> weights;
+    weights.reserve(core::getDefaultGraph()->getWeights().size());
+    for (auto pair : core::getDefaultGraph()->getWeights())
+        weights.push_back(pair.second);
+    core::GradientBuilder builder(aTensor->get(), weights);
     core::GradientBuilder::TensorMap grads = builder.createGradients();
 
     // cast all Tensor::SPtr to ITensorPtr
