@@ -1,12 +1,14 @@
 #ifndef READ_MNIST_H_
 #define READ_MNIST_H_
 
+#include <string>
 #include <vector>
 
 class MnistDataset
 {
   public:
-    MnistDataset(int batchSize);
+    MnistDataset(const std::string& imagesPath, const std::string& labelsPath,
+                 int batchSize);
 
     int getNumBatches() const;
 

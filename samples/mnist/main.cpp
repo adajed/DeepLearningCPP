@@ -3,11 +3,21 @@
 #include "readMNIST.h"
 
 #include <iostream>
+#include <numeric>
 #include <random>
 
 const int BATCH_SIZE = 64;
 const int NUM_EPOCHS = 1;
 const int PRINT_EVERY = 100;
+
+const std::string TRAIN_IMAGES_PATH =
+    "/home/adam/Projects/DLL/samples/mnist/train-images-idx3-ubyte";
+const std::string TRAIN_LABELS_PATH =
+    "/home/adam/Projects/DLL/samples/mnist/train-labels-idx1-ubyte";
+const std::string VALID_IMAGES_PATH =
+    "/home/adam/Projects/DLL/samples/mnist/t10k-images-idx3-ubyte";
+const std::string VALID_LABELS_PATH =
+    "/home/adam/Projects/DLL/samples/mnist/t10k-labels-idx1-ubyte";
 
 using namespace graphdl;
 
@@ -44,6 +54,18 @@ int numCorrect(const HostTensor& y, const HostTensor& pred)
     }
 
     return cnt;
+}
+
+float mean(const std::vector<float>& vec)
+{
+    float m = std::accumulate(vec.begin(), vec.end(), 0.);
+    return m / float(vec.size());
+}
+
+float meanAcc(const std::vector<int>& vec)
+{
+    int sum = std::accumulate(vec.begin(), vec.end(), 0);
+    return float(sum) / float(vec.size() * BATCH_SIZE);
 }
 
 Network buildNetwork()
@@ -88,7 +110,8 @@ Network buildNetwork()
 int main()
 {
     std::cout << "Reading MNIST dataset..." << std::endl;
-    MnistDataset mnist(BATCH_SIZE);
+    MnistDataset train_mnist(TRAIN_IMAGES_PATH, TRAIN_LABELS_PATH, BATCH_SIZE);
+    MnistDataset valid_mnist(VALID_IMAGES_PATH, VALID_LABELS_PATH, BATCH_SIZE);
     std::cout << "Building network..." << std::endl;
     Network net = buildNetwork();
     initializeGraph();
@@ -100,10 +123,11 @@ int main()
         losses.clear();
         accs.clear();
         std::cout << "Epoch " << e << std::endl;
-        std::cout << "Number of batches " << mnist.getNumBatches() << std::endl;
-        for (int i = 0; i < mnist.getNumBatches(); ++i)
+        std::cout << "Number of batches " << train_mnist.getNumBatches()
+                  << std::endl;
+        for (int i = 0; i < train_mnist.getNumBatches(); ++i)
         {
-            auto batch = mnist.getNextBatch();
+            auto batch = train_mnist.getNextBatch();
             auto outputs = eval({net.loss, net.output},
                                 {{"X", batch[0]}, {"Y", batch[1]}});
             (void)eval(net.modifiers, {{"X", batch[0]}, {"Y", batch[1]}});
@@ -111,21 +135,29 @@ int main()
             accs.push_back(numCorrect(batch[1], outputs[1]));
             if (i % PRINT_EVERY == PRINT_EVERY - 1)
             {
-                float mean = 0.;
-                for (float f : losses) mean += f;
-                mean /= float(losses.size());
-
-                int acc = 0;
-                for (int i : accs) acc += i;
-                std::cout << "Loss " << mean << ", acc "
-                          << float(acc) / float(PRINT_EVERY * BATCH_SIZE)
-                          << std::endl;
+                std::cout << "Step " << i << ": "
+                          << "loss " << mean(losses) << ", acc "
+                          << meanAcc(accs) << std::endl;
 
                 losses.clear();
                 accs.clear();
             }
         }
-        mnist.reset();
+
+        losses.clear();
+        accs.clear();
+        for (int i = 0; i < valid_mnist.getNumBatches(); ++i)
+        {
+            auto batch = valid_mnist.getNextBatch();
+            auto outputs = eval({net.loss, net.output},
+                                {{"X", batch[0]}, {"Y", batch[1]}});
+            losses.push_back(outputs[0][0]);
+            accs.push_back(numCorrect(batch[1], outputs[1]));
+        }
+        std::cout << "Valid. loss " << mean(losses) << ", Valid. acc "
+                  << meanAcc(accs) << std::endl;
+        train_mnist.reset();
+        valid_mnist.reset();
     }
 
     return 0;

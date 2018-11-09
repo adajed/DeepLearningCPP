@@ -70,15 +70,12 @@ void parseLabels(const std::string& path, std::vector<std::vector<float>>& db)
     }
 }
 
-MnistDataset::MnistDataset(int batchSize) : mBatchSize(batchSize), mPos(0)
+MnistDataset::MnistDataset(const std::string& imagesPath,
+                           const std::string& labelsPath, int batchSize)
+    : mBatchSize(batchSize), mPos(0)
 {
-    const std::string IMAGES_PATH =
-        "/home/adam/Projects/DLL/samples/mnist/train-images-idx3-ubyte";
-    const std::string LABELS_PATH =
-        "/home/adam/Projects/DLL/samples/mnist/train-labels-idx1-ubyte";
-
-    parseImages(IMAGES_PATH, mX);
-    parseLabels(LABELS_PATH, mY);
+    parseImages(imagesPath, mX);
+    parseLabels(labelsPath, mY);
 }
 
 int MnistDataset::getNumBatches() const
