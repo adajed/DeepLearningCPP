@@ -14,18 +14,20 @@ class GradientBuilder
   public:
     using TensorMap = std::map<Tensor::SPtr, Tensor::SPtr>;
 
-    GradientBuilder(const Tensor::SPtr& tensor);
+    GradientBuilder(const Tensor::SPtr& tensor,
+                    const std::vector<Tensor::SPtr>& weights);
 
     TensorMap createGradients();
 
   private:
     void findTensorOutputs(const Tensor::SPtr& tensor,
                            std::set<Tensor::SPtr>& visited);
-    void modifyTensorGradient(Tensor::SPtr tensor,
+    void modifyTensorGradient(const Tensor::SPtr& tensor,
                               const Tensor::SPtr& tensorGrad);
     void calculateGradientsForTensor(const Tensor::SPtr& tensor);
 
     Tensor::SPtr mTensor;
+    std::set<Tensor::SPtr> mWeights;
     std::map<Tensor::SPtr, std::vector<Tensor::SPtr>> mTensorGradients;
     std::map<Tensor::SPtr, std::set<Tensor::SPtr>> mGradientsToCalc;
     std::map<Tensor::SPtr, Tensor::SPtr> mCalculatedTensors;
