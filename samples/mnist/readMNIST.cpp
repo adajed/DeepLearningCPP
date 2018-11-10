@@ -1,7 +1,11 @@
 #include "readMNIST.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
+#include <iostream>
+#include <numeric>
+#include <random>
 
 unsigned rev(unsigned n)
 {
@@ -76,6 +80,10 @@ MnistDataset::MnistDataset(const std::string& imagesPath,
 {
     parseImages(imagesPath, mX);
     parseLabels(labelsPath, mY);
+    mIndexes = std::vector<int>(mX.size());
+    std::iota(mIndexes.begin(), mIndexes.end(), 0);
+    std::shuffle(mIndexes.begin(), mIndexes.end(),
+                 std::mt19937(std::random_device()()));
 }
 
 int MnistDataset::getNumBatches() const
@@ -88,8 +96,9 @@ std::vector<std::vector<float>> MnistDataset::getNextBatch()
     std::vector<float> batchX, batchY;
     for (int n = 0; n < mBatchSize; ++n)
     {
-        for (float f : mX[mPos + n]) batchX.push_back(f);
-        for (float f : mY[mPos + n]) batchY.push_back(f);
+        int i = mIndexes[mPos + n];
+        for (float f : mX[i]) batchX.push_back(f);
+        for (float f : mY[i]) batchY.push_back(f);
     }
 
     mPos += mBatchSize;
@@ -99,4 +108,6 @@ std::vector<std::vector<float>> MnistDataset::getNextBatch()
 void MnistDataset::reset()
 {
     mPos = 0;
+    std::shuffle(mIndexes.begin(), mIndexes.end(),
+                 std::mt19937(std::random_device()()));
 }

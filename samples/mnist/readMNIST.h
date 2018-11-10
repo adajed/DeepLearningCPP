@@ -19,6 +19,7 @@ class MnistDataset
   private:
     int mBatchSize;
     int mPos;
+    std::vector<int> mIndexes;
     std::vector<std::vector<float>> mX;
     std::vector<std::vector<float>> mY;
 };
