@@ -25,8 +25,7 @@ struct Network
 {
     std::map<std::string, ITensorPtr> inputs;
     std::vector<ITensorPtr> weights;
-    std::vector<ITensorPtr> modifiers;
-    ITensorPtr output, loss;
+    ITensorPtr output, loss, optimize;
 };
 
 int numCorrect(const HostTensor& y, const HostTensor& pred)
@@ -97,13 +96,14 @@ Network buildNetwork()
         ITensorPtr s = constant(0.1, pair.first->getShape(), loc);
         modifiers.push_back(assign(pair.first, pair.first - s * pair.second));
     }
+    ITensorPtr opt = group(modifiers);
 
     Network net;
     net.inputs = {{"X", X}, {"Y", Y}};
     net.weights = {W1, W2, W3};
     net.output = a3;
     net.loss = loss;
-    net.modifiers = modifiers;
+    net.optimize = opt;
     return net;
 }
 
@@ -128,9 +128,8 @@ int main()
         for (int i = 0; i < train_mnist.getNumBatches(); ++i)
         {
             auto batch = train_mnist.getNextBatch();
-            auto outputs = eval({net.loss, net.output},
+            auto outputs = eval({net.loss, net.output, net.optimize},
                                 {{"X", batch[0]}, {"Y", batch[1]}});
-            (void)eval(net.modifiers, {{"X", batch[0]}, {"Y", batch[1]}});
             losses.push_back(outputs[0][0]);
             accs.push_back(numCorrect(batch[1], outputs[1]));
             if (i % PRINT_EVERY == PRINT_EVERY - 1)

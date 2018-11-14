@@ -26,7 +26,8 @@ global:
         graphdl::log*;
         graphdl::assign*;
         graphdl::reduceSum*;
-        graphdl::addN*
+        graphdl::addN*;
+        graphdl::group*
     };
 local: *;
 };
