@@ -1,5 +1,6 @@
 #include "graphdl.h"
 #include "graphdl_ops.h"
+#include "graphdl_train.h"
 #include "readMNIST.h"
 
 #include <iostream>
@@ -9,6 +10,7 @@
 const int BATCH_SIZE = 64;
 const int NUM_EPOCHS = 1;
 const int PRINT_EVERY = 100;
+const float LEARNING_RATE = 0.1;
 
 const std::string TRAIN_IMAGES_PATH =
     "/home/adam/Projects/DLL/samples/mnist/train-images-idx3-ubyte";
@@ -89,14 +91,7 @@ Network buildNetwork()
     ITensorPtr loss = neg(reduceSum(Y * log(a3) + (ones - Y) * log(ones - a3)));
     loss = loss / constant(BATCH_SIZE, {}, loc);
 
-    std::map<ITensorPtr, ITensorPtr> grads = gradients(loss);
-    std::vector<ITensorPtr> modifiers;
-    for (auto pair : grads)
-    {
-        ITensorPtr s = constant(0.1, pair.first->getShape(), loc);
-        modifiers.push_back(assign(pair.first, pair.first - s * pair.second));
-    }
-    ITensorPtr opt = group(modifiers);
+    ITensorPtr opt = train::gradientDescent(LEARNING_RATE)->optimize(loss);
 
     Network net;
     net.inputs = {{"X", X}, {"Y", Y}};

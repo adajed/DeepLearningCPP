@@ -22,12 +22,14 @@ COMMON_LFLAGS +=-fPIC -shared -Wl,--version-script=$(EXPORTS_MAP)
 LFLAGS_R=$(COMMON_LFLAGS)
 LFLAGS_D=$(COMMON_LFLAGS)
 
-.PHONY: release debug format layers_release layers_debug
+.PHONY: release debug format
+.PHONY: layers_release layers_debug
+.PHONY: trainers_release trainers_debug
 
 all: release debug
 
-release: layers_release $(SHARED_R) $(STATIC_R)
-debug: layers_debug $(SHARED_D) $(STATIC_D)
+release: layers_release trainers_release $(SHARED_R) $(STATIC_R)
+debug: layers_debug trainers_debug $(SHARED_D) $(STATIC_D)
 
 #### LAYERS
 layers_release:
@@ -35,6 +37,13 @@ layers_release:
 
 layers_debug:
 	@+make -C layers debug
+
+#### TRAINERS
+trainers_release:
+	@+make -C trainers release
+
+trainers_debug:
+	@+make -C trainers debug
 
 #### LINKING
 
@@ -76,9 +85,11 @@ $(OUTDIR_D):
 format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)
 	@+make -C layers format
+	@+make -C trainers format
 
 #### clang-tidy
 tidy:
 	@$(foreach src,$(CPP_SOURCES),\
 		$(CLANG_TIDY_EXEC) --fix $(src) -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS);)
 	@+make -C layers tidy
+	@+make -C trainers tidy

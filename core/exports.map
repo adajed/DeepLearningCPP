@@ -27,7 +27,8 @@ global:
         graphdl::assign*;
         graphdl::reduceSum*;
         graphdl::addN*;
-        graphdl::group*
+        graphdl::group*;
+        graphdl::train::gradientDescent*
     };
 local: *;
 };
