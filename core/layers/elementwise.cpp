@@ -198,7 +198,6 @@ ElementwiseLayer::ElementwiseLayer(ID id, const Tensor::SPtr& t1,
                                    const Tensor::SPtr& t2, Elementwise op)
     : DifferentiableLayer(id, {t1, t2}, createOutputs(t1, t2)), mOp(op)
 {
-    assert(t1->getShape() == t2->getShape());
 }
 
 void ElementwiseLayer::execute(const InputDict& inputs)
@@ -280,13 +279,13 @@ bool shapesCompatibleForElementwise(const TensorShape& shape1,
     TensorShape shapeLong;
     if (shape1.size() > shape2.size())
     {
-        shapeShort = shape1;
-        shapeLong = shape2;
+        shapeShort = shape2;
+        shapeLong = shape1;
     }
     else
     {
-        shapeShort = shape2;
-        shapeLong = shape1;
+        shapeShort = shape1;
+        shapeLong = shape2;
     }
 
     int sizeShort = shapeShort.size();

@@ -101,8 +101,8 @@ __global__ void elementwiseGradientKernelSmall(float* x1, size_t size1,
                                                float* yG, float* out)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t minSize = n == 0 ? size2 : size1;
-    size_t maxSize = n == 0 ? size1 : size2;
+    size_t minSize = (size1 > size2) ? size2 : size1;
+    size_t maxSize = (size1 > size2) ? size1 : size2;
 
     if (id < maxSize)
         out[(maxSize / minSize) * (id % minSize) + (id / minSize)] =
@@ -166,7 +166,7 @@ void runElementwiseGradientKernels(float* x1, size_t size1, float* x2,
         elementwiseGradientKernelSmall<elem, 1>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, temp);
 
-        for (int i = 0; i < size1 / size2; ++i)
+        for (int i = 0; i < size2; ++i)
             reduce<ReduceOpCuda::kSUM>(temp + i * (size1 / size2),
                                        size1 / size2, x2G + i);
     }
@@ -177,7 +177,7 @@ void runElementwiseGradientKernels(float* x1, size_t size1, float* x2,
         elementwiseGradientKernelBig<elem, 1>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x2G);
 
-        for (int i = 0; i < size2 / size1; ++i)
+        for (int i = 0; i < size1; ++i)
             reduce<ReduceOpCuda::kSUM>(temp + i * (size2 / size1),
                                        size2 / size1, x1G + i);
     }
