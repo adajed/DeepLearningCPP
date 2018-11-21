@@ -39,7 +39,8 @@ float op<Elementwise::kDIV>(float f1, float f2)
 }
 
 template <Elementwise elem>
-void elementwise(const float* x1, size_t size1, const float* x2, size_t size2, float* y)
+void elementwise(const float* x1, size_t size1, const float* x2, size_t size2,
+                 float* y)
 {
     if (size1 < size2)
     {
@@ -55,8 +56,8 @@ void elementwise(const float* x1, size_t size1, const float* x2, size_t size2, f
     }
 }
 
-void runElementwiseHost(const float* x1, size_t size1, const float* x2, size_t size2, float* y,
-                        Elementwise op)
+void runElementwiseHost(const float* x1, size_t size1, const float* x2,
+                        size_t size2, float* y, Elementwise op)
 {
     switch (op)
     {
@@ -122,8 +123,8 @@ float opGrad2<Elementwise::kDIV>(float f1, float f2)
 }
 
 template <Elementwise elem>
-void elementwiseGradient(const float* x1, size_t size1, const float* x2, size_t size2,
-                         const float* yG, float* x1G, float* x2G)
+void elementwiseGradient(const float* x1, size_t size1, const float* x2,
+                         size_t size2, const float* yG, float* x1G, float* x2G)
 {
     if (size1 < size2)
     {
@@ -151,22 +152,27 @@ void elementwiseGradient(const float* x1, size_t size1, const float* x2, size_t 
     }
 }
 
-void runElementwiseGradientHost(const float* x1, size_t size1, const float* x2, size_t size2,
-                                const float* yG, float* x1G, float* x2G, Elementwise op)
+void runElementwiseGradientHost(const float* x1, size_t size1, const float* x2,
+                                size_t size2, const float* yG, float* x1G,
+                                float* x2G, Elementwise op)
 {
     switch (op)
     {
     case Elementwise::kADD:
-        elementwiseGradient<Elementwise::kADD>(x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseGradient<Elementwise::kADD>(x1, size1, x2, size2, yG, x1G,
+                                               x2G);
         return;
     case Elementwise::kSUB:
-        elementwiseGradient<Elementwise::kSUB>(x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseGradient<Elementwise::kSUB>(x1, size1, x2, size2, yG, x1G,
+                                               x2G);
         return;
     case Elementwise::kMUL:
-        elementwiseGradient<Elementwise::kMUL>(x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseGradient<Elementwise::kMUL>(x1, size1, x2, size2, yG, x1G,
+                                               x2G);
         return;
     case Elementwise::kDIV:
-        elementwiseGradient<Elementwise::kDIV>(x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseGradient<Elementwise::kDIV>(x1, size1, x2, size2, yG, x1G,
+                                               x2G);
         return;
     }
 }
@@ -213,7 +219,7 @@ void ElementwiseLayer::execute(const InputDict& inputs)
         runElementwiseHost(input0, size0, input1, size1, output, mOp);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runElementwiseDevice(size0, input0, input1, output, mOp);
+        cuda::runElementwiseDevice(input0, size0, input1, size1, output, mOp);
 #endif
 }
 
@@ -255,18 +261,20 @@ void ElementwiseGradientLayer::execute(const InputDict& inputs)
     size_t size2 = input2->getMemory().getCount();
 
     if (input1->getType() == MemoryType::kHOST_MEMORY)
-        runElementwiseGradientHost(in1, size1, in2, size2, outGrad,
-                                   gradient1, gradient2, mOp);
+        runElementwiseGradientHost(in1, size1, in2, size2, outGrad, gradient1,
+                                   gradient2, mOp);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runElementwiseGradientDevice(size1, in1, in2, outGrad, gradient1,
-                                           gradient2, mOp);
+        cuda::runElementwiseGradientDevice(in1, size1, in2, size2, outGrad,
+                                           gradient1, gradient2, mOp);
 #endif
 }
 
 }  // namespace layers
-namespace {
-bool shapesCompatibleForElementwise(const TensorShape& shape1, const TensorShape& shape2)
+namespace
+{
+bool shapesCompatibleForElementwise(const TensorShape& shape1,
+                                    const TensorShape& shape2)
 {
     TensorShape shapeShort;
     TensorShape shapeLong;
@@ -284,7 +292,7 @@ bool shapesCompatibleForElementwise(const TensorShape& shape1, const TensorShape
     int sizeShort = shapeShort.size();
     int sizeLong = shapeLong.size();
     for (int i = 0; i < sizeShort; ++i)
-        if (shapeShort[sizeShort - i - 1] != shapeLong[sizeLong - i -1])
+        if (shapeShort[sizeShort - i - 1] != shapeLong[sizeLong - i - 1])
             return false;
 
     return true;
