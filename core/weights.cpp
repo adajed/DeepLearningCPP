@@ -1,5 +1,7 @@
 #include "weights.h"
 
+#include "graph.h"
+
 #include <random>
 
 namespace graphdl
@@ -34,6 +36,14 @@ void WeightsLayer::initialize()
 
 // This does nothing, because weights are already in memory.
 void WeightsLayer::execute(const InputDict& /*inputs*/) {}
+
+Tensor::SPtr weights(const std::string& name, const TensorShape& shape,
+                     MemoryType type, const std::string& nspace)
+{
+    Layer::SPtr layer = createLayer<WeightsLayer>(name, shape, type);
+    Tensor::SPtr tensor = getDefaultGraph()->addWeights(name, layer, nspace);
+    return tensor;
+}
 
 }  // namespace core
 }  // namespace graphdl

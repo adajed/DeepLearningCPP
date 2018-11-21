@@ -18,9 +18,10 @@ class QueueLayer : public Layer
     void execute(const InputDict& inputs) override;
 };
 
-Tensor::SPtr queue(const std::vector<Tensor::SPtr>& tensors);
-
 }  // namespace layers
+
+Tensor::SPtr queue(const std::vector<Tensor::SPtr>& ops);
+
 }  // namespace core
 }  // namespace graphdl
 

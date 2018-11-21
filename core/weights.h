@@ -24,6 +24,9 @@ class WeightsLayer : public Layer
     void execute(const InputDict& inputs) override;
 };
 
+Tensor::SPtr weights(const std::string& name, const TensorShape& shape,
+                     MemoryType type, const std::string& nspace);
+
 }  // namespace core
 }  // namespace graphdl
 

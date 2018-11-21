@@ -19,6 +19,8 @@ using ITrainerPtr = std::unique_ptr<ITrainer>;
 
 ITrainerPtr gradientDescent(float lr);
 
+ITrainerPtr momentum(float lr, float m);
+
 }  // namespace train
 }  // namespace graphdl
 

@@ -91,7 +91,7 @@ Network buildNetwork()
     ITensorPtr loss = neg(reduceSum(Y * log(a3) + (ones - Y) * log(ones - a3)));
     loss = loss / constant(BATCH_SIZE, {}, loc);
 
-    ITensorPtr opt = train::gradientDescent(LEARNING_RATE)->optimize(loss);
+    ITensorPtr opt = train::momentum(LEARNING_RATE, 0.9)->optimize(loss);
 
     Network net;
     net.inputs = {{"X", X}, {"Y", Y}};
