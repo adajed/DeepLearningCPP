@@ -38,6 +38,8 @@ ITensorPtr addN(std::vector<ITensorPtr> tensors);
 
 ITensorPtr group(const std::vector<ITensorPtr>& tensors);
 
+ITensorPtr queue(const std::vector<ITensorPtr>& tensors);
+
 }  // namespace graphdl
 
 #endif  // GRAPHDL_OPS_H_
