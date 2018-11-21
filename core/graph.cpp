@@ -87,9 +87,10 @@ Tensor::SPtr Graph::addInput(const std::string& /*name*/,
 }
 
 Tensor::SPtr Graph::addWeights(const std::string& /*name*/,
-                               const Layer::SPtr& layer)
+                               const Layer::SPtr& layer,
+                               const std::string& nspace)
 {
-    mWeights[GRAPH_WEIGHTS_NAMESPACE].push_back(layer);
+    mWeights[nspace].push_back(layer);
     return layer->getOutputs()[0];
 }
 

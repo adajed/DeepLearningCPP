@@ -2,6 +2,7 @@
 
 #include "abstractTensor.h"
 #include "graphdl.h"
+#include "weightsNamespaces.h"
 
 #include <cassert>
 #include <utility>
@@ -120,8 +121,8 @@ ITensorPtr createWeights(const std::string& name, const Shape& shape,
     core::MemoryType type = core::memoryLocationToType(location);
     core::Layer::SPtr weights =
         core::createLayer<core::WeightsLayer>(name, shape, type);
-    core::Tensor::SPtr tensor =
-        core::getDefaultGraph()->addWeights(name, weights);
+    core::Tensor::SPtr tensor = core::getDefaultGraph()->addWeights(
+        name, weights, core::GRAPH_WEIGHTS_NAMESPACE);
     return core::makeAbstractTensor(tensor);
 }
 

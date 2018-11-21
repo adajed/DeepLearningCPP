@@ -69,7 +69,8 @@ class Graph
     //! \param shape Shape of new weights.
     //!
     //! \return Pointer to tensor representing new weights.
-    Tensor::SPtr addWeights(const std::string& name, const Layer::SPtr& layer);
+    Tensor::SPtr addWeights(const std::string& name, const Layer::SPtr& layer,
+                            const std::string& nspace);
 
     //! \fn insertLayer
     //!

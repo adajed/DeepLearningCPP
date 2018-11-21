@@ -22,7 +22,6 @@ class GradientDescentTrainer : public Trainer
 };
 
 }  // namespace trainers
-
 }  // namespace core
 }  // namespace graphdl
 

@@ -17,7 +17,7 @@ extern const std::string TRAIN_WEIGHTS_NAMESPACE;
 class WeightsNamespaces : public std::map<std::string, std::vector<Layer::SPtr>>
 {
   public:
-    //! thic constructor creates default namespaces
+    //! this constructor creates default namespaces
     WeightsNamespaces()
         : std::map<std::string, std::vector<Layer::SPtr>>(
               {{GRAPH_WEIGHTS_NAMESPACE, {}}, {TRAIN_WEIGHTS_NAMESPACE, {}}})
