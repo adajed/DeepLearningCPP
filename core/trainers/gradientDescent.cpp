@@ -25,8 +25,7 @@ Tensor::SPtr GradientDescentTrainer::parseGradients(
     {
         Tensor::SPtr w = grad.first;
         Tensor::SPtr g = grad.second;
-        Tensor::SPtr step =
-            constant(mLearningRate, w->getShape(), w->getType());
+        Tensor::SPtr step = constant(mLearningRate, {}, w->getType());
         Tensor::SPtr a = assign(w, w - step * g);
         modifications.push_back(a);
     }

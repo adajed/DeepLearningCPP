@@ -42,8 +42,8 @@ Tensor::SPtr MomentumTrainer::parseGradients(
         Tensor::SPtr w = grad.first;
         Tensor::SPtr g = grad.second;
         Tensor::SPtr s = steps[w];
-        Tensor::SPtr m = constant(mMomentum, w->getShape(), w->getType());
-        Tensor::SPtr lr = constant(mLearningRate, w->getShape(), w->getType());
+        Tensor::SPtr m = constant(mMomentum, {}, w->getType());
+        Tensor::SPtr lr = constant(mLearningRate, {}, w->getType());
 
         Tensor::SPtr a = assign(s, m * s + lr * g);
         stepUpdates.push_back(a);
