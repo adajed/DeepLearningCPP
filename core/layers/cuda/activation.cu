@@ -56,7 +56,13 @@ __device__ float op<Activation::kRECIPROCAL>(float x)
 template <>
 __device__ float op<Activation::kLOG>(float x)
 {
-    return log(x);
+    return logf(x);
+}
+
+template <>
+__device__ float op<Activation::kSQRT>(float x)
+{
+    return sqrtf(x);
 }
 
 template <Activation act>
@@ -120,6 +126,12 @@ __device__ float opGrad<Activation::kLOG>(float x, float o)
     return 1. / x;
 }
 
+template <>
+__device__ float opGrad<Activation::kSQRT>(float x, float o)
+{
+    return 1. / (2. * o);
+}
+
 template <Activation act>
 __global__ void activationGradientKernel(std::size_t size, float* x, float* y,
                                          float* yGrad, float* xGrad)
@@ -142,35 +154,39 @@ extern "C" void runActivationDevice(std::size_t size, float* x, float* y,
     case Activation::kRELU:
         activationKernel<Activation::kRELU>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
     case Activation::kSIGMOID:
         activationKernel<Activation::kSIGMOID>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
     case Activation::kTANH:
         activationKernel<Activation::kTANH>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
     case Activation::kSQUARE:
         activationKernel<Activation::kSQUARE>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
     case Activation::kABS:
         activationKernel<Activation::kABS>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
     case Activation::kNEG:
         activationKernel<Activation::kNEG>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
     case Activation::kRECIPROCAL:
         activationKernel<Activation::kRECIPROCAL>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
     case Activation::kLOG:
         activationKernel<Activation::kLOG>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
-        return;
+        break;
+    case Activation::kSQRT:
+        activationKernel<Activation::kSQRT>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y);
+        break;
     }
     cudaDeviceSynchronize();
     return;
@@ -188,35 +204,39 @@ extern "C" void runActivationGradientDevice(std::size_t size, float* x,
     case Activation::kRELU:
         activationGradientKernel<Activation::kRELU>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
     case Activation::kSIGMOID:
         activationGradientKernel<Activation::kSIGMOID>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
     case Activation::kTANH:
         activationGradientKernel<Activation::kTANH>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
     case Activation::kSQUARE:
         activationGradientKernel<Activation::kSQUARE>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
     case Activation::kABS:
         activationGradientKernel<Activation::kABS>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
     case Activation::kNEG:
         activationGradientKernel<Activation::kNEG>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
     case Activation::kRECIPROCAL:
         activationGradientKernel<Activation::kRECIPROCAL>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
     case Activation::kLOG:
         activationGradientKernel<Activation::kLOG>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
-        return;
+        break;
+    case Activation::kSQRT:
+        activationGradientKernel<Activation::kSQRT>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(size, x, y, yGrad, xGrad);
+        break;
     }
     cudaDeviceSynchronize();
     return;

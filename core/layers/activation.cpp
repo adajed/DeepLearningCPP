@@ -58,6 +58,11 @@ float op<Activation::kLOG>(float x)
 {
     return std::log(x);
 }
+template <>
+float op<Activation::kSQRT>(float x)
+{
+    return std::sqrt(x);
+}
 
 template <Activation act>
 void activation(std::size_t size, float* x, float* y)
@@ -83,6 +88,7 @@ void runActivationHost(std::size_t size, float* x, float* y, Activation op)
         activation<Activation::kRECIPROCAL>(size, x, y);
         return;
     case Activation::kLOG: activation<Activation::kLOG>(size, x, y); return;
+    case Activation::kSQRT: activation<Activation::kSQRT>(size, x, y); return;
     }
 }
 
@@ -128,6 +134,11 @@ float opGrad<Activation::kLOG>(float x, float /* o */)
 {
     return 1. / x;
 }
+template <>
+float opGrad<Activation::kSQRT>(float /* x */, float o)
+{
+    return 1. / (2 * o);
+}
 
 template <Activation act>
 void activationGradient(std::size_t size, float* x, float* y, float* yGrad,
@@ -165,6 +176,9 @@ void runActivationGradientHost(std::size_t size, float* x, float* y,
         return;
     case Activation::kLOG:
         activationGradient<Activation::kLOG>(size, x, y, yGrad, xGrad);
+        return;
+    case Activation::kSQRT:
+        activationGradient<Activation::kSQRT>(size, x, y, yGrad, xGrad);
         return;
     }
 }
@@ -288,6 +302,10 @@ Tensor::SPtr log(Tensor::SPtr t)
 {
     return createActivation(std::move(t), layers::Activation::kLOG);
 }
+Tensor::SPtr sqrt(Tensor::SPtr t)
+{
+    return createActivation(std::move(t), layers::Activation::kSQRT);
+}
 
 }  // namespace core
 
@@ -337,6 +355,12 @@ ITensorPtr log(const ITensorPtr& t)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::log(tensor->get()));
+}
+
+ITensorPtr sqrt(const ITensorPtr& t)
+{
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::sqrt(tensor->get()));
 }
 
 }  // namespace graphdl
