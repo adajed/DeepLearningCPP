@@ -20,7 +20,8 @@ enum class Activation
     kABS = 4,
     kNEG = 5,
     kRECIPROCAL = 6,
-    kLOG = 7
+    kLOG = 7,
+    kSQRT = 8
 };
 
 class ActivationLayer : public DifferentiableLayer
@@ -73,6 +74,8 @@ Tensor::SPtr square(Tensor::SPtr);
 Tensor::SPtr abs(Tensor::SPtr);
 Tensor::SPtr neg(Tensor::SPtr);
 Tensor::SPtr reciprocal(Tensor::SPtr);
+Tensor::SPtr log(Tensor::SPtr);
+Tensor::SPtr sqrt(Tensor::SPtr);
 
 }  // namespace core
 }  // namespace graphdl
