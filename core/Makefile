@@ -13,6 +13,8 @@ CPP_HEADERS=$(wildcard *.h)
 OBJS_R=$(patsubst %.cpp,$(OUTDIR_R)/%.o,$(CPP_SOURCES))
 OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
+TIDY_TARGETS=$(patsubst %.cpp,.tidy_%,$(CPP_SOURCES))
+
 COMMON_CFLAGS += -Wunused-parameter -I$(ROOT_DIR)/core -I$(ROOT_DIR)/core/layers -fPIC
 CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
@@ -78,7 +80,11 @@ format:
 	@+make -C layers format
 
 #### clang-tidy
-tidy:
-	@$(foreach src,$(CPP_SOURCES),\
-		$(CLANG_TIDY_EXEC) --fix $(src) -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS);)
-	@+make -C layers tidy
+tidy: $(TIDY_TARGETS) tidy_layers
+
+tidy_layers:
+	@make -C layers tidy
+
+.tidy_%: %.cpp $(CPP_HEADERS)
+	$(CLANG_TIDY_EXEC) --fix $< -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS)
+	@touch $@
