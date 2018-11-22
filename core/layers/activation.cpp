@@ -137,7 +137,7 @@ float opGrad<Activation::kLOG>(float x, float /* o */)
 template <>
 float opGrad<Activation::kSQRT>(float /* x */, float o)
 {
-    return -1. / (2 * o);
+    return 1. / (2 * o);
 }
 
 template <Activation act>
