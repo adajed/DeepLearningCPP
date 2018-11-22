@@ -82,21 +82,24 @@ Network buildNetwork()
     ITensorPtr W2 = createWeights("W2", {512, 128}, loc);
     ITensorPtr W3 = createWeights("W3", {128, 10}, loc);
 
-    ITensorPtr a1 = sigmoid(matmul(X, W1));
-    ITensorPtr a2 = sigmoid(matmul(a1, W2));
-    ITensorPtr a3 = sigmoid(matmul(a2, W3));
+    ITensorPtr b1 = createWeights("b1", {512}, loc);
+    ITensorPtr b2 = createWeights("b2", {128}, loc);
+    ITensorPtr b3 = createWeights("b3", {10}, loc);
 
-    ITensorPtr ones = constant(1., Y->getShape(), loc);
+    ITensorPtr a1 = sigmoid(matmul(X, W1) + b1);
+    ITensorPtr a2 = sigmoid(matmul(a1, W2) + b2);
+    ITensorPtr a3 = sigmoid(matmul(a2, W3) + b3);
+
+    ITensorPtr ones = scalar(1., loc);
     ITensorPtr loss = neg(reduceSum(Y * log(a3) + (ones - Y) * log(ones - a3)));
-    loss = loss / constant(BATCH_SIZE, {}, loc);
+    loss = loss / scalar(BATCH_SIZE, loc);
 
     std::map<ITensorPtr, ITensorPtr> grads = gradients(loss);
     std::vector<ITensorPtr> modifiers;
+    ITensorPtr s = scalar(0.1, loc);
+    modifiers.reserve(grads.size());
     for (auto pair : grads)
-    {
-        ITensorPtr s = constant(0.1, pair.first->getShape(), loc);
         modifiers.push_back(assign(pair.first, pair.first - s * pair.second));
-    }
 
     Network net;
     net.inputs = {{"X", X}, {"Y", Y}};
@@ -116,6 +119,10 @@ int main()
     Network net = buildNetwork();
     initializeGraph();
 
+    std::vector<ITensorPtr> ops = net.modifiers;
+    ops.push_back(net.loss);
+    ops.push_back(net.output);
+
     std::vector<float> losses;
     std::vector<int> accs;
     for (int e = 0; e < NUM_EPOCHS; ++e)
@@ -128,11 +135,9 @@ int main()
         for (int i = 0; i < train_mnist.getNumBatches(); ++i)
         {
             auto batch = train_mnist.getNextBatch();
-            auto outputs = eval({net.loss, net.output},
-                                {{"X", batch[0]}, {"Y", batch[1]}});
-            (void)eval(net.modifiers, {{"X", batch[0]}, {"Y", batch[1]}});
-            losses.push_back(outputs[0][0]);
-            accs.push_back(numCorrect(batch[1], outputs[1]));
+            auto outputs = eval(ops, {{"X", batch[0]}, {"Y", batch[1]}});
+            losses.push_back(outputs[outputs.size() - 2][0]);
+            accs.push_back(numCorrect(batch[1], outputs[outputs.size() - 1]));
             if (i % PRINT_EVERY == PRINT_EVERY - 1)
             {
                 std::cout << "Step " << i << ": "

@@ -50,4 +50,9 @@ ITensorPtr constant(float value, const Shape& shape, MemoryLocation location)
     return makeAbstractTensor(core::constant(value, shape, type));
 }
 
+ITensorPtr scalar(float value, MemoryLocation location)
+{
+    return constant(value, {}, location);
+}
+
 }  // namespace graphdl

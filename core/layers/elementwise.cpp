@@ -177,11 +177,17 @@ void runElementwiseGradientHost(const float* x1, size_t size1, const float* x2,
     }
 }
 
+TensorShape getBigger(const TensorShape& s1, const TensorShape& s2)
+{
+    return s1.size() > s2.size() ? s1 : s2;
+}
+
 std::vector<Tensor::SPtr> createOutputs(const Tensor::SPtr& t1,
                                         const Tensor::SPtr& t2)
 {
     assert(t1->getType() == t2->getType());
-    return {createTensor("", t1->getShape(), t1->getType())};
+    TensorShape shape = getBigger(t1->getShape(), t2->getShape());
+    return {createTensor("", shape, t1->getType())};
 }
 
 std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& t1,
