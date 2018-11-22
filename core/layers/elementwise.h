@@ -55,12 +55,12 @@ class ElementwiseGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-void runElementwiseDevice(std::size_t size, float* x1, float* x2, float* y,
-                          Elementwise op);
+void runElementwiseDevice(float* x1, size_t size1, float* x2, size_t size2,
+                          float* y, Elementwise op);
 
-void runElementwiseGradientDevice(std::size_t size, float* x1, float* x2,
-                                  float* yG, float* x1G, float* x2G,
-                                  Elementwise op);
+void runElementwiseGradientDevice(float* x1, size_t size1, float* x2,
+                                  size_t size2, float* yG, float* x1G,
+                                  float* x2G, Elementwise op);
 
 }  // namespace cuda
 #endif

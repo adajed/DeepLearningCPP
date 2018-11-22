@@ -48,7 +48,7 @@ void ReduceSumLayer::execute(const InputDict& inputs)
         runReduceSumHost(size, input, output);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runReduceSumDevice(size, input, output);
+        cuda::runReduceSumDevice(input, size, output);
 #endif
 }
 
@@ -83,7 +83,7 @@ void ReduceSumGradientLayer::execute(const InputDict& inputs)
         runReduceSumGradientHost(size, outGrad, inGrad);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runReduceSumGradientDevice(size, outGrad, inGrad);
+        cuda::runReduceSumGradientDevice(outGrad, size, inGrad);
 #endif
 }
 

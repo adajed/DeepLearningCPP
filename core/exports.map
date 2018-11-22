@@ -10,6 +10,7 @@ global:
         graphdl::eval*;
         graphdl::gradients*;
         graphdl::constant*;
+        graphdl::scalar*;
         graphdl::add*;
         graphdl::operator*;
         graphdl::sub*;
