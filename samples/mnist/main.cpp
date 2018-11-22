@@ -83,13 +83,17 @@ Network buildNetwork()
     ITensorPtr W2 = createWeights("W2", {512, 128}, loc);
     ITensorPtr W3 = createWeights("W3", {128, 10}, loc);
 
-    ITensorPtr a1 = sigmoid(matmul(X, W1));
-    ITensorPtr a2 = sigmoid(matmul(a1, W2));
-    ITensorPtr a3 = sigmoid(matmul(a2, W3));
+    ITensorPtr b1 = createWeights("b1", {512}, loc);
+    ITensorPtr b2 = createWeights("b2", {128}, loc);
+    ITensorPtr b3 = createWeights("b3", {10}, loc);
 
-    ITensorPtr ones = constant(1., Y->getShape(), loc);
+    ITensorPtr a1 = sigmoid(matmul(X, W1) + b1);
+    ITensorPtr a2 = sigmoid(matmul(a1, W2) + b2);
+    ITensorPtr a3 = sigmoid(matmul(a2, W3) + b3);
+
+    ITensorPtr ones = scalar(1., loc);
     ITensorPtr loss = neg(reduceSum(Y * log(a3) + (ones - Y) * log(ones - a3)));
-    loss = loss / constant(BATCH_SIZE, {}, loc);
+    loss = loss / scalar(BATCH_SIZE, loc);
 
     ITensorPtr opt = train::momentum(LEARNING_RATE, 0.9)->optimize(loss);
 

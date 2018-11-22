@@ -18,6 +18,7 @@ ITensorPtr div(const ITensorPtr& t1, const ITensorPtr& t2);
 ITensorPtr operator/(const ITensorPtr& t1, const ITensorPtr& t2);
 
 ITensorPtr constant(float value, const Shape& shape, MemoryLocation location);
+ITensorPtr scalar(float value, MemoryLocation location);
 
 ITensorPtr matmul(const ITensorPtr& m1, const ITensorPtr& m2);
 

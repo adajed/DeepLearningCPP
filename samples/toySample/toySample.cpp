@@ -6,8 +6,8 @@
 int main()
 {
     graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
-    graphdl::ITensorPtr step = graphdl::constant(0.2, {}, loc);
-    graphdl::ITensorPtr c = graphdl::constant(5., {}, loc);
+    graphdl::ITensorPtr step = graphdl::scalar(0.2, loc);
+    graphdl::ITensorPtr c = graphdl::scalar(5., loc);
     graphdl::ITensorPtr w = graphdl::createWeights("w", {}, loc);
     graphdl::ITensorPtr loss = graphdl::square(c - w);
     graphdl::ITensorPtr grad = graphdl::gradients(loss)[w];

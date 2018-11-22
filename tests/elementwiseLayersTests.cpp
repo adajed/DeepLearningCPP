@@ -7,43 +7,78 @@ namespace
 {
 using namespace graphdl::core::layers;
 
-using TestCase = std::tuple<Vec, Elementwise, MemoryLocation>;
+using TestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise, MemoryLocation>;
 using ErrorTestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise>;
 
-Shape shape(const TestCase& testCase)
+//!
+//! n == 0 means to return first shape
+//! n == 1 means to return second shape
+//! n > 1  means to return the bigger shape
+//!     (which is equal to the output shape)
+//!
+Shape shape(const TestCase& testCase, int n)
 {
-    return std::get<0>(testCase);
+    if (n == 0)
+        return std::get<0>(std::get<0>(testCase));
+    else if (n == 1)
+        return std::get<1>(std::get<0>(testCase));
+    else
+    {
+        Vec v1 = shape(testCase, 0);
+        Vec v2 = shape(testCase, 1);
+        return v1.size() > v2.size() ? v1 : v2;
+    }
 }
 Elementwise op(const TestCase& testCase)
 {
     return std::get<1>(testCase);
 }
 
-std::vector<Vec> SHAPES = {
+std::vector<std::tuple<Vec, Vec>> SHAPES = {
     // clang-format off
-    {},
-    {1},
-    {1, 1},
-    {2},
-    {2, 2},
-    {2, 2, 2},
-    {2, 2, 2, 2},
-    {2, 2, 2, 2, 2},
-    {2, 2, 2, 2, 2, 2},
-    {20, 20}
+    {{}, {}},
+    {{1}, {1}},
+    {{1, 1}, {1, 1}},
+    {{2}, {}},
+    {{}, {2}},
+    {{2}, {2}},
+    {{2, 2}, {}},
+    {{}, {2, 2}},
+    {{2, 2}, {2}},
+    {{2}, {2, 2}},
+    {{2, 2}, {2, 2}},
+    {{2, 2, 2}, {}},
+    {{}, {2, 2, 2}},
+    {{2, 2, 2}, {2}},
+    {{2}, {2, 2, 2}},
+    {{2, 2, 2}, {2, 2}},
+    {{2, 2}, {2, 2, 2}},
+    {{2, 2, 2}, {2, 2, 2}},
+    {{2, 2, 2, 2}, {}},
+    {{}, {2, 2, 2, 2}},
+    {{2, 2, 2, 2}, {2, 2, 2, 2}},
+    {{2, 2, 2, 2, 2}, {}},
+    {{}, {2, 2, 2, 2, 2}},
+    {{2, 2, 2, 2, 2}, {2, 2, 2, 2, 2}},
+    {{2, 2, 2, 2, 2, 2}, {}},
+    {{}, {2, 2, 2, 2, 2, 2}},
+    {{2, 2, 2, 2, 2, 2}, {2, 2, 2, 2, 2, 2}},
+    {{20, 20}, {}},
+    {{}, {20, 20}},
+    {{20, 20}, {20}},
+    {{20}, {20, 20}},
+    {{20, 20}, {20, 20}},
+    {{100, 100}, {}},
+    {{}, {100, 100}},
+    {{100, 100}, {100, 100}},
     // clang-format on
 };
 
 std::vector<std::tuple<Vec, Vec>> ERROR_SHAPES = {
     // clang-format off
-    {{}, {2}},
     {{2}, {5}},
     {{2, 3}, {2, 5}},
     {{3, 4}, {4, 3}},
-    {{2, 2}, {2}},
-    {{2}, {2, 2}},
-    {{2, 2}, {2, 2, 2}},
-    {{2, 2, 2}, {2, 2, 2, 2}}
     // clang-format on
 };
 
@@ -75,7 +110,7 @@ class ElementwiseTest : public LayerTest,
         setupGradient(testCase);
         LayerBuilder builder = getGradientBuilder(testCase);
         bool correct = runTest({mInput1, mInput2, mOutputGrad},
-                               {mGradient1, mGradient2}, builder);
+                               {mGradient1, mGradient2}, builder, 10e-4);
 
         EXPECT_TRUE(correct);
     }
@@ -89,9 +124,9 @@ class ElementwiseTest : public LayerTest,
         UniformGen gen(0);
 
         // allocate memory
-        mInput1 = RefTensor(shape(testCase));
-        mInput2 = RefTensor(shape(testCase));
-        mOutput = RefTensor(shape(testCase));
+        mInput1 = RefTensor(shape(testCase, 0));
+        mInput2 = RefTensor(shape(testCase, 1));
+        mOutput = RefTensor(shape(testCase, 2));
 
         // fill inputs with random data
         mInput1.fillRandomly(gen);
@@ -113,20 +148,23 @@ class ElementwiseTest : public LayerTest,
             f = [](float f1, float f2) { return f1 / f2; };
             break;
         }
+
         // calculate reference output
-        for (std::size_t i = 0; i < mInput1.getCount(); ++i)
-            mOutput.at(i) = f(mInput1.at(i), mInput2.at(i));
+        size_t s1 = mInput1.getCount();
+        size_t s2 = mInput2.getCount();
+        for (std::size_t i = 0; i < (s1 > s2 ? s1 : s2); ++i)
+            mOutput.at(i) = f(mInput1.at(i % s1), mInput2.at(i % s2));
     }
 
     void setupGradient(const TestCase& testCase)
     {
         UniformGen gen(0);
 
-        mInput1 = RefTensor(shape(testCase));
-        mInput2 = RefTensor(shape(testCase));
-        mOutputGrad = RefTensor(shape(testCase));
-        mGradient1 = RefTensor(shape(testCase));
-        mGradient2 = RefTensor(shape(testCase));
+        mInput1 = RefTensor(shape(testCase, 0));
+        mInput2 = RefTensor(shape(testCase, 1));
+        mOutputGrad = RefTensor(shape(testCase, 2));
+        mGradient1 = RefTensor(shape(testCase, 0));
+        mGradient2 = RefTensor(shape(testCase, 1));
 
         mInput1.fillRandomly(gen);
         mInput2.fillRandomly(gen);
@@ -154,22 +192,29 @@ class ElementwiseTest : public LayerTest,
             break;
         }
 
-        for (std::size_t i = 0; i < mInput1.getCount(); ++i)
+        size_t s1 = mInput1.getCount();
+        size_t s2 = mInput2.getCount();
+        for (size_t i = 0; i < s1; ++i) mGradient1.at(i) = 0;
+        for (size_t i = 0; i < s2; ++i) mGradient2.at(i) = 0;
+
+        for (std::size_t i = 0; i < (s1 > s2 ? s1 : s2); ++i)
         {
-            mGradient1.at(i) =
-                mOutputGrad.at(i) * fun1(mInput1.at(i), mInput2.at(i));
-            mGradient2.at(i) =
-                mOutputGrad.at(i) * fun2(mInput1.at(i), mInput2.at(i));
+            mGradient1.at(i % s1) +=
+                mOutputGrad.at(i) *
+                fun1(mInput1.at(i % s1), mInput2.at(i % s2));
+            mGradient2.at(i % s2) +=
+                mOutputGrad.at(i) *
+                fun2(mInput1.at(i % s1), mInput2.at(i % s2));
         }
     }
 
     LayerBuilder getBuilder(const TestCase& testCase)
     {
         return [&testCase](const HostVec& ins) {
-            ITensorPtr input1 =
-                createInput("input1", shape(testCase), std::get<2>(testCase));
-            ITensorPtr input2 =
-                createInput("input2", shape(testCase), std::get<2>(testCase));
+            ITensorPtr input1 = createInput("input1", shape(testCase, 0),
+                                            std::get<2>(testCase));
+            ITensorPtr input2 = createInput("input2", shape(testCase, 1),
+                                            std::get<2>(testCase));
             ITensorPtr output;
             switch (op(testCase))
             {
@@ -189,11 +234,14 @@ class ElementwiseTest : public LayerTest,
         return [&testCase](const HostVec& ins) {
             MemoryType type = memoryLocationToType(std::get<2>(testCase));
             Tensor::SPtr in1 = core::getDefaultGraph()->addInput(
-                "in1", createLayer<InputLayer>("in1", shape(testCase), type));
+                "in1",
+                createLayer<InputLayer>("in1", shape(testCase, 0), type));
             Tensor::SPtr in2 = core::getDefaultGraph()->addInput(
-                "in2", createLayer<InputLayer>("in2", shape(testCase), type));
+                "in2",
+                createLayer<InputLayer>("in2", shape(testCase, 1), type));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", shape(testCase), type));
+                "outG",
+                createLayer<InputLayer>("outG", shape(testCase, 2), type));
             Tensor::SPtr output = createElementwise(in1, in2, op(testCase));
             Layer::SPtr layer = createLayer<ElementwiseGradientLayer>(
                 in1, in2, output, outG, op(testCase));
