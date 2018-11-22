@@ -7,10 +7,14 @@
 #include <numeric>
 #include <random>
 
+#ifdef CUDA_AVAILABLE
 const int BATCH_SIZE = 64;
+#else
+const int BATCH_SIZE = 16;
+#endif
 const int NUM_EPOCHS = 1;
 const int PRINT_EVERY = 100;
-const float LEARNING_RATE = 0.1;
+const float LEARNING_RATE = 0.001;
 
 const std::string TRAIN_IMAGES_PATH =
     "/home/adam/Projects/DLL/samples/mnist/train-images-idx3-ubyte";
@@ -95,7 +99,8 @@ Network buildNetwork()
     ITensorPtr loss = neg(reduceSum(Y * log(a3) + (ones - Y) * log(ones - a3)));
     loss = loss / scalar(BATCH_SIZE, loc);
 
-    ITensorPtr opt = train::momentum(LEARNING_RATE, 0.9)->optimize(loss);
+    ITensorPtr opt =
+        train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
 
     Network net;
     net.inputs = {{"X", X}, {"Y", Y}};
