@@ -39,8 +39,8 @@ Tensor::SPtr AdagradTrainer::parseGradients(
     return queue({group(gradUpdates), group(weightsUpdates)});
 }
 
-}
-}
+}  // namespace trainers
+}  // namespace core
 
 namespace train
 {
@@ -50,5 +50,5 @@ ITrainerPtr adagrad(float lr, float eps)
         std::make_unique<core::trainers::AdagradTrainer>(lr, eps);
     return core::makeAbstractTrainer(std::move(t));
 }
-}
-}
+}  // namespace train
+}  // namespace graphdl

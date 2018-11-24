@@ -22,8 +22,8 @@ class AdagradTrainer : public Trainer
     float mEpsilon;
 };
 
-}
-}
-}
+}  // namespace trainers
+}  // namespace core
+}  // namespace graphdl
 
 #endif  // GRAPHDL_CORE_TRAINERS_ADAGRAD_H_
