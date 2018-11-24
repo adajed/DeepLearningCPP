@@ -32,7 +32,8 @@ global:
         graphdl::group*;
         graphdl::train::gradientDescent*;
         graphdl::train::momentum*;
-        graphdl::train::adam*
+        graphdl::train::adam*;
+        graphdl::train::adagrad*;
     };
 local: *;
 };

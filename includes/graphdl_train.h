@@ -23,6 +23,8 @@ ITrainerPtr momentum(float lr, float m);
 
 ITrainerPtr adam(float lr, float beta1, float beta2, float eps);
 
+ITrainerPtr adagrad(float lr, float eps);
+
 }  // namespace train
 }  // namespace graphdl
 
