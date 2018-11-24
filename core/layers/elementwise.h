@@ -70,16 +70,32 @@ Tensor::SPtr createElementwise(const Tensor::SPtr&, const Tensor::SPtr&,
                                layers::Elementwise);
 
 Tensor::SPtr add(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr add(float, const Tensor::SPtr&);
+Tensor::SPtr add(const Tensor::SPtr&, float);
 Tensor::SPtr operator+(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator+(float, const Tensor::SPtr&);
+Tensor::SPtr operator+(const Tensor::SPtr&, float);
 
 Tensor::SPtr sub(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr sub(float, const Tensor::SPtr&);
+Tensor::SPtr sub(const Tensor::SPtr&, float);
 Tensor::SPtr operator-(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator-(float, const Tensor::SPtr&);
+Tensor::SPtr operator-(const Tensor::SPtr&, float);
 
 Tensor::SPtr mul(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr mul(float, const Tensor::SPtr&);
+Tensor::SPtr mul(const Tensor::SPtr&, float);
 Tensor::SPtr operator*(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator*(float, const Tensor::SPtr&);
+Tensor::SPtr operator*(const Tensor::SPtr&, float);
 
 Tensor::SPtr div(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr div(float, const Tensor::SPtr&);
+Tensor::SPtr div(const Tensor::SPtr&, float);
 Tensor::SPtr operator/(const Tensor::SPtr&, const Tensor::SPtr&);
+Tensor::SPtr operator/(float, const Tensor::SPtr&);
+Tensor::SPtr operator/(const Tensor::SPtr&, float);
 
 }  // namespace core
 }  // namespace graphdl

@@ -42,23 +42,18 @@ Tensor::SPtr AdamTrainer::parseGradients(
         wM.insert({w, m});
         wV.insert({w, v});
 
-        Tensor::SPtr one = constant(1., {}, w->getType());
-        Tensor::SPtr b1 = constant(mBeta1, {}, w->getType());
-        Tensor::SPtr b2 = constant(mBeta2, {}, w->getType());
-        Tensor::SPtr lr = constant(mLearningRate, {}, w->getType());
-        Tensor::SPtr eps = constant(mEpsilon, {}, w->getType());
-
-        updatesM.push_back(assign(m, b1 * m + (one - b1) * g));
-        updatesV.push_back(assign(v, b2 * v + (one - b2) * square(g)));
+        updatesM.push_back(assign(m, mBeta1 * m + (1. - mBeta1) * g));
+        updatesV.push_back(assign(v, mBeta1 * v + (1. - mBeta2) * square(g)));
 
         Tensor::SPtr b1_step = constant(1., {}, w->getType());
         Tensor::SPtr b2_step = constant(1., {}, w->getType());
-        correct.push_back(assign(b1_step, b1_step * b1));
-        correct.push_back(assign(b2_step, b2_step * b2));
+        correct.push_back(assign(b1_step, b1_step * mBeta1));
+        correct.push_back(assign(b2_step, b2_step * mBeta2));
 
-        Tensor::SPtr m_dash = m / (one - b1_step);
-        Tensor::SPtr v_dash = v / (one - b2_step);
-        Tensor::SPtr a = assign(w, w - lr / (sqrt(v_dash) + eps) * m_dash);
+        Tensor::SPtr m_dash = m / (1. - b1_step);
+        Tensor::SPtr v_dash = v / (1. - b2_step);
+        Tensor::SPtr delta = mLearningRate / (sqrt(v_dash) + mEpsilon) * m_dash;
+        Tensor::SPtr a = assign(w, w - delta);
         updates.push_back(a);
     }
 

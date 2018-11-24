@@ -315,45 +315,38 @@ Tensor::SPtr createElementwise(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
     return layer->getOutputs()[0];
 }
 
-Tensor::SPtr add(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return createElementwise(t1, t2, layers::Elementwise::kADD);
-}
+#define ELEMENTWISE_CORE(opName, op, elem)                              \
+    Tensor::SPtr opName(const Tensor::SPtr& t1, const Tensor::SPtr& t2) \
+    {                                                                   \
+        return createElementwise(t1, t2, layers::Elementwise::elem);    \
+    }                                                                   \
+    Tensor::SPtr opName(float val, const Tensor::SPtr& t2)              \
+    {                                                                   \
+        Tensor::SPtr t1 = constant(val, {}, t2->getType());             \
+        return createElementwise(t1, t2, layers::Elementwise::elem);    \
+    }                                                                   \
+    Tensor::SPtr opName(const Tensor::SPtr& t1, float val)              \
+    {                                                                   \
+        Tensor::SPtr t2 = constant(val, {}, t1->getType());             \
+        return createElementwise(t1, t2, layers::Elementwise::elem);    \
+    }                                                                   \
+    Tensor::SPtr op(const Tensor::SPtr& t1, const Tensor::SPtr& t2)     \
+    {                                                                   \
+        return opName(t1, t2);                                          \
+    }                                                                   \
+    Tensor::SPtr op(float val, const Tensor::SPtr& t2)                  \
+    {                                                                   \
+        return opName(val, t2);                                         \
+    }                                                                   \
+    Tensor::SPtr op(const Tensor::SPtr& t1, float val)                  \
+    {                                                                   \
+        return opName(t1, val);                                         \
+    }
 
-Tensor::SPtr sub(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return createElementwise(t1, t2, layers::Elementwise::kSUB);
-}
-
-Tensor::SPtr mul(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return createElementwise(t1, t2, layers::Elementwise::kMUL);
-}
-
-Tensor::SPtr div(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return createElementwise(t1, t2, layers::Elementwise::kDIV);
-}
-
-Tensor::SPtr operator+(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return add(t1, t2);
-}
-
-Tensor::SPtr operator-(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return sub(t1, t2);
-}
-
-Tensor::SPtr operator*(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return mul(t1, t2);
-}
-
-Tensor::SPtr operator/(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
-{
-    return div(t1, t2);
-}
+ELEMENTWISE_CORE(add, operator+, kADD)
+ELEMENTWISE_CORE(sub, operator-, kSUB)
+ELEMENTWISE_CORE(mul, operator*, kMUL)
+ELEMENTWISE_CORE(div, operator/, kDIV)
 
 }  // namespace core
 
@@ -368,16 +361,12 @@ Tensor::SPtr operator/(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
     ITensorPtr opName(float val, const ITensorPtr& t2)                         \
     {                                                                          \
         core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);          \
-        core::Tensor::SPtr t1 =                                                \
-            core::constant(val, {}, tensor2->get()->getType());                \
-        return makeAbstractTensor(core::opName(t1, tensor2->get()));           \
+        return makeAbstractTensor(core::opName(val, tensor2->get()));          \
     }                                                                          \
     ITensorPtr opName(const ITensorPtr& t1, float val)                         \
     {                                                                          \
         core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);          \
-        core::Tensor::SPtr t2 =                                                \
-            core::constant(val, {}, tensor1->get()->getType());                \
-        return makeAbstractTensor(core::opName(tensor1->get(), t2));           \
+        return makeAbstractTensor(core::opName(tensor1->get(), val));          \
     }                                                                          \
                                                                                \
     ITensorPtr op(const ITensorPtr& t1, const ITensorPtr& t2)                  \
@@ -388,11 +377,8 @@ Tensor::SPtr operator/(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
     ITensorPtr op(const ITensorPtr& t1, float val) { return opName(t1, val); }
 
 ELEMENTWISE(add, operator+)
-
 ELEMENTWISE(sub, operator-)
-
 ELEMENTWISE(mul, operator*)
-
 ELEMENTWISE(div, operator/)
 
 }  // namespace graphdl
