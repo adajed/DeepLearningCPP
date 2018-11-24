@@ -6,16 +6,32 @@
 namespace graphdl
 {
 ITensorPtr add(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr add(float val, const ITensorPtr& t2);
+ITensorPtr add(const ITensorPtr& t1, float val);
 ITensorPtr operator+(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr operator+(float val, const ITensorPtr& t2);
+ITensorPtr operator+(const ITensorPtr& t1, float val);
 
 ITensorPtr sub(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr sub(float val, const ITensorPtr& t2);
+ITensorPtr sub(const ITensorPtr& t1, float val);
 ITensorPtr operator-(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr operator-(float val, const ITensorPtr& t2);
+ITensorPtr operator-(const ITensorPtr& t1, float val);
 
 ITensorPtr mul(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr mul(float val, const ITensorPtr& t2);
+ITensorPtr mul(const ITensorPtr& t1, float val);
 ITensorPtr operator*(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr operator*(float val, const ITensorPtr& t2);
+ITensorPtr operator*(const ITensorPtr& t1, float val);
 
 ITensorPtr div(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr div(float val, const ITensorPtr& t2);
+ITensorPtr div(const ITensorPtr& t1, float val);
 ITensorPtr operator/(const ITensorPtr& t1, const ITensorPtr& t2);
+ITensorPtr operator/(float val, const ITensorPtr& t2);
+ITensorPtr operator/(const ITensorPtr& t1, float val);
 
 ITensorPtr constant(float value, const Shape& shape, MemoryLocation location);
 ITensorPtr scalar(float value, MemoryLocation location);

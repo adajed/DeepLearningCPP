@@ -1,6 +1,7 @@
 #include "elementwise.h"
 
 #include "abstractTensor.h"
+#include "constant.h"
 #include "graph.h"
 #include "graphdl_ops.h"
 
@@ -356,52 +357,42 @@ Tensor::SPtr operator/(const Tensor::SPtr& t1, const Tensor::SPtr& t2)
 
 }  // namespace core
 
-ITensorPtr add(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
-    core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
-    return makeAbstractTensor(core::add(tensor1->get(), tensor2->get()));
-}
+#define ELEMENTWISE(opName, op)                                                \
+    ITensorPtr opName(const ITensorPtr& t1, const ITensorPtr& t2)              \
+    {                                                                          \
+        core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);          \
+        core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);          \
+        return makeAbstractTensor(                                             \
+            core::opName(tensor1->get(), tensor2->get()));                     \
+    }                                                                          \
+    ITensorPtr opName(float val, const ITensorPtr& t2)                         \
+    {                                                                          \
+        core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);          \
+        core::Tensor::SPtr t1 =                                                \
+            core::constant(val, {}, tensor2->get()->getType());                \
+        return makeAbstractTensor(core::opName(t1, tensor2->get()));           \
+    }                                                                          \
+    ITensorPtr opName(const ITensorPtr& t1, float val)                         \
+    {                                                                          \
+        core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);          \
+        core::Tensor::SPtr t2 =                                                \
+            core::constant(val, {}, tensor1->get()->getType());                \
+        return makeAbstractTensor(core::opName(tensor1->get(), t2));           \
+    }                                                                          \
+                                                                               \
+    ITensorPtr op(const ITensorPtr& t1, const ITensorPtr& t2)                  \
+    {                                                                          \
+        return opName(t1, t2);                                                 \
+    }                                                                          \
+    ITensorPtr op(float val, const ITensorPtr& t2) { return opName(val, t2); } \
+    ITensorPtr op(const ITensorPtr& t1, float val) { return opName(t1, val); }
 
-ITensorPtr sub(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
-    core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
-    return makeAbstractTensor(core::sub(tensor1->get(), tensor2->get()));
-}
+ELEMENTWISE(add, operator+)
 
-ITensorPtr mul(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
-    core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
-    return makeAbstractTensor(core::mul(tensor1->get(), tensor2->get()));
-}
+ELEMENTWISE(sub, operator-)
 
-ITensorPtr div(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    core::AbstractTensor::Ptr tensor1 = core::castITensorPtr(t1);
-    core::AbstractTensor::Ptr tensor2 = core::castITensorPtr(t2);
-    return makeAbstractTensor(core::div(tensor1->get(), tensor2->get()));
-}
+ELEMENTWISE(mul, operator*)
 
-ITensorPtr operator+(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    return add(t1, t2);
-}
-
-ITensorPtr operator-(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    return sub(t1, t2);
-}
-
-ITensorPtr operator*(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    return mul(t1, t2);
-}
-
-ITensorPtr operator/(const ITensorPtr& t1, const ITensorPtr& t2)
-{
-    return div(t1, t2);
-}
+ELEMENTWISE(div, operator/)
 
 }  // namespace graphdl
