@@ -95,9 +95,8 @@ Network buildNetwork()
     ITensorPtr a2 = sigmoid(matmul(a1, W2) + b2);
     ITensorPtr a3 = sigmoid(matmul(a2, W3) + b3);
 
-    ITensorPtr ones = scalar(1., loc);
-    ITensorPtr loss = neg(reduceSum(Y * log(a3) + (ones - Y) * log(ones - a3)));
-    loss = loss / scalar(BATCH_SIZE, loc);
+    ITensorPtr loss = neg(reduceSum(Y * log(a3) + (1. - Y) * log(1. - a3)));
+    loss = loss / float(BATCH_SIZE);
 
     ITensorPtr opt =
         train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
