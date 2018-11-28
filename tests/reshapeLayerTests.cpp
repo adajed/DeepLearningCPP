@@ -1,6 +1,6 @@
-#include "reshape.h"
 #include "graphdl_ops.h"
 #include "layerTests.h"
+#include "reshape.h"
 
 namespace
 {
@@ -57,8 +57,7 @@ class ReshapeTest : public LayerTest,
         for (size_t pos = 0; pos < input.getCount(); ++pos)
             output.at(pos) = input.at(pos);
 
-        LayerBuilder builder = [&testCase](const HostVec& ins)
-        {
+        LayerBuilder builder = [&testCase](const HostVec& ins) {
             ITensorPtr in = createInput("in", shape0(testCase), loc(testCase));
             ITensorPtr out = reshape(in, shape1(testCase));
             initializeGraph();
@@ -77,4 +76,4 @@ TEST_P(ReshapeTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, ReshapeTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
-}
+}  // namespace
