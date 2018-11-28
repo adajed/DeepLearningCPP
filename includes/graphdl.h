@@ -148,7 +148,7 @@ ITensorPtr createInput(const std::string& name, const Shape& shape,
 //! \param location Location of the weights.
 //!
 ITensorPtr createWeights(const std::string& name, const Shape& shape,
-                         SharedPtr<IInitializer> initializer,
+                         const SharedPtr<IInitializer>& initializer,
                          MemoryLocation location);
 
 //! \fn

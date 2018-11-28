@@ -108,7 +108,7 @@ ITensorPtr createInput(const std::string& name, const Shape& shape,
 }
 
 ITensorPtr createWeights(const std::string& name, const Shape& shape,
-                         SharedPtr<IInitializer> initializer,
+                         const SharedPtr<IInitializer>& initializer,
                          MemoryLocation location)
 {
 #ifndef CUDA_AVAILABLE

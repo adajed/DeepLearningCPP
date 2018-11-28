@@ -42,8 +42,8 @@ void uniformRandom(float* memory, size_t size, float min, float max,
     cudaDeviceSynchronize();
 }
 
-void normalRandomKernel(float* memory, size_t size, float mean, float stddev,
-                        size_t seed)
+void normalRandom(float* memory, size_t size, float mean, float stddev,
+                  size_t seed)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
