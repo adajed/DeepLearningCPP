@@ -119,6 +119,16 @@ void reduce(const float* vals, size_t size, float* out)
         reduceKernel<op, BLOCK_SIZE><<<1, BLOCK_SIZE>>>(size, vals, out);
 }
 
+namespace utils
+{
+template <typename T>
+void copy(T* out, T* in, size_t size)
+{
+    cudaMemcpy((void*)out, (void*)in, size * sizeof(T), cudaMemcpyDeviceToDevice);
+}
+
+}
+
 }  // namespace cuda
 }  // namespace layers
 }  // namespace core
