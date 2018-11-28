@@ -6,7 +6,6 @@ namespace
 {
 using Shapes = std::tuple<Vec, Vec>;
 using TestCase = std::tuple<Shapes, MemoryLocation>;
-using ErrorTestCase = std::tuple<Shapes, MemoryLocation>;
 
 std::vector<Shapes> SHAPES = {
     // clang-format off
@@ -69,11 +68,30 @@ class ReshapeTest : public LayerTest,
     }
 };
 
+class ReshapeErrorTest : public LayerTest,
+                         public testing::WithParamInterface<TestCase>
+{
+  public:
+    void test(const TestCase& testCase)
+    {
+        ITensorPtr in = createInput("in", shape0(testCase), loc(testCase));
+        EXPECT_THROW({ ITensorPtr t = reshape(in, shape1(testCase)); },
+                     std::runtime_error);
+    }
+};
+
 TEST_P(ReshapeTest, testAPI)
 {
     test(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, ReshapeTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+
+TEST_P(ReshapeErrorTest, test)
+{
+    test(GetParam());
+}
+INSTANTIATE_TEST_CASE_P(LayerErrorTest, ReshapeErrorTest,
+                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(LOCATIONS)));
 
 }  // namespace
