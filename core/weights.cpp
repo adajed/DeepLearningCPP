@@ -11,8 +11,8 @@ namespace core
 {
 WeightsLayer::WeightsLayer(ID id, const std::string& name, const Shape& shape,
                            Initializer::SPtr initializer, MemoryType type)
-    : Layer(id, {}, {createTensor(name, shape, type)})
-    , mInitializer(std::move(std::move(initializer)))
+    : Layer(id, {}, {createTensor(name, shape, type)}),
+      mInitializer(std::move(std::move(initializer)))
 {
 }
 

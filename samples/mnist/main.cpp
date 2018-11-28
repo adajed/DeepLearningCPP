@@ -80,19 +80,18 @@ Network buildNetwork()
 #else
     MemoryLocation loc = MemoryLocation::kHOST;
 #endif
+
+    SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);
     ITensorPtr X = createInput("X", {BATCH_SIZE, 28 * 28}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 
-    ITensorPtr W1 =
-        createWeights("W1", {28 * 28, 512}, constantInitializer(0.), loc);
-    ITensorPtr W2 =
-        createWeights("W2", {512, 128}, constantInitializer(0.), loc);
-    ITensorPtr W3 =
-        createWeights("W3", {128, 10}, constantInitializer(0.), loc);
+    ITensorPtr W1 = createWeights("W1", {28 * 28, 512}, init, loc);
+    ITensorPtr W2 = createWeights("W2", {512, 128}, init, loc);
+    ITensorPtr W3 = createWeights("W3", {128, 10}, init, loc);
 
-    ITensorPtr b1 = createWeights("b1", {512}, constantInitializer(0.), loc);
-    ITensorPtr b2 = createWeights("b2", {128}, constantInitializer(0.), loc);
-    ITensorPtr b3 = createWeights("b3", {10}, constantInitializer(0.), loc);
+    ITensorPtr b1 = createWeights("b1", {512}, init, loc);
+    ITensorPtr b2 = createWeights("b2", {128}, init, loc);
+    ITensorPtr b3 = createWeights("b3", {10}, init, loc);
 
     ITensorPtr a1 = sigmoid(matmul(X, W1) + b1);
     ITensorPtr a2 = sigmoid(matmul(a1, W2) + b2);

@@ -121,7 +121,7 @@ ITensorPtr createWeights(const std::string& name, const Shape& shape,
             throw std::runtime_error("Weights \"" + name + "\" already exists");
 
     SharedPtr<core::AbstractInitializer> init =
-        core::castIInitializer(std::move(initializer));
+        core::castIInitializer(initializer);
     core::MemoryType type = core::memoryLocationToType(location);
     core::Layer::SPtr weights =
         core::createLayer<core::WeightsLayer>(name, shape, init->get(), type);
