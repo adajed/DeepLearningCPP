@@ -29,8 +29,8 @@ class QueueTest : public LayerTest, public testing::WithParamInterface<TestCase>
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {
                 std::string wName = "weights" + std::to_string(i);
-                weights.push_back(
-                    createWeights(wName, {}, std::get<1>(testCase)));
+                weights.push_back(createWeights(
+                    wName, {}, constantInitializer(0.), std::get<1>(testCase)));
             }
             for (int i = 0; i < std::get<0>(testCase); ++i)
             {

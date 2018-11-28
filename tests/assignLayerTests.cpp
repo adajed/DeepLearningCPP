@@ -49,8 +49,9 @@ class AssignTest : public LayerTest,
         LayerBuilder builder = [&testCase](const HostVec& ins) {
             ITensorPtr in =
                 createInput("in", std::get<0>(testCase), std::get<1>(testCase));
-            ITensorPtr w = createWeights("w", std::get<0>(testCase),
-                                         std::get<1>(testCase));
+            ITensorPtr w =
+                createWeights("w", std::get<0>(testCase),
+                              constantInitializer(0.), std::get<1>(testCase));
             ITensorPtr a = assign(w, in);
             initializeGraph();
 
