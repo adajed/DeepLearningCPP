@@ -2,6 +2,9 @@
 
 #include "abstractInitializer.h"
 #include "graphdl.h"
+#ifdef CUDA_AVAILABLE
+#include "layers/cuda/utils.h"
+#endif
 
 #include <algorithm>
 
@@ -23,7 +26,7 @@ void ConstantInitializer::initDevice(float* memory,
                                      const TensorShape& shape) const
 {
 #ifdef CUDA_AVAILABLE
-    /* cuda::utils::fill(memory, mValue); */
+    cuda::utils::fill(memory, shape.getCount(), mValue);
 #else
     throw std::runtime_error("Cuda not available, please use CPU");
 #endif
