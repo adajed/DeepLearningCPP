@@ -15,9 +15,9 @@ class NormalInitializer : public Initializer
     NormalInitializer(float mean, float stddev, size_t seed);
 
   private:
-    void initHost(float* memory, const TensorShape& shape) const override;
+    void initHost(float* memory, const TensorShape& shape) override;
 
-    void initDevice(float* memory, const TensorShape& shape) const override;
+    void initDevice(float* memory, const TensorShape& shape) override;
 
     float mMean, mStddev;
     size_t mSeed;

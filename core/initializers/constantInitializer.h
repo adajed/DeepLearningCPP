@@ -15,9 +15,9 @@ class ConstantInitializer : public Initializer
     ConstantInitializer(float value);
 
   private:
-    void initHost(float* memory, const TensorShape& shape) const override;
+    void initHost(float* memory, const TensorShape& shape) override;
 
-    void initDevice(float* memory, const TensorShape& shape) const override;
+    void initDevice(float* memory, const TensorShape& shape) override;
 
     float mValue;
 };

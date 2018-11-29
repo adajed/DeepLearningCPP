@@ -15,9 +15,9 @@ class UniformInitializer : public Initializer
     UniformInitializer(float min, float max, size_t seed);
 
   private:
-    void initHost(float* memory, const TensorShape& shape) const override;
+    void initHost(float* memory, const TensorShape& shape) override;
 
-    void initDevice(float* memory, const TensorShape& shape) const override;
+    void initDevice(float* memory, const TensorShape& shape) override;
 
     float mMinValue, mMaxValue;
     size_t mSeed;

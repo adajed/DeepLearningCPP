@@ -14,16 +14,17 @@ namespace core
 {
 namespace initializers
 {
-ConstantInitializer::ConstantInitializer(float value) : mValue(value) {}
+ConstantInitializer::ConstantInitializer(float value)
+    : Initializer(0), mValue(value)
+{
+}
 
-void ConstantInitializer::initHost(float* memory,
-                                   const TensorShape& shape) const
+void ConstantInitializer::initHost(float* memory, const TensorShape& shape)
 {
     std::fill_n(memory, shape.getCount(), mValue);
 }
 
-void ConstantInitializer::initDevice(float* memory,
-                                     const TensorShape& shape) const
+void ConstantInitializer::initDevice(float* memory, const TensorShape& shape)
 {
 #ifdef CUDA_AVAILABLE
     cuda::utils::fill(memory, shape.getCount(), mValue);

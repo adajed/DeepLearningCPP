@@ -14,20 +14,19 @@ namespace core
 namespace initializers
 {
 NormalInitializer::NormalInitializer(float mean, float stddev, size_t seed)
-    : mMean(mean), mStddev(stddev), mSeed(seed)
+    : Initializer(seed), mMean(mean), mStddev(stddev)
 {
 }
 
-void NormalInitializer::initHost(float* memory, const TensorShape& shape) const
+void NormalInitializer::initHost(float* memory, const TensorShape& shape)
 {
     std::normal_distribution<> d(mMean, mStddev);
-    std::mt19937 e2(mSeed);
+    std::mt19937 gen(mSeed);
 
-    for (size_t pos = 0; pos < shape.getCount(); ++pos) memory[pos] = d(e2);
+    for (size_t pos = 0; pos < shape.getCount(); ++pos) memory[pos] = d(gen);
 }
 
-void NormalInitializer::initDevice(float* memory,
-                                   const TensorShape& shape) const
+void NormalInitializer::initDevice(float* memory, const TensorShape& shape)
 {
 #ifdef CUDA_AVAILABLE
     cuda::normalRandom(memory, shape.getCount(), mMean, mStddev, mSeed);

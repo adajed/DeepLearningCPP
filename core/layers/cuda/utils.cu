@@ -13,8 +13,7 @@ namespace
 __global__ void fillKernel(float* memory, size_t size, float value)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
-    if (id < size)
-        memory[id] = value;
+    if (id < size) memory[id] = value;
 }
 
 }  // namespace

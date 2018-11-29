@@ -14,20 +14,19 @@ namespace core
 namespace initializers
 {
 UniformInitializer::UniformInitializer(float min, float max, size_t seed)
-    : mMinValue(min), mMaxValue(max), mSeed(seed)
+    : Initializer(seed), mMinValue(min), mMaxValue(max)
 {
 }
 
-void UniformInitializer::initHost(float* memory, const TensorShape& shape) const
+void UniformInitializer::initHost(float* memory, const TensorShape& shape)
 {
     std::uniform_real_distribution<> d(mMinValue, mMaxValue);
-    std::mt19937 e2(mSeed);
+    std::mt19937 gen(mSeed);
 
-    for (size_t pos = 0; pos < shape.getCount(); ++pos) memory[pos] = d(e2);
+    for (size_t pos = 0; pos < shape.getCount(); ++pos) memory[pos] = d(gen);
 }
 
-void UniformInitializer::initDevice(float* memory,
-                                    const TensorShape& shape) const
+void UniformInitializer::initDevice(float* memory, const TensorShape& shape)
 {
 #ifdef CUDA_AVAILABLE
     cuda::uniformRandom(memory, shape.getCount(), mMinValue, mMaxValue, mSeed);
