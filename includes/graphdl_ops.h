@@ -58,6 +58,8 @@ ITensorPtr group(const std::vector<ITensorPtr>& tensors);
 
 ITensorPtr queue(const std::vector<ITensorPtr>& tensors);
 
+ITensorPtr reshape(const ITensorPtr& t, const Shape& shape);
+
 }  // namespace graphdl
 
 #endif  // GRAPHDL_OPS_H_

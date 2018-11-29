@@ -1,5 +1,5 @@
 #include "layers/reduceSum.h"
-#include "utils.h"
+#include "reduceUtils.h"
 
 namespace graphdl
 {
