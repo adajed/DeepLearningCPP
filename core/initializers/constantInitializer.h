@@ -23,6 +23,9 @@ class ConstantInitializer : public Initializer
 };
 
 }  // namespace initializers
+
+initializers::Initializer::SPtr constantInitializer(float value);
+
 }  // namespace core
 }  // namespace graphdl
 

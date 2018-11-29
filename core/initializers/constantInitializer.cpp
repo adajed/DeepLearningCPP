@@ -34,6 +34,12 @@ void ConstantInitializer::initDevice(float* memory, const TensorShape& shape)
 }
 
 }  // namespace initializers
+
+initializers::Initializer::SPtr constantInitializer(float value)
+{
+    return std::make_shared<initializers::ConstantInitializer>(value);
+}
+
 }  // namespace core
 
 SharedPtr<IInitializer> constantInitializer(float value)

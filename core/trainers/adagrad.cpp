@@ -2,12 +2,15 @@
 
 #include "abstractTrainer.h"
 #include "graphdl_train.h"
+#include "initializers/constantInitializer.h"
 #include "layers/activation.h"
 #include "layers/assign.h"
 #include "layers/constant.h"
 #include "layers/elementwise.h"
 #include "layers/group.h"
 #include "layers/queue.h"
+#include "weights.h"
+#include "weightsNamespaces.h"
 
 namespace graphdl
 {
@@ -29,7 +32,9 @@ Tensor::SPtr AdagradTrainer::parseGradients(
     {
         Tensor::SPtr w = grad.first;
         Tensor::SPtr g = grad.second;
-        Tensor::SPtr gSquared = constant(0., w->getShape(), w->getType());
+        Tensor::SPtr gSquared =
+            weights("", w->getShape(), constantInitializer(0.), w->getType(),
+                    core::TRAIN_WEIGHTS_NAMESPACE);
 
         gradUpdates.push_back(assign(gSquared, gSquared + square(g)));
         Tensor::SPtr delta = (mLearningRate / sqrt(gSquared + mEpsilon)) * g;

@@ -3,6 +3,7 @@
 #include "abstractTrainer.h"
 #include "gradientBuilder.h"
 #include "graphdl_train.h"
+#include "initializers/constantInitializer.h"
 #include "layers/assign.h"
 #include "layers/constant.h"
 #include "layers/elementwise.h"
@@ -29,9 +30,9 @@ Tensor::SPtr MomentumTrainer::parseGradients(
     for (const auto& grad : grads)
     {
         Tensor::SPtr w = grad.first;
-        /* Tensor::SPtr wStep = weights("", w->getShape(), w->getType(),
-         * core::TRAIN_WEIGHTS_NAMESPACE); */
-        Tensor::SPtr wStep = constant(0., w->getShape(), w->getType());
+        Tensor::SPtr wStep =
+            weights("", w->getShape(), constantInitializer(0.), w->getType(),
+                    core::TRAIN_WEIGHTS_NAMESPACE);
         steps.insert({w, wStep});
     }
 

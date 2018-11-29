@@ -3,6 +3,7 @@
 #include "abstractTrainer.h"
 #include "gradientBuilder.h"
 #include "graphdl_train.h"
+#include "initializers/constantInitializer.h"
 #include "layers/activation.h"
 #include "layers/assign.h"
 #include "layers/constant.h"
@@ -36,8 +37,10 @@ Tensor::SPtr AdamTrainer::parseGradients(
     {
         Tensor::SPtr w = grad.first;
         Tensor::SPtr g = grad.second;
-        Tensor::SPtr m = constant(0., w->getShape(), w->getType());
-        Tensor::SPtr v = constant(0., w->getShape(), w->getType());
+        Tensor::SPtr m = weights("", w->getShape(), constantInitializer(0.),
+                                 w->getType(), core::TRAIN_WEIGHTS_NAMESPACE);
+        Tensor::SPtr v = weights("", w->getShape(), constantInitializer(0.),
+                                 w->getType(), core::TRAIN_WEIGHTS_NAMESPACE);
 
         wM.insert({w, m});
         wV.insert({w, v});
@@ -45,8 +48,12 @@ Tensor::SPtr AdamTrainer::parseGradients(
         updatesM.push_back(assign(m, mBeta1 * m + (1. - mBeta1) * g));
         updatesV.push_back(assign(v, mBeta1 * v + (1. - mBeta2) * square(g)));
 
-        Tensor::SPtr b1_step = constant(1., {}, w->getType());
-        Tensor::SPtr b2_step = constant(1., {}, w->getType());
+        Tensor::SPtr b1_step =
+            weights("", {}, constantInitializer(1.), w->getType(),
+                    core::TRAIN_WEIGHTS_NAMESPACE);
+        Tensor::SPtr b2_step =
+            weights("", {}, constantInitializer(1.), w->getType(),
+                    core::TRAIN_WEIGHTS_NAMESPACE);
         correct.push_back(assign(b1_step, b1_step * mBeta1));
         correct.push_back(assign(b2_step, b2_step * mBeta2));
 
