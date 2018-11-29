@@ -39,7 +39,7 @@ void ReshapeLayer::execute(const InputDict& inputs)
     if (input->getType() == MemoryType::kHOST_MEMORY)
         std::memcpy(out, in, input->getShape().getCount() * sizeof(float));
 #ifdef CUDA_AVAILABLE
-    else  // input->getType() == MemoryType::kHOST_MEMORY
+    else  // input->getType() == MemoryType::kDEVICE_MEMORY
         cuda::utils::copy(out, in, input->getShape().getCount());
 #endif
 }
