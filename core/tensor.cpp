@@ -73,6 +73,11 @@ void Tensor::freeMemory()
     mMemory.free();
 }
 
+std::set<Tensor::SPtr> Tensor::getNecessaryInputs() const
+{
+    return mLayer.lock()->getNecessaryInputs();
+}
+
 void Tensor::eval(const InputDict& inputs)
 {
     if (!mIsEvaluated)

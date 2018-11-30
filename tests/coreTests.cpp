@@ -114,3 +114,39 @@ TEST_F(CoreTest, nonScalarGradientException)
     graphdl::ITensorPtr grad;
     EXPECT_THROW({ grad = graphdl::gradients(o)[w]; }, std::runtime_error);
 }
+
+TEST_F(CoreTest, checkLackingHostTensors)
+{
+    graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr i1 = graphdl::createInput("i1", {2, 2}, host);
+    graphdl::ITensorPtr i2 = graphdl::createInput("i2", {2, 2}, host);
+    graphdl::ITensorPtr out = i1 * i2;
+
+    graphdl::HostTensor h({1., 1., 1., 1.});
+
+    EXPECT_THROW({ auto t = out->eval({}); }, std::runtime_error);
+    EXPECT_THROW({ auto t = out->eval({{"i1", h}}); }, std::runtime_error);
+    EXPECT_THROW({ auto t = out->eval({{"i2", h}}); }, std::runtime_error);
+}
+
+TEST_F(CoreTest, checkWrongShapeOfHostTensor)
+{
+    graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr i1 = graphdl::createInput("i1", {2, 2}, host);
+    graphdl::ITensorPtr i2 = graphdl::createInput("i2", {2, 2}, host);
+    graphdl::ITensorPtr out = i1 * i2;
+
+    graphdl::HostTensor h1({1., 1., 1., 1.});
+    graphdl::HostTensor h2({1., 1., 1.});
+
+    EXPECT_THROW(
+        {
+            auto t = out->eval({{"i1", h1}, {"i2", h2}});
+        },
+        std::runtime_error);
+    EXPECT_THROW(
+        {
+            auto t = out->eval({{"i1", h2}, {"i2", h1}});
+        },
+        std::runtime_error);
+}

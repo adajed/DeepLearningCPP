@@ -12,6 +12,11 @@ InputLayer::InputLayer(ID id, const std::string& name, const Shape& shape,
 {
 }
 
+std::set<Tensor::SPtr> InputLayer::getNecessaryInputs() const
+{
+    return {mOutputs[0]};
+}
+
 void InputLayer::execute(const InputDict& inputs)
 {
     std::string name = mOutputs[0]->getName();

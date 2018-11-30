@@ -28,6 +28,17 @@ Shape AbstractTensor::getShape() const
 
 HostTensor AbstractTensor::eval(const InputDict& inputs)
 {
+    std::set<Tensor::SPtr> tensors = mTensor->getNecessaryInputs();
+    for (const auto& t : tensors)
+    {
+        if (inputs.count(t->getName()) == 0)
+            throw std::runtime_error("eval: input \"" + t->getName() +
+                                     "\" not provided");
+        if (inputs.at(t->getName()).size() != t->getShape().getCount())
+            throw std::runtime_error("eval: input \"" + t->getName() +
+                                     "\" has wrong shape");
+    }
+
     mTensor->eval(inputs);
 
     HostTensor output(mTensor->getShape().getCount());

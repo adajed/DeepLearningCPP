@@ -18,6 +18,9 @@ class InputLayer : public Layer
     InputLayer(ID id, const std::string& name, const Shape& shape,
                MemoryType type);
 
+    //! only InputLayer provides new necessary tensors
+    std::set<Tensor::SPtr> getNecessaryInputs() const override;
+
   private:
     void execute(const InputDict& inputs) override;
 };

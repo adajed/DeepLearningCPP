@@ -6,6 +6,7 @@
 #include "tensorShape.h"
 
 #include <exception>
+#include <set>
 
 namespace graphdl
 {
@@ -76,6 +77,12 @@ class Tensor
     //!
     void freeMemory();
 
+    //! \fn getNecessaryInputs
+    //! \brief Returns all necessary input tensors to
+    //!     evaulate this tensor.
+    //!
+    std::set<Tensor::SPtr> getNecessaryInputs() const;
+
     //! \fn eval
     //! \brief Evaluates tensor, recursive.
     //!
@@ -135,6 +142,12 @@ class Layer
     //! \fn getOutputs
     //!
     std::vector<Tensor::SPtr> getOutputs();
+
+    //! \fn getNecessaryInputs
+    //! \brief Returns all necessary input tensors to
+    //!     evaulate this layer.
+    //!
+    virtual std::set<Tensor::SPtr> getNecessaryInputs() const;
 
     //! \fn eval
     //! \brief Evaluates layer, recursive.
