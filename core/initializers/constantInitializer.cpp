@@ -24,6 +24,7 @@ void ConstantInitializer::initHost(float* memory, const TensorShape& shape)
     std::fill_n(memory, shape.getCount(), mValue);
 }
 
+// NOLINTNEXTLINE
 void ConstantInitializer::initDevice(float* memory, const TensorShape& shape)
 {
 #ifdef CUDA_AVAILABLE

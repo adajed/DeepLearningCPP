@@ -20,7 +20,7 @@ class UniformInitializer : public Initializer
     void initDevice(float* memory, const TensorShape& shape) override;
 
     float mMinValue, mMaxValue;
-    size_t mSeed;
+    size_t mSeed{};
 };
 
 }  // namespace initializers

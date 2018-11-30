@@ -84,6 +84,8 @@ class Graph
 
     Layer::ID nextLayerID();
 
+    const WeightsNamespaces& getWeightsNamespaces() const;
+
   private:
     std::string mName;  //!< Name of the graph.
     std::vector<Layer::SPtr> mInputLayers;

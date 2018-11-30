@@ -102,9 +102,9 @@ format:
 tidy: $(TIDY_TARGETS) tidy_layers
 
 tidy_layers:
-	@make -C layers tidy
-	@make -C trainers tidy
-	@+make -C initializers debug
+	@+make -C layers tidy
+	@+make -C trainers tidy
+	@+make -C initializers tidy
 
 .tidy_%: %.cpp $(CPP_HEADERS)
 	$(CLANG_TIDY_EXEC) --fix $< -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS)

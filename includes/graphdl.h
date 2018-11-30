@@ -105,7 +105,7 @@ class IInitializer
                       MemoryLocation location) const = 0;
 };
 
-SharedPtr<IInitializer> constantInitializer(float val);
+SharedPtr<IInitializer> constantInitializer(float value);
 
 SharedPtr<IInitializer> uniformInitializer(float min, float max, size_t seed);
 

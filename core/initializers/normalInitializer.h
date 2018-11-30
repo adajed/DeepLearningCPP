@@ -20,7 +20,7 @@ class NormalInitializer : public Initializer
     void initDevice(float* memory, const TensorShape& shape) override;
 
     float mMean, mStddev;
-    size_t mSeed;
+    size_t mSeed{};
 };
 
 }  // namespace initializers

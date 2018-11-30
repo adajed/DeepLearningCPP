@@ -26,6 +26,7 @@ void UniformInitializer::initHost(float* memory, const TensorShape& shape)
     for (size_t pos = 0; pos < shape.getCount(); ++pos) memory[pos] = d(gen);
 }
 
+// NOLINTNEXTLINE
 void UniformInitializer::initDevice(float* memory, const TensorShape& shape)
 {
 #ifdef CUDA_AVAILABLE

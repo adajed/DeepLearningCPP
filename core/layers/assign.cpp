@@ -44,6 +44,12 @@ void AssignLayer::execute(const InputDict& inputs)
 
 Tensor::SPtr assign(const Tensor::SPtr& dest, const Tensor::SPtr& src)
 {
+    // check is dest is weights tensor
+    const WeightsNamespaces& namespaces =
+        getDefaultGraph()->getWeightsNamespaces();
+    if (!namespaces.contains(dest->getLayer()))
+        throw std::runtime_error("assign: destination must be weights");
+
     if (dest->getShape() != src->getShape())
         throw std::runtime_error("Shapes don\'t match");
     if (dest->getType() != src->getType())

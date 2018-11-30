@@ -121,3 +121,11 @@ TEST_F(CoreTest, nonScalarGradientException)
     graphdl::ITensorPtr grad;
     EXPECT_THROW({ grad = graphdl::gradients(o)[w]; }, std::runtime_error);
 }
+
+TEST_F(CoreTest, assignToNonWeights)
+{
+    graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr i1 = graphdl::createInput("i1", {2}, host);
+    graphdl::ITensorPtr i2 = graphdl::createInput("i2", {2}, host);
+    EXPECT_THROW({ assign(i1, i2); }, std::runtime_error);
+}

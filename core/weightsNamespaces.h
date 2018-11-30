@@ -23,6 +23,8 @@ class WeightsNamespaces : public std::map<std::string, std::vector<Layer::SPtr>>
               {{GRAPH_WEIGHTS_NAMESPACE, {}}, {TRAIN_WEIGHTS_NAMESPACE, {}}})
     {
     }
+
+    bool contains(const Layer::SPtr& layer) const;
 };
 
 }  // namespace core
