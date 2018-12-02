@@ -5,10 +5,47 @@
 #include "randGen.h"
 #include "tensorShape.h"
 
+#include <initializer_list>
 #include <ostream>
+#include <vector>
 
 using namespace graphdl;
 using namespace graphdl::core;
+
+class Coord
+{
+  public:
+    Coord(const std::vector<unsigned>& values);
+    Coord(std::initializer_list<unsigned> list);
+
+    unsigned size() const;
+
+    unsigned& operator[](size_t pos);
+    const unsigned& operator[](size_t pos) const;
+
+  private:
+    std::vector<unsigned> mValues;
+};
+
+class Coord_iterator
+{
+  public:
+    Coord_iterator(Coord c, Coord shape);
+    Coord_iterator(const Coord_iterator& it) = default;
+    Coord_iterator&  operator=(const Coord_iterator& it) = default;
+
+    Coord_iterator operator++();
+    Coord_iterator operator++(int junk);
+
+    bool operator==(const Coord_iterator& it) const;
+    bool operator!=(const Coord_iterator& it) const;
+
+    Coord& operator()();
+
+  private:
+    Coord mCoord;
+    Coord mShape;
+};
 
 class RefTensor
 {
@@ -25,8 +62,11 @@ class RefTensor
     //! \fn operator []
     //! \brief Return value given its multidimensional coordinate.
     //!
-    float& operator[](const std::vector<unsigned int>& point);
-    const float& operator[](const std::vector<unsigned int>& point) const;
+    float& operator[](const Coord& c);
+    const float& operator[](const Coord& c) const;
+
+    Coord_iterator begin();
+    Coord_iterator end();
 
     //! \fn getCount
     std::size_t getCount() const;

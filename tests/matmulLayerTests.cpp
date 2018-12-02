@@ -110,14 +110,12 @@ class MatmulTest : public LayerTest,
         mInput2.fillRandomly(gen);
 
         // calculate reference output
-        for (unsigned x = 0; x < n; ++x)
+        for (auto it = mOutput.begin(); it != mOutput.end(); ++it)
         {
-            for (unsigned y = 0; y < k; ++y)
-            {
-                mOutput[{x, y}] = 0.;
-                for (unsigned i = 0; i < m; ++i)
-                    mOutput[{x, y}] += mInput1[{x, i}] * mInput2[{i, y}];
-            }
+            unsigned x = it()[0], y = it()[1];
+            mOutput[{x, y}] = 0.;
+            for (unsigned i = 0; i < m; ++i)
+                mOutput[{x, y}] += mInput1[{x, i}] * mInput2[{i, y}];
         }
     }
 
@@ -140,25 +138,21 @@ class MatmulTest : public LayerTest,
         mOutputGrad.fillRandomly(gen);
 
         // calculate reference gradient 1
-        for (unsigned x = 0; x < n; ++x)
+        for (auto it = mInput1.begin(); it != mInput1.end(); ++it)
         {
-            for (unsigned y = 0; y < m; ++y)
-            {
-                mGradient1[{x, y}] = 0.;
-                for (unsigned i = 0; i < k; ++i)
-                    mGradient1[{x, y}] += mInput2[{y, i}] * mOutputGrad[{x, i}];
-            }
+            unsigned x = it()[0], y = it()[1];
+            mGradient1[{x, y}] = 0.;
+            for (unsigned i = 0; i < k; ++i)
+                mGradient1[{x, y}] += mInput2[{y, i}] * mOutputGrad[{x, i}];
         }
 
         // calculate reference gradient 2
-        for (unsigned x = 0; x < m; ++x)
+        for (auto it = mInput2.begin(); it != mInput2.end(); ++it)
         {
-            for (unsigned y = 0; y < k; ++y)
-            {
-                mGradient2[{x, y}] = 0.;
-                for (unsigned i = 0; i < n; ++i)
-                    mGradient2[{x, y}] += mInput1[{i, x}] * mOutputGrad[{i, y}];
-            }
+            unsigned x = it()[0], y = it()[1];
+            mGradient2[{x, y}] = 0.;
+            for (unsigned i = 0; i < n; ++i)
+                mGradient2[{x, y}] += mInput1[{i, x}] * mOutputGrad[{i, y}];
         }
     }
 };
