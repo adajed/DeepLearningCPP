@@ -5,12 +5,23 @@
 Coord::Coord(const std::vector<unsigned>& values) : mValues(values) {}
 Coord::Coord(std::initializer_list<unsigned> list) : mValues(list) {}
 
-unsigned Coord::size() const { return mValues.size(); }
+unsigned Coord::size() const
+{
+    return mValues.size();
+}
 
-unsigned& Coord::operator[](size_t pos) { return mValues[pos]; }
-const unsigned& Coord::operator[](size_t pos) const { return mValues[pos]; }
+unsigned& Coord::operator[](size_t pos)
+{
+    return mValues[pos];
+}
+const unsigned& Coord::operator[](size_t pos) const
+{
+    return mValues[pos];
+}
 
-Coord_iterator::Coord_iterator(Coord c, Coord shape) : mCoord(c), mShape(shape) {}
+Coord_iterator::Coord_iterator(Coord c, Coord shape) : mCoord(c), mShape(shape)
+{
+}
 
 Coord_iterator Coord_iterator::operator++()
 {
@@ -55,8 +66,7 @@ bool Coord_iterator::operator==(const Coord_iterator& it) const
     if (mCoord.size() != it.mCoord.size()) return false;
 
     for (unsigned i = 0; i < mCoord.size(); ++i)
-        if (mCoord[i] != it.mCoord[i])
-            return false;
+        if (mCoord[i] != it.mCoord[i]) return false;
 
     return true;
 }
@@ -66,9 +76,10 @@ bool Coord_iterator::operator!=(const Coord_iterator& it) const
     return !operator==(it);
 }
 
-Coord& Coord_iterator::operator()() { return mCoord; }
-
-
+Coord& Coord_iterator::operator()()
+{
+    return mCoord;
+}
 
 RefTensor::RefTensor() : mValues(0), mCount(0), mShape({}) {}
 

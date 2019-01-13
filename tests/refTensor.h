@@ -32,7 +32,7 @@ class Coord_iterator
   public:
     Coord_iterator(Coord c, Coord shape);
     Coord_iterator(const Coord_iterator& it) = default;
-    Coord_iterator&  operator=(const Coord_iterator& it) = default;
+    Coord_iterator& operator=(const Coord_iterator& it) = default;
 
     Coord_iterator operator++();
     Coord_iterator operator++(int junk);
