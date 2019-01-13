@@ -129,8 +129,8 @@ void Pooling2DLayer::execute(const InputDict& inputs)
         runPooling2DHost(in, out, shape, mKernelWindow, mStrides, mPooling,
                          mPadding);
     else  // inTensor->getType() == MemoryType::kDEVICE_MEMORY
-    {
-    }
+        cuda::runPool2DDevice(in, out, shape.data(), mKernelWindow.data(),
+                              mStrides.data(), mPooling, mPadding);
 }
 
 Pooling2DGradientLayer::Pooling2DGradientLayer(
@@ -167,8 +167,9 @@ void Pooling2DGradientLayer::execute(const InputDict& inputs)
         runPooling2DGradientHost(in, out, outG, inG, shape, mKernelWindow,
                                  mStrides, mPooling, mPadding);
     else  // outGradTensor->getType() == MemoryType::kDEVICE_MEMORY
-    {
-    }
+        cuda::runPool2DGradientDevice(in, out, outG, inG, shape.data(),
+                                      mKernelWindow.data(), mStrides.data(),
+                                      mPooling, mPadding);
 }
 
 }  // namespace layers

@@ -15,6 +15,9 @@ enum class ReduceOpCuda
     kSUM = 0,
 };
 
+namespace
+{
+
 template <ReduceOpCuda op>
 __device__ float reduceOp(float f1, float f2);
 
@@ -99,6 +102,8 @@ __global__ void reduceKernel(size_t size, const float* x, float* y)
 
     if (tid == 0) y[blockIdx.x] = sData[0];
 }
+
+}  // namespace
 
 template <ReduceOpCuda op>
 void reduce(const float* vals, size_t size, float* out)

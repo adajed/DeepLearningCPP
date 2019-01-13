@@ -56,6 +56,22 @@ class Pooling2DGradientLayer : public Layer
     PaddingType mPadding;
 };
 
+#ifdef CUDA_AVAILABLE
+namespace cuda
+{
+extern "C" void runPool2DDevice(const float* x, float* y, int* shape,
+                                int* kernel, int* strides, PoolingType pooling,
+                                PaddingType padding);
+
+extern "C" void runPool2DGradientDevice(const float* x, const float* y,
+                                        const float* yG, float* xG, int* shape,
+                                        int* kernel, int* strides,
+                                        PoolingType pooling,
+                                        PaddingType padding);
+
+}  // namespace cuda
+#endif
+
 }  // namespace layers
 
 Tensor::SPtr pooling2D(const Tensor::SPtr& t, layers::PoolingType pooling,
