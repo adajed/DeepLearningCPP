@@ -43,6 +43,18 @@ std::vector<Tensor::SPtr> Layer::getOutputs()
     return mOutputs;
 }
 
+std::set<Tensor::SPtr> Layer::getNecessaryInputs() const
+{
+    std::set<Tensor::SPtr> inputs;
+    for (const Tensor::WeakPtr& tensor : mInputs)
+    {
+        auto tensorInputs = tensor.lock()->getNecessaryInputs();
+        inputs.insert(tensorInputs.begin(), tensorInputs.end());
+    }
+
+    return inputs;
+}
+
 void Layer::eval(const InputDict& inputs)
 {
     if (!mIsEvaluated)
