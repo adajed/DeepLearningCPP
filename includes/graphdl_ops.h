@@ -60,6 +60,14 @@ ITensorPtr queue(const std::vector<ITensorPtr>& tensors);
 
 ITensorPtr reshape(const ITensorPtr& t, const Shape& shape);
 
+ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
+                     const std::vector<int>& strides,
+                     const std::string& padding);
+
+ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
+                     const std::vector<int>& strides,
+                     const std::string& padding);
+
 }  // namespace graphdl
 
 #endif  // GRAPHDL_OPS_H_
