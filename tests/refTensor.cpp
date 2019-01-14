@@ -5,6 +5,16 @@
 Coord::Coord(const std::vector<unsigned>& values) : mValues(values) {}
 Coord::Coord(std::initializer_list<unsigned> list) : mValues(list) {}
 
+Coord Coord::operator+(const Coord& c) const
+{
+    assert(mValues.size() == c.mValues.size());
+
+    std::vector<unsigned> v = mValues;
+    for (unsigned i = 0; i < mValues.size(); ++i) v[i] += c.mValues[i];
+
+    return Coord(v);
+}
+
 unsigned Coord::size() const
 {
     return mValues.size();
@@ -79,6 +89,15 @@ bool Coord_iterator::operator!=(const Coord_iterator& it) const
 Coord& Coord_iterator::operator()()
 {
     return mCoord;
+}
+
+bool isInside(const Coord& c, const TensorShape& shape)
+{
+    assert(c.size() == shape.size());
+
+    for (unsigned i = 0; i < c.size(); ++i)
+        if (c[i] >= shape[i]) return false;
+    return true;
 }
 
 RefTensor::RefTensor() : mValues(0), mCount(0), mShape({}) {}
@@ -177,6 +196,21 @@ HostTensor RefTensor::toHostTensor()
 
     for (std::size_t i = 0; i < mCount; ++i) t[i] = mValues[i];
     return t;
+}
+
+RefTensor RefTensor::slice(Coord start, const TensorShape& shape) const
+{
+    RefTensor tensor(shape);
+
+    for (Coord_iterator it = tensor.begin(); it != tensor.end(); ++it)
+    {
+        if (isInside(start + it(), mShape))
+            tensor[it()] = this->operator[](start + it());
+        else
+            tensor[it()] = 0.;
+    }
+
+    return tensor;
 }
 
 std::ostream& operator<<(std::ostream& stream, const RefTensor& tensor)

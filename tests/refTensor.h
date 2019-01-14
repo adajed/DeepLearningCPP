@@ -18,6 +18,8 @@ class Coord
     Coord(const std::vector<unsigned>& values);
     Coord(std::initializer_list<unsigned> list);
 
+    Coord operator+(const Coord& c) const;
+
     unsigned size() const;
 
     unsigned& operator[](size_t pos);
@@ -47,6 +49,9 @@ class Coord_iterator
     Coord mShape;
 };
 
+//! \brief Tests whether coordinate is inside shape
+bool isInside(const Coord& c, const TensorShape& shape);
+
 class RefTensor
 {
   public:
@@ -67,6 +72,8 @@ class RefTensor
 
     Coord_iterator begin();
     Coord_iterator end();
+
+    RefTensor slice(Coord start, const TensorShape& shape) const;
 
     //! \fn getCount
     std::size_t getCount() const;

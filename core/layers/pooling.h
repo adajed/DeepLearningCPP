@@ -25,8 +25,8 @@ class Pooling2DLayer : public DifferentiableLayer
 {
   public:
     Pooling2DLayer(ID id, const Tensor::SPtr& t, PoolingType pooling,
-                   std::vector<int> kernel, const std::vector<int>& strides,
-                   PaddingType padding);
+                   const std::vector<int>& kernel,
+                   const std::vector<int>& strides, PaddingType padding);
 
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 

@@ -58,13 +58,11 @@ ITensorPtr group(const std::vector<ITensorPtr>& tensors);
 
 ITensorPtr queue(const std::vector<ITensorPtr>& tensors);
 
-ITensorPtr maxPool2D(const ITensorPtr& tensor,
-                     const std::vector<int>& kernelSize,
+ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
                      const std::vector<int>& strides,
                      const std::string& padding);
 
-ITensorPtr avgPool2D(const ITensorPtr& tensor,
-                     const std::vector<int>& kernelSize,
+ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
                      const std::vector<int>& strides,
                      const std::string& padding);
 

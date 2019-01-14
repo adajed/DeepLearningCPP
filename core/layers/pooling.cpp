@@ -18,6 +18,7 @@ namespace layers
 namespace
 {
 Tensor::SPtr createPoolingOutput(const Tensor::SPtr& t,
+                                 const std::vector<int>& kernel,
                                  const std::vector<int>& strides,
                                  PaddingType padding)
 {
@@ -25,8 +26,8 @@ Tensor::SPtr createPoolingOutput(const Tensor::SPtr& t,
 
     if (padding == PaddingType::kVALID)
     {
-        shape[2] /= strides[0];
-        shape[3] /= strides[1];
+        shape[2] = ceil(shape[2] - kernel[0] + 1, strides[0]);
+        shape[3] = ceil(shape[3] - kernel[1] + 1, strides[1]);
     }
     else  // padding == PaddingType::kSAME
     {
@@ -92,12 +93,14 @@ void runPooling2DGradientHost(const float* in, const float* out,
 }  // namespace
 
 Pooling2DLayer::Pooling2DLayer(ID id, const Tensor::SPtr& t,
-                               PoolingType pooling, std::vector<int> kernel,
+                               PoolingType pooling,
+                               const std::vector<int>& kernel,
                                const std::vector<int>& strides,
                                PaddingType padding)
-    : DifferentiableLayer(id, {t}, {createPoolingOutput(t, strides, padding)}),
+    : DifferentiableLayer(id, {t},
+                          {createPoolingOutput(t, kernel, strides, padding)}),
       mPooling(pooling),
-      mKernelWindow(std::move(kernel)),
+      mKernelWindow(kernel),
       mStrides(strides),
       mPadding(padding)
 {
@@ -198,8 +201,7 @@ Tensor::SPtr pooling2D(const Tensor::SPtr& t, layers::PoolingType pooling,
 
 }  // namespace core
 
-ITensorPtr maxPool2D(const ITensorPtr& tensor,
-                     const std::vector<int>& kernelSize,
+ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
                      const std::vector<int>& strides,
                      const std::string& padding)
 {
@@ -214,11 +216,10 @@ ITensorPtr maxPool2D(const ITensorPtr& tensor,
 
     core::Tensor::SPtr t = core::castITensorPtr(tensor)->get();
     return core::makeAbstractTensor(core::pooling2D(
-        t, core::layers::PoolingType::kMAX, kernelSize, strides, p));
+        t, core::layers::PoolingType::kMAX, kernel, strides, p));
 }
 
-ITensorPtr avgPool2D(const ITensorPtr& tensor,
-                     const std::vector<int>& kernelSize,
+ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
                      const std::vector<int>& strides,
                      const std::string& padding)
 {
@@ -233,7 +234,7 @@ ITensorPtr avgPool2D(const ITensorPtr& tensor,
 
     core::Tensor::SPtr t = core::castITensorPtr(tensor)->get();
     return core::makeAbstractTensor(core::pooling2D(
-        t, core::layers::PoolingType::kAVERAGE, kernelSize, strides, p));
+        t, core::layers::PoolingType::kAVERAGE, kernel, strides, p));
 }
 
 }  // namespace graphdl

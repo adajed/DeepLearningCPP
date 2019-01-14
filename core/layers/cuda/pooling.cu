@@ -16,24 +16,29 @@ int ceil(int x, int y)
 }
 
 template <PoolingType pooling>
-__device__ float pool2DReduceKernel(const float* in, int* inShape, int* kernel,
-                                    int x, int y);
+__device__ float pool2DReduceKernel(const float* in, int* info, int x, int y);
 
 template <>
 __device__ float pool2DReduceKernel<PoolingType::kMAX>(const float* in,
-                                                       int* inShape,
-                                                       int* kernel, int x,
-                                                       int y)
+                                                       int* info, int x, int y)
 {
     float ret = in[0];
 
-    for (int iX = 0; iX < kernel[0]; ++iX)
+    for (int iX = 0; iX < info[8]; ++iX)
     {
-        if (x + iX >= inShape[2]) break;
-        for (int iY = 0; iY < kernel[1]; ++iY)
+        if (x + iX >= info[2])
         {
-            if (y + iY >= inShape[3]) break;
-            float val = in[iX * inShape[3] + iY];
+            ret = ret > 0. ? ret : 0.;
+            break;
+        }
+        for (int iY = 0; iY < info[9]; ++iY)
+        {
+            if (y + iY >= info[3])
+            {
+                ret = ret > 0. ? ret : 0.;
+                break;
+            }
+            float val = in[iX * info[3] + iY];
             ret = ret > val ? ret : val;
         }
     }
@@ -43,47 +48,42 @@ __device__ float pool2DReduceKernel<PoolingType::kMAX>(const float* in,
 
 template <>
 __device__ float pool2DReduceKernel<PoolingType::kAVERAGE>(const float* in,
-                                                           int* inShape,
-                                                           int* kernel, int x,
+                                                           int* info, int x,
                                                            int y)
 {
     float ret = 0.;
 
-    for (int iX = 0; iX < kernel[0]; ++iX)
+    for (int iX = 0; iX < info[8] && x + iX < info[2]; ++iX)
     {
-        if (x + iX >= inShape[2]) break;
-        for (int iY = 0; iY < kernel[1]; ++iY)
+        for (int iY = 0; iY < info[9] && y + iY < info[3]; ++iY)
         {
-            if (y + iY >= inShape[3]) break;
-            ret += in[iX * inShape[3] + iY];
+            ret += in[iX * info[3] + iY];
         }
     }
 
-    return ret / (kernel[0] * kernel[1]);
+    return ret / (info[8] * info[9]);
 }
 
 template <PoolingType pooling>
-__global__ void poolKernel(const float* in, float* out, int* inShape,
-                           int* outShape, int* kernel, int* s)
+__global__ void poolKernel(const float* in, float* out, int* info)
 {
-    size_t id = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t outPos = id;
+    size_t n = blockIdx.x * blockDim.x + threadIdx.x;
+    size_t outPos = n;
 
-    int y = id % outShape[3];
-    id /= outShape[3];
-    int x = id % outShape[2];
-    id /= outShape[2];
-    int c = outShape[1];
-    id /= outShape[1];
-    int n = id;
+    int y = n % info[7];
+    n /= info[7];
+    int x = n % info[6];
+    n /= info[6];
+    int c = n % info[5];
+    n /= info[5];
 
-    if (n < outShape[0])
+    if (n < info[4])
     {
-        size_t inPos =
-            ((n * inShape[1] + c) * inShape[2] + x * s[0]) * inShape[3] +
-            y * s[1];
-        out[outPos] = pool2DReduceKernel<pooling>(in + inPos, inShape, kernel,
-                                                  x * s[0], y * s[1]);
+        size_t inPos = n * info[1] + c;
+        inPos = inPos * info[2] + x * info[10];
+        inPos = inPos * info[3] + y * info[11];
+        out[outPos] = pool2DReduceKernel<pooling>(in + inPos, info,
+                                                  x * info[10], y * info[11]);
     }
 }
 
@@ -174,7 +174,6 @@ __global__ void poolGradientKernel<PoolingType::kAVERAGE>(
                 inG[inPos] += outG[outPos];
 
                 yOut++;
-                ;
             }
             xOut++;
         }
@@ -190,8 +189,8 @@ extern "C" void runPool2DDevice(const float* x, float* y, int* shape,
     int outShape[] = {shape[0], shape[1], 0, 0};
     if (padding == PaddingType::kVALID)
     {
-        outShape[2] = shape[2] / strides[0];
-        outShape[3] = shape[3] / strides[1];
+        outShape[2] = ceil(shape[2] - kernel[0] + 1, strides[0]);
+        outShape[3] = ceil(shape[3] - kernel[1] + 1, strides[1]);
     }
     else  // padding == PaddingType::kSAME
     {
@@ -203,12 +202,21 @@ extern "C" void runPool2DDevice(const float* x, float* y, int* shape,
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
+    int* info;
+    cudaMalloc((void**)&info, 12 * sizeof(int));
+    cudaMemcpy(info, shape, 4 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(info + 4, outShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(info + 8, kernel, 2 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(info + 10, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
+
     if (pooling == PoolingType::kMAX)
-        poolKernel<PoolingType::kMAX><<<NUM_BLOCKS, BLOCK_SIZE>>>(
-            x, y, shape, outShape, kernel, strides);
+        poolKernel<PoolingType::kMAX><<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
     else  // pooling == PoolingType::kAVERAGE
-        poolKernel<PoolingType::kAVERAGE><<<NUM_BLOCKS, BLOCK_SIZE>>>(
-            x, y, shape, outShape, kernel, strides);
+        poolKernel<PoolingType::kAVERAGE>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+
+    cudaDeviceSynchronize();
+    cudaFree(info);
 }
 
 extern "C" void runPool2DGradientDevice(const float* x, const float* y,
@@ -220,8 +228,8 @@ extern "C" void runPool2DGradientDevice(const float* x, const float* y,
     int outShape[] = {shape[0], shape[1], 0, 0};
     if (padding == PaddingType::kVALID)
     {
-        outShape[2] = shape[2] / strides[0];
-        outShape[3] = shape[3] / strides[1];
+        outShape[2] = ceil(shape[2] - kernel[0] + 1, strides[0]);
+        outShape[3] = ceil(shape[3] - kernel[1] + 1, strides[1]);
     }
     else  // padding == PaddingType::kSAME
     {

@@ -25,10 +25,18 @@ float pool_reduce<PoolingType::kMAX>(const float* in,
     float val = in[0];
     for (int iX = 0; iX < kernel[0]; ++iX)
     {
-        if (x + iX >= shape[2]) break;
+        if (x + iX >= shape[2])
+        {
+            val = val > 0. ? val : 0.;
+            break;
+        }
         for (int iY = 0; iY < kernel[1]; ++iY)
         {
-            if (y + iY >= shape[3]) break;
+            if (y + iY >= shape[3])
+            {
+                val = val > 0. ? val : 0.;
+                break;
+            }
             float f = in[iX * shape[3] + iY];
             val = val > f ? val : f;
         }
@@ -65,8 +73,8 @@ void pool(const float* in, float* out, const std::vector<int>& shape,
     int outShape[] = {shape[0], shape[1], 0, 0};
     if (padding == PaddingType::kVALID)
     {
-        outShape[2] = shape[2] / s[0];
-        outShape[3] = shape[3] / s[1];
+        outShape[2] = ceil(shape[2] - k[0] + 1, s[0]);
+        outShape[3] = ceil(shape[3] - k[1] + 1, s[1]);
     }
     else  // padding == PaddingType::kSAME
     {
@@ -139,8 +147,8 @@ void poolGradient(const float* in, const float* out, const float* outG,
     int outShape[] = {shape[0], shape[1], 0, 0};
     if (padding == PaddingType::kVALID)
     {
-        outShape[2] = shape[2] / s[0];
-        outShape[3] = shape[3] / s[1];
+        outShape[2] = ceil(shape[2] - k[0] + 1, s[0]);
+        outShape[3] = ceil(shape[3] - k[1] + 1, s[1]);
     }
     else  // padding == PaddingType::kSAME
     {
