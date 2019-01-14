@@ -44,8 +44,9 @@ class Pooling2DGradientLayer : public Layer
   public:
     Pooling2DGradientLayer(ID id, const Tensor::SPtr& t,
                            const Tensor::SPtr& out, const Tensor::SPtr& outGrad,
-                           PoolingType pooling, std::vector<int> kernel,
-                           std::vector<int> strides, PaddingType padding);
+                           PoolingType pooling, const std::vector<int>& kernel,
+                           const std::vector<int>& strides,
+                           PaddingType padding);
 
   private:
     void execute(const InputDict& inputs) override;

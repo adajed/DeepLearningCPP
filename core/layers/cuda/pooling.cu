@@ -89,52 +89,49 @@ __global__ void poolKernel(const float* in, float* out, int* info)
 
 __device__ int firstWindow(int x, int k, int s)
 {
-    int c = (x - k) / s + 1;
+    int c = x - k + 1;
     c = c > 0 ? c : 0;
-    c = (x - s * c) / s + 1;
-    return c > 0 ? c : 0;
+    return c / s + int(c % s > 0);
 }
 
 template <PoolingType pooling>
 __global__ void poolGradientKernel(const float* in, const float* out,
-                                   const float* outG, float* inG, int* inShape,
-                                   int* outShape, int* kernel, int* strides);
+                                   const float* outG, float* inG, int* info);
 
 template <>
-__global__ void poolGradientKernel<PoolingType::kMAX>(
-    const float* in, const float* out, const float* outG, float* inG,
-    int* inShape, int* outShape, int* kernel, int* strides)
+__global__ void poolGradientKernel<PoolingType::kMAX>(const float* in,
+                                                      const float* out,
+                                                      const float* outG,
+                                                      float* inG, int* info)
 {
-    size_t id = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t inPos = id;
+    size_t n = blockIdx.x * blockDim.x + threadIdx.x;
+    size_t inPos = n;
 
-    int y = id % inShape[3];
-    id /= inShape[3];
-    int x = id % inShape[2];
-    id /= inShape[2];
-    int c = id % inShape[1];
-    id /= inShape[1];
-    int n = id;
+    int y = n % info[3];
+    n /= info[3];
+    int x = n % info[2];
+    n /= info[2];
+    int c = n % info[1];
+    n /= info[1];
 
-    if (n < inShape[0])
+    if (n < info[0])
     {
         inG[inPos] = 0.;
-        int xOut = firstWindow(x, kernel[0], strides[0]);
+        int xOut = firstWindow(x, info[8], info[10]);
         int yOut;
 
-        while (xOut * strides[0] <= x && xOut < outShape[2])
+        while (xOut * info[10] <= x && xOut < info[6])
         {
-            yOut = firstWindow(y, kernel[1], strides[1]);
-            while (yOut * strides[1] <= y && yOut < outShape[3])
+            yOut = firstWindow(y, info[9], info[11]);
+            while (yOut * info[11] <= y && yOut < info[7])
             {
-                size_t outPos =
-                    ((n * outShape[1] + c) * outShape[2] + xOut) * outShape[3] +
-                    yOut;
+                size_t outPos = n * info[5] + c;
+                outPos = outPos * info[6] + xOut;
+                outPos = outPos * info[7] + yOut;
 
                 if (in[inPos] == out[outPos]) inG[inPos] += outG[outPos];
 
                 yOut++;
-                ;
             }
             xOut++;
         }
@@ -142,36 +139,35 @@ __global__ void poolGradientKernel<PoolingType::kMAX>(
 }
 
 template <>
-__global__ void poolGradientKernel<PoolingType::kAVERAGE>(
-    const float* in, const float* out, const float* outG, float* inG,
-    int* inShape, int* outShape, int* kernel, int* strides)
+__global__ void poolGradientKernel<PoolingType::kAVERAGE>(const float* in,
+                                                          const float* out,
+                                                          const float* outG,
+                                                          float* inG, int* info)
 {
-    size_t id = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t inPos = id;
+    size_t n = blockIdx.x * blockDim.x + threadIdx.x;
+    size_t inPos = n;
 
-    int y = id % inShape[3];
-    id /= inShape[3];
-    int x = id % inShape[2];
-    id /= inShape[2];
-    int c = id % inShape[1];
-    id /= inShape[1];
-    int n = id;
+    int y = n % info[3];
+    n /= info[3];
+    int x = n % info[2];
+    n /= info[2];
+    int c = n % info[1];
+    n /= info[1];
 
-    if (n < inShape[0])
+    if (n < info[0])
     {
         inG[inPos] = 0.;
-        int xOut = firstWindow(x, kernel[0], strides[0]);
-        int yOut;
+        int xOut = firstWindow(x, info[8], info[10]), yOut;
 
-        while (xOut * strides[0] <= x && xOut < outShape[2])
+        while (xOut * info[10] <= x && xOut < info[6])
         {
-            yOut = firstWindow(y, kernel[1], strides[1]);
-            while (yOut * strides[1] <= y && yOut < outShape[3])
+            yOut = firstWindow(y, info[9], info[11]);
+            while (yOut * info[11] <= y && yOut < info[7])
             {
-                size_t outPos =
-                    ((n * outShape[1] + c) * outShape[2] + xOut) * outShape[3] +
-                    yOut;
-                inG[inPos] += outG[outPos];
+                size_t outPos = n * info[5] + c;
+                outPos = outPos * info[6] + xOut;
+                outPos = outPos * info[7] + yOut;
+                inG[inPos] += *((float*)(info + 12)) * outG[outPos];
 
                 yOut++;
             }
@@ -241,12 +237,24 @@ extern "C" void runPool2DGradientDevice(const float* x, const float* y,
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
+    float grad = 1. / float(kernel[0] * kernel[1]);
+    int* info;
+    cudaMalloc((void**)&info, 12 * sizeof(int) + sizeof(float));
+    cudaMemcpy(info, shape, 4 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(info + 4, outShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(info + 8, kernel, 2 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(info + 10, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(info + 12, &grad, sizeof(float), cudaMemcpyHostToDevice);
+
     if (pooling == PoolingType::kMAX)
-        poolGradientKernel<PoolingType::kMAX><<<NUM_BLOCKS, BLOCK_SIZE>>>(
-            x, y, yG, xG, shape, outShape, kernel, strides);
+        poolGradientKernel<PoolingType::kMAX>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
     else  // pooling == PoolingType::kAVERAGE
-        poolGradientKernel<PoolingType::kAVERAGE><<<NUM_BLOCKS, BLOCK_SIZE>>>(
-            x, y, yG, xG, shape, outShape, kernel, strides);
+        poolGradientKernel<PoolingType::kAVERAGE>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+
+    cudaDeviceSynchronize();
+    cudaFree(info);
 }
 
 }  // namespace cuda

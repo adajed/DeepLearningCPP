@@ -57,6 +57,7 @@ class RefTensor
   public:
     RefTensor();
     RefTensor(const TensorShape& shape);
+    RefTensor(const TensorShape& shape, RandGen& gen);
 
     //! \fn at
     //! \brief Returns value given its linear coordinate.
@@ -92,6 +93,10 @@ class RefTensor
     std::size_t mCount;
     TensorShape mShape;
 };
+
+Coord_iterator shapeBegin(const TensorShape& shape);
+
+Coord_iterator shapeEnd(const TensorShape& shape);
 
 std::ostream& operator<<(std::ostream&, const RefTensor&);
 

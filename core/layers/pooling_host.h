@@ -124,10 +124,10 @@ void pool_gradient_reduce<PoolingType::kMAX>(const float* in, float out,
 
 template <>
 void pool_gradient_reduce<PoolingType::kAVERAGE>(
-    const float* /* in */, float /* out */, float /* outG */, float* inG,
+    const float* /* in */, float /* out */, float outG, float* inG,
     const std::vector<int>& shape, const std::vector<int>& kernel, int x, int y)
 {
-    float grad = 1. / float(kernel[0] * kernel[1]);
+    float grad = outG / float(kernel[0] * kernel[1]);
     for (int iX = 0; iX < kernel[0]; ++iX)
     {
         if (x + iX >= shape[2]) break;
@@ -164,12 +164,12 @@ void poolGradient(const float* in, const float* out, const float* outG,
             for (int x = 0; x < outShape[2]; ++x)
                 for (int y = 0; y < outShape[3]; ++y)
                 {
-                    size_t outPos = ((n * outShape[1] + c) * outShape[2] + x) *
-                                        outShape[3] +
-                                    y;
-                    size_t inPos =
-                        ((n * shape[1] + c) * shape[2] + x * s[0]) * shape[3] +
-                        y * s[1];
+                    size_t outPos = n * outShape[1] + c;
+                    outPos = outPos * outShape[2] + x;
+                    outPos = outPos * outShape[3] + y;
+                    size_t inPos = n * shape[1] + c;
+                    inPos = inPos * shape[2] + x * s[0];
+                    inPos = inPos * shape[3] + y * s[1];
                     pool_gradient_reduce<pooling>(in + inPos, out[outPos],
                                                   outG[outPos], inG + inPos,
                                                   shape, k, x * s[0], y * s[1]);

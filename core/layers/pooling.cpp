@@ -136,15 +136,18 @@ void Pooling2DLayer::execute(const InputDict& inputs)
                               mStrides.data(), mPooling, mPadding);
 }
 
-Pooling2DGradientLayer::Pooling2DGradientLayer(
-    ID id, const Tensor::SPtr& t, const Tensor::SPtr& out,
-    const Tensor::SPtr& outGrad, PoolingType pooling, std::vector<int> kernel,
-    std::vector<int> strides, PaddingType padding)
+Pooling2DGradientLayer::Pooling2DGradientLayer(ID id, const Tensor::SPtr& t,
+                                               const Tensor::SPtr& out,
+                                               const Tensor::SPtr& outGrad,
+                                               PoolingType pooling,
+                                               const std::vector<int>& kernel,
+                                               const std::vector<int>& strides,
+                                               PaddingType padding)
     : Layer(id, {t, out, outGrad},
             {createTensor("", t->getShape(), t->getType())}),
       mPooling(pooling),
-      mKernelWindow(std::move(kernel)),
-      mStrides(std::move(strides)),
+      mKernelWindow(kernel),
+      mStrides(strides),
       mPadding(padding)
 {
 }

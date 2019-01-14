@@ -107,6 +107,11 @@ RefTensor::RefTensor(const TensorShape& shape)
 {
 }
 
+RefTensor::RefTensor(const TensorShape& shape, RandGen& gen) : RefTensor(shape)
+{
+    fillRandomly(gen);
+}
+
 float& RefTensor::at(std::size_t pos)
 {
     assert(pos < mValues.size());
@@ -149,27 +154,12 @@ const float& RefTensor::operator[](const Coord& c) const
 
 Coord_iterator RefTensor::begin()
 {
-    std::vector<unsigned> c;
-    std::vector<unsigned> shape;
-    for (unsigned i = 0; i < mShape.size(); ++i)
-    {
-        c.push_back(0);
-        shape.push_back(mShape[i]);
-    }
-    return Coord_iterator(Coord(c), Coord(shape));
+    return shapeBegin(mShape);
 }
 
 Coord_iterator RefTensor::end()
 {
-    std::vector<unsigned> c;
-    std::vector<unsigned> shape;
-    for (unsigned i = 0; i < mShape.size(); ++i)
-    {
-        c.push_back(0);
-        shape.push_back(mShape[i]);
-    }
-    c[0] = mShape[0];
-    return Coord_iterator(Coord(c), Coord(shape));
+    return shapeEnd(mShape);
 }
 
 std::size_t RefTensor::getCount() const
@@ -218,4 +208,27 @@ std::ostream& operator<<(std::ostream& stream, const RefTensor& tensor)
     for (std::size_t i = 0; i < tensor.getCount(); ++i)
         stream << tensor.at(i) << " ";
     return stream;
+}
+
+Coord_iterator shapeBegin(const TensorShape& shape)
+{
+    std::vector<unsigned> c, s;
+    for (unsigned i = 0; i < shape.size(); ++i)
+    {
+        c.push_back(0);
+        s.push_back(shape[i]);
+    }
+    return Coord_iterator(Coord(c), Coord(s));
+}
+
+Coord_iterator shapeEnd(const TensorShape& shape)
+{
+    std::vector<unsigned> c, s;
+    for (unsigned i = 0; i < shape.size(); ++i)
+    {
+        c.push_back(0);
+        s.push_back(shape[i]);
+    }
+    c[0] = shape[0];
+    return Coord_iterator(Coord(c), Coord(s));
 }

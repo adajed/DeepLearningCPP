@@ -1,3 +1,4 @@
+#include "abstractTensor.h"
 #include "graphdl_ops.h"
 #include "layerTests.h"
 #include "pooling.h"
@@ -20,7 +21,8 @@ std::vector<Shapes> SHAPES = {
     {{8, 8}, {3, 2}, {3, 2}},
     {{8 ,8}, {3, 2}, {2, 2}},
     {{8, 8}, {2, 2}, {4, 4}},
-    {{8, 8}, {3, 1}, {3, 1}}
+    {{8, 8}, {3, 1}, {3, 1}},
+    {{14, 14}, {14, 14}, {14, 14}} // global
     // clang-format on
 };
 
@@ -100,8 +102,8 @@ Vec outputShape(const TestCase& testCase)
     return output;
 }
 
-class PoolingTest : public LayerTest,
-                    public testing::WithParamInterface<TestCase>
+class Pooling2DTest : public LayerTest,
+                      public testing::WithParamInterface<TestCase>
 {
   public:
     void test(const TestCase& testCase)
@@ -109,6 +111,14 @@ class PoolingTest : public LayerTest,
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
         bool correct = runTest({mInput}, {mOutput}, builder);
+        EXPECT_TRUE(correct);
+    }
+
+    void testGradient(const TestCase& testCase)
+    {
+        setupGradient(testCase);
+        LayerBuilder builder = getGradientBuilder(testCase);
+        bool correct = runTest({mInput, mOutputGrad}, {mInputGrad}, builder);
         EXPECT_TRUE(correct);
     }
 
@@ -133,6 +143,30 @@ class PoolingTest : public LayerTest,
         return ret;
     }
 
+    void poolGradient(Coord cIn, Coord cOut, const TestCase& testCase)
+    {
+        Vec k = kernel(testCase);
+        TensorShape w({1, 1, k[0], k[1]});
+        Coord_iterator end = shapeEnd(w);
+
+        if (pooling(testCase) == PoolingType::kMAX)
+        {
+            RefTensor subTensor = mInput.slice(cIn, w);
+            float m = pool(subTensor, PoolingType::kMAX);
+            for (Coord_iterator it = shapeBegin(w); it != end; ++it)
+                if (isInside(cIn + it(), mInput.shape()))
+                    if (mInput[cIn + it()] == m)
+                        mInputGrad[cIn + it()] += mOutputGrad[cOut];
+        }
+        else
+        {
+            float grad = mOutputGrad[cOut] / float(w.getCount());
+            for (Coord_iterator it = shapeBegin(w); it != end; ++it)
+                if (isInside(cIn + it(), mInput.shape()))
+                    mInputGrad[cIn + it()] += grad;
+        }
+    }
+
     void setup(const TestCase& testCase)
     {
         UniformGen gen(0);
@@ -149,6 +183,25 @@ class PoolingTest : public LayerTest,
             Coord c({it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
             RefTensor subTensor = mInput.slice(c, subShape);
             mOutput[it()] = pool(subTensor, pooling(testCase));
+        }
+    }
+
+    void setupGradient(const TestCase& testCase)
+    {
+        UniformGen gen(0);
+        mInput = RefTensor(inputShape(testCase), gen);
+        mOutputGrad = RefTensor(outputShape(testCase), gen);
+        mInputGrad = RefTensor(inputShape(testCase));
+
+        Vec s = strides(testCase);
+
+        for (size_t pos = 0; pos < mInputGrad.getCount(); ++pos)
+            mInputGrad.at(pos) = 0.;
+        for (Coord_iterator it = mOutputGrad.begin(); it != mOutputGrad.end();
+             ++it)
+        {
+            Coord cIn({it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
+            poolGradient(cIn, it(), testCase);
         }
     }
 
@@ -178,16 +231,54 @@ class PoolingTest : public LayerTest,
         };
     }
 
-    RefTensor mInput, mOutput, mOutputGrad, mGradient;
+    LayerBuilder getGradientBuilder(const TestCase& testCase)
+    {
+        return [&testCase](const HostVec& ins) {
+            MemoryType type = memoryLocationToType(location(testCase));
+            Tensor::SPtr in = core::getDefaultGraph()->addInput(
+                "in",
+                createLayer<InputLayer>("in", inputShape(testCase), type));
+            Tensor::SPtr outG = core::getDefaultGraph()->addInput(
+                "outG",
+                createLayer<InputLayer>("outG", outputShape(testCase), type));
+
+            std::vector<int> k(
+                {int(kernel(testCase)[0]), int(kernel(testCase)[1])});
+            std::vector<int> s(
+                {int(strides(testCase)[0]), int(strides(testCase)[1])});
+
+            Tensor::SPtr out =
+                pooling2D(in, pooling(testCase), k, s, padding(testCase));
+
+            Layer::SPtr layer = createLayer<Pooling2DGradientLayer>(
+                in, out, outG, pooling(testCase), k, s, padding(testCase));
+            ITensorPtr grad = makeAbstractTensor(layer->getOutputs()[0]);
+            initializeGraph();
+            return HostVec({grad->eval({{"in", ins[0]}, {"outG", ins[1]}})});
+        };
+    }
+
+    RefTensor mInput, mOutput, mOutputGrad, mInputGrad;
 };
 
-TEST_P(PoolingTest, testAPI)
+TEST_P(Pooling2DTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, PoolingTest,
+INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
                                 ValuesIn(POOLINGS), ValuesIn(PADDINGS),
                                 ValuesIn(LOCATIONS)));
 
+class Pooling2DGradientTest : public Pooling2DTest
+{
+};
+TEST_P(Pooling2DGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
+INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DGradientTest,
+                        Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
+                                ValuesIn(POOLINGS), ValuesIn(PADDINGS),
+                                ValuesIn(LOCATIONS)));
 }  // namespace
