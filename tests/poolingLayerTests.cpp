@@ -86,17 +86,18 @@ int ceil(int x, int y)
 Vec outputShape(const TestCase& testCase)
 {
     Vec output = inputShape(testCase);
+    Vec k = kernel(testCase);
+    Vec s = strides(testCase);
+
     if (padding(testCase) == PaddingType::kVALID)
     {
-        output[2] =
-            ceil(output[2] - kernel(testCase)[0] + 1, strides(testCase)[0]);
-        output[3] =
-            ceil(output[3] - kernel(testCase)[1] + 1, strides(testCase)[1]);
+        output[2] = ceil(output[2] - k[0] + 1, s[0]);
+        output[3] = ceil(output[3] - k[1] + 1, s[1]);
     }
     else  // padding == PaddingType::kSAME
     {
-        output[2] = ceil(output[2], strides(testCase)[0]);
-        output[3] = ceil(output[3], strides(testCase)[1]);
+        output[2] = ceil(output[2], s[0]);
+        output[3] = ceil(output[3], s[1]);
     }
 
     return output;
@@ -170,9 +171,8 @@ class Pooling2DTest : public LayerTest,
     void setup(const TestCase& testCase)
     {
         UniformGen gen(0);
-        mInput = RefTensor(inputShape(testCase));
+        mInput = RefTensor(inputShape(testCase), gen);
         mOutput = RefTensor(outputShape(testCase));
-        mInput.fillRandomly(gen);
 
         Vec k = kernel(testCase);
         Vec s = strides(testCase);
@@ -180,7 +180,13 @@ class Pooling2DTest : public LayerTest,
 
         for (Coord_iterator it = mOutput.begin(); it != mOutput.end(); ++it)
         {
-            Coord c({it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
+            Coord c(
+                {it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
+            if (padding(testCase) == PaddingType::kSAME)
+            {
+                c[2] -= (int(k[0]) - 1) / 2;
+                c[3] -= (int(k[1]) - 1) / 2;
+            }
             RefTensor subTensor = mInput.slice(c, subShape);
             mOutput[it()] = pool(subTensor, pooling(testCase));
         }
@@ -193,6 +199,7 @@ class Pooling2DTest : public LayerTest,
         mOutputGrad = RefTensor(outputShape(testCase), gen);
         mInputGrad = RefTensor(inputShape(testCase));
 
+        Vec k = kernel(testCase);
         Vec s = strides(testCase);
 
         for (size_t pos = 0; pos < mInputGrad.getCount(); ++pos)
@@ -200,8 +207,14 @@ class Pooling2DTest : public LayerTest,
         for (Coord_iterator it = mOutputGrad.begin(); it != mOutputGrad.end();
              ++it)
         {
-            Coord cIn({it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
-            poolGradient(cIn, it(), testCase);
+            Coord c(
+                {it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
+            if (padding(testCase) == PaddingType::kSAME)
+            {
+                c[2] -= (int(k[0]) - 1) / 2;
+                c[3] -= (int(k[1]) - 1) / 2;
+            }
+            poolGradient(c, it(), testCase);
         }
     }
 
