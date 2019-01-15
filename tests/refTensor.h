@@ -15,18 +15,18 @@ using namespace graphdl::core;
 class Coord
 {
   public:
-    Coord(const std::vector<unsigned>& values);
-    Coord(std::initializer_list<unsigned> list);
+    Coord(const std::vector<int>& values);
+    Coord(std::initializer_list<int> list);
 
     Coord operator+(const Coord& c) const;
 
     unsigned size() const;
 
-    unsigned& operator[](size_t pos);
-    const unsigned& operator[](size_t pos) const;
+    int& operator[](size_t pos);
+    const int& operator[](size_t pos) const;
 
   private:
-    std::vector<unsigned> mValues;
+    std::vector<int> mValues;
 };
 
 class Coord_iterator

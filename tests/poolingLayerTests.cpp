@@ -180,7 +180,7 @@ class Pooling2DTest : public LayerTest,
 
         for (Coord_iterator it = mOutput.begin(); it != mOutput.end(); ++it)
         {
-            Coord c({it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
+            Coord c({it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
             RefTensor subTensor = mInput.slice(c, subShape);
             mOutput[it()] = pool(subTensor, pooling(testCase));
         }
@@ -200,7 +200,7 @@ class Pooling2DTest : public LayerTest,
         for (Coord_iterator it = mOutputGrad.begin(); it != mOutputGrad.end();
              ++it)
         {
-            Coord cIn({it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
+            Coord cIn({it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
             poolGradient(cIn, it(), testCase);
         }
     }

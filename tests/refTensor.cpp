@@ -2,14 +2,14 @@
 
 #include <assert.h>
 
-Coord::Coord(const std::vector<unsigned>& values) : mValues(values) {}
-Coord::Coord(std::initializer_list<unsigned> list) : mValues(list) {}
+Coord::Coord(const std::vector<int>& values) : mValues(values) {}
+Coord::Coord(std::initializer_list<int> list) : mValues(list) {}
 
 Coord Coord::operator+(const Coord& c) const
 {
     assert(mValues.size() == c.mValues.size());
 
-    std::vector<unsigned> v = mValues;
+    std::vector<int> v = mValues;
     for (unsigned i = 0; i < mValues.size(); ++i) v[i] += c.mValues[i];
 
     return Coord(v);
@@ -20,11 +20,11 @@ unsigned Coord::size() const
     return mValues.size();
 }
 
-unsigned& Coord::operator[](size_t pos)
+int& Coord::operator[](size_t pos)
 {
     return mValues[pos];
 }
-const unsigned& Coord::operator[](size_t pos) const
+const int& Coord::operator[](size_t pos) const
 {
     return mValues[pos];
 }
@@ -96,7 +96,7 @@ bool isInside(const Coord& c, const TensorShape& shape)
     assert(c.size() == shape.size());
 
     for (unsigned i = 0; i < c.size(); ++i)
-        if (c[i] >= shape[i]) return false;
+        if (c[i] < 0 || c[i] >= int(shape[i])) return false;
     return true;
 }
 
@@ -131,7 +131,7 @@ float& RefTensor::operator[](const Coord& c)
     std::size_t pos = 0;
     for (std::size_t i = 0; i < c.size(); ++i)
     {
-        assert(mShape[i] > c[i]);
+        assert(int(mShape[i]) > c[i]);
         pos *= mShape[i];
         pos += c[i];
     }
@@ -145,7 +145,7 @@ const float& RefTensor::operator[](const Coord& c) const
     std::size_t pos = 0;
     for (std::size_t i = 0; i < c.size(); ++i)
     {
-        assert(mShape[i] > c[i]);
+        assert(int(mShape[i]) > c[i]);
         pos *= mShape[i];
         pos += c[i];
     }
@@ -212,7 +212,7 @@ std::ostream& operator<<(std::ostream& stream, const RefTensor& tensor)
 
 Coord_iterator shapeBegin(const TensorShape& shape)
 {
-    std::vector<unsigned> c, s;
+    std::vector<int> c, s;
     for (unsigned i = 0; i < shape.size(); ++i)
     {
         c.push_back(0);
@@ -223,7 +223,7 @@ Coord_iterator shapeBegin(const TensorShape& shape)
 
 Coord_iterator shapeEnd(const TensorShape& shape)
 {
-    std::vector<unsigned> c, s;
+    std::vector<int> c, s;
     for (unsigned i = 0; i < shape.size(); ++i)
     {
         c.push_back(0);
