@@ -22,18 +22,19 @@ template <>
 __device__ float pool2DReduceKernel<PoolingType::kMAX>(const float* in,
                                                        int* info, int x, int y)
 {
-    float ret = in[0];
+    float ret = 0;
+    if (x >= 0 && y >= 0) ret = in[x * info[3] + y];
 
-    for (int iX = 0; iX < info[8]; ++iX)
+    for (int iX = x > 0 ? x : 0; iX < x + info[8]; ++iX)
     {
-        if (x + iX >= info[2])
+        if (iX >= info[2])
         {
             ret = ret > 0. ? ret : 0.;
             break;
         }
-        for (int iY = 0; iY < info[9]; ++iY)
+        for (int iY = y > 0 ? y : 0; iY < y + info[9]; ++iY)
         {
-            if (y + iY >= info[3])
+            if (iY >= info[3])
             {
                 ret = ret > 0. ? ret : 0.;
                 break;
@@ -53,9 +54,9 @@ __device__ float pool2DReduceKernel<PoolingType::kAVERAGE>(const float* in,
 {
     float ret = 0.;
 
-    for (int iX = 0; iX < info[8] && x + iX < info[2]; ++iX)
+    for (int iX = x > 0 ? x : 0; iX < x + info[8] && iX < info[2]; ++iX)
     {
-        for (int iY = 0; iY < info[9] && y + iY < info[3]; ++iY)
+        for (int iY = y > 0 ? y : 0; iY < y + info[9] && iY < info[3]; ++iY)
         {
             ret += in[iX * info[3] + iY];
         }
@@ -65,7 +66,7 @@ __device__ float pool2DReduceKernel<PoolingType::kAVERAGE>(const float* in,
 }
 
 template <PoolingType pooling>
-__global__ void poolKernel(const float* in, float* out, int* info)
+__global__ void poolKernel_valid(const float* in, float* out, int* info)
 {
     size_t n = blockIdx.x * blockDim.x + threadIdx.x;
     size_t outPos = n;
@@ -79,70 +80,71 @@ __global__ void poolKernel(const float* in, float* out, int* info)
 
     if (n < info[4])
     {
-        size_t inPos = n * info[1] + c;
-        inPos = inPos * info[2] + x * info[10];
-        inPos = inPos * info[3] + y * info[11];
+        size_t inPos = (n * info[1] + c) * info[2] * info[3];
         out[outPos] = pool2DReduceKernel<pooling>(in + inPos, info,
                                                   x * info[10], y * info[11]);
     }
 }
 
-__device__ int firstWindow(int x, int k, int s)
+template <PoolingType pooling>
+__global__ void poolKernel_same(const float* in, float* out, int* info)
+{
+    size_t n = blockIdx.x * blockDim.x + threadIdx.x;
+    size_t outPos = n;
+
+    int y = n % info[7];
+    n /= info[7];
+    int x = n % info[6];
+    n /= info[6];
+    int c = n % info[5];
+    n /= info[5];
+
+    if (n < info[4])
+    {
+        size_t inPos = (n * info[1] + c) * info[2] * info[3];
+        out[outPos] = pool2DReduceKernel<pooling>(
+            in + inPos, info, x * info[10] - (info[8] - 1) / 2,
+            y * info[11] - (info[9] - 1) / 2);
+    }
+}
+
+template <PaddingType padding>
+__device__ int firstWindow(int x, int k, int s);
+
+template <>
+__device__ int firstWindow<PaddingType::kVALID>(int x, int k, int s)
 {
     int c = x - k + 1;
     c = c > 0 ? c : 0;
     return c / s + int(c % s > 0);
 }
 
-template <PoolingType pooling>
-__global__ void poolGradientKernel(const float* in, const float* out,
-                                   const float* outG, float* inG, int* info);
+template <>
+__device__ int firstWindow<PaddingType::kSAME>(int x, int k, int s)
+{
+    int c = x + (k - 1) / 2 - k + 1;
+    c = c > 0 ? c : 0;
+    return c / s + int(c % s > 0);
+}
+
+template <PaddingType>
+__device__ int out2in(int x, int k, int s);
 
 template <>
-__global__ void poolGradientKernel<PoolingType::kMAX>(const float* in,
-                                                      const float* out,
-                                                      const float* outG,
-                                                      float* inG, int* info)
+__device__ int out2in<PaddingType::kVALID>(int x, int /* k */, int s)
 {
-    size_t n = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t inPos = n;
-
-    int y = n % info[3];
-    n /= info[3];
-    int x = n % info[2];
-    n /= info[2];
-    int c = n % info[1];
-    n /= info[1];
-
-    if (n < info[0])
-    {
-        inG[inPos] = 0.;
-        int xOut = firstWindow(x, info[8], info[10]);
-        int yOut;
-
-        while (xOut * info[10] <= x && xOut < info[6])
-        {
-            yOut = firstWindow(y, info[9], info[11]);
-            while (yOut * info[11] <= y && yOut < info[7])
-            {
-                size_t outPos = n * info[5] + c;
-                outPos = outPos * info[6] + xOut;
-                outPos = outPos * info[7] + yOut;
-
-                if (in[inPos] == out[outPos]) inG[inPos] += outG[outPos];
-
-                yOut++;
-            }
-            xOut++;
-        }
-    }
+    return x * s;
 }
 
 template <>
-__global__ void poolGradientKernel<PoolingType::kAVERAGE>(const float* in,
-                                                          const float* out,
-                                                          const float* outG,
-                                                          float* inG, int* info)
+__device__ int out2in<PaddingType::kSAME>(int x, int k, int s)
+{
+    return x * s - (k - 1) / 2;
+}
+
+template <PoolingType pooling, PaddingType padding>
+__global__ void poolGradientKernel(const float* in, const float* out,
+                                   const float* outG, float* inG, int* info)
 {
     size_t n = blockIdx.x * blockDim.x + threadIdx.x;
     size_t inPos = n;
@@ -157,17 +159,27 @@ __global__ void poolGradientKernel<PoolingType::kAVERAGE>(const float* in,
     if (n < info[0])
     {
         inG[inPos] = 0.;
-        int xOut = firstWindow(x, info[8], info[10]), yOut;
+        int xOut = firstWindow<padding>(x, info[8], info[10]);
+        int yOut;
 
-        while (xOut * info[10] <= x && xOut < info[6])
+        while (out2in<padding>(xOut, info[8], info[10]) <= x && xOut < info[6])
         {
-            yOut = firstWindow(y, info[9], info[11]);
-            while (yOut * info[11] <= y && yOut < info[7])
+            yOut = firstWindow<padding>(y, info[9], info[11]);
+            while (out2in<padding>(yOut, info[9], info[11]) <= y &&
+                   yOut < info[7])
             {
                 size_t outPos = n * info[5] + c;
                 outPos = outPos * info[6] + xOut;
                 outPos = outPos * info[7] + yOut;
-                inG[inPos] += *((float*)(info + 12)) * outG[outPos];
+
+                if (pooling == PoolingType::kMAX)
+                {
+                    if (in[inPos] == out[outPos]) inG[inPos] += outG[outPos];
+                }
+                else  // pooling == PoolingType::kAVERAGE
+                {
+                    inG[inPos] += *((float*)(info + 12)) * outG[outPos];
+                }
 
                 yOut++;
             }
@@ -206,10 +218,23 @@ extern "C" void runPool2DDevice(const float* x, float* y, int* shape,
     cudaMemcpy(info + 10, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
 
     if (pooling == PoolingType::kMAX)
-        poolKernel<PoolingType::kMAX><<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+    {
+        if (padding == PaddingType::kVALID)
+            poolKernel_valid<PoolingType::kMAX>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+        else  // padding == PaddingType::kSAME
+            poolKernel_same<PoolingType::kMAX>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+    }
     else  // pooling == PoolingType::kAVERAGE
-        poolKernel<PoolingType::kAVERAGE>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+    {
+        if (padding == PaddingType::kVALID)
+            poolKernel_valid<PoolingType::kAVERAGE>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+        else  // padding == PaddingType::kSAME
+            poolKernel_same<PoolingType::kAVERAGE>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+    }
 
     cudaDeviceSynchronize();
     cudaFree(info);
@@ -247,11 +272,23 @@ extern "C" void runPool2DGradientDevice(const float* x, const float* y,
     cudaMemcpy(info + 12, &grad, sizeof(float), cudaMemcpyHostToDevice);
 
     if (pooling == PoolingType::kMAX)
-        poolGradientKernel<PoolingType::kMAX>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+    {
+        if (padding == PaddingType::kVALID)
+            poolGradientKernel<PoolingType::kMAX, PaddingType::kVALID>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+        else  // padding == PaddingType::kSAME
+            poolGradientKernel<PoolingType::kMAX, PaddingType::kSAME>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+    }
     else  // pooling == PoolingType::kAVERAGE
-        poolGradientKernel<PoolingType::kAVERAGE>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+    {
+        if (padding == PaddingType::kVALID)
+            poolGradientKernel<PoolingType::kAVERAGE, PaddingType::kVALID>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+        else  // padding == PaddingType::kSAME
+            poolGradientKernel<PoolingType::kAVERAGE, PaddingType::kSAME>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+    }
 
     cudaDeviceSynchronize();
     cudaFree(info);

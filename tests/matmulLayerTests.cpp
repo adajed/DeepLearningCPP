@@ -109,9 +109,9 @@ class MatmulTest : public LayerTest,
         // calculate reference output
         for (auto it = mOutput.begin(); it != mOutput.end(); ++it)
         {
-            unsigned x = it()[0], y = it()[1];
+            int x = it()[0], y = it()[1];
             mOutput[{x, y}] = 0.;
-            for (unsigned i = 0; i < m; ++i)
+            for (int i = 0; i < int(m); ++i)
                 mOutput[{x, y}] += mInput1[{x, i}] * mInput2[{i, y}];
         }
     }
@@ -133,18 +133,18 @@ class MatmulTest : public LayerTest,
         // calculate reference gradient 1
         for (auto it = mInput1.begin(); it != mInput1.end(); ++it)
         {
-            unsigned x = it()[0], y = it()[1];
+            int x = it()[0], y = it()[1];
             mGradient1[{x, y}] = 0.;
-            for (unsigned i = 0; i < k; ++i)
+            for (int i = 0; i < int(k); ++i)
                 mGradient1[{x, y}] += mInput2[{y, i}] * mOutputGrad[{x, i}];
         }
 
         // calculate reference gradient 2
         for (auto it = mInput2.begin(); it != mInput2.end(); ++it)
         {
-            unsigned x = it()[0], y = it()[1];
+            int x = it()[0], y = it()[1];
             mGradient2[{x, y}] = 0.;
-            for (unsigned i = 0; i < n; ++i)
+            for (int i = 0; i < int(n); ++i)
                 mGradient2[{x, y}] += mInput1[{i, x}] * mOutputGrad[{i, y}];
         }
     }
