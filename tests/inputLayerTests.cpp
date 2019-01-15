@@ -37,12 +37,10 @@ class InputTest : public LayerTest, public testing::WithParamInterface<TestCase>
 
     void setup(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
 
-        mInput = RefTensor(std::get<0>(testCase));
+        mInput = RefTensor(std::get<0>(testCase), gen);
         mOutput = RefTensor(std::get<0>(testCase));
-
-        mInput.fillRandomly(gen);
 
         // calculate reference output
         for (std::size_t i = 0; i < mInput.getCount(); ++i)

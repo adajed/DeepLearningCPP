@@ -169,10 +169,9 @@ class Pooling2DTest : public LayerTest,
 
     void setup(const TestCase& testCase)
     {
-        UniformGen gen(0);
-        mInput = RefTensor(inputShape(testCase));
+        UniformGen gen(seed);
+        mInput = RefTensor(inputShape(testCase), gen);
         mOutput = RefTensor(outputShape(testCase));
-        mInput.fillRandomly(gen);
 
         Vec k = kernel(testCase);
         Vec s = strides(testCase);
@@ -188,7 +187,7 @@ class Pooling2DTest : public LayerTest,
 
     void setupGradient(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
         mInput = RefTensor(inputShape(testCase), gen);
         mOutputGrad = RefTensor(outputShape(testCase), gen);
         mInputGrad = RefTensor(inputShape(testCase));

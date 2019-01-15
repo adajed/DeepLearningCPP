@@ -33,11 +33,10 @@ class ReduceSumTest : public LayerTest,
   public:
     void test(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
 
-        RefTensor input(std::get<0>(testCase));
+        RefTensor input(std::get<0>(testCase), gen);
         RefTensor output(TensorShape({}));
-        input.fillRandomly(gen);
 
         output.at(0) = 0.;
         for (std::size_t pos = 0; pos < input.getCount(); ++pos)
@@ -57,12 +56,10 @@ class ReduceSumTest : public LayerTest,
 
     void testGradient(const TestCase& testCase)
     {
-        UniformGen gen(0);
-        RefTensor input(std::get<0>(testCase));
-        RefTensor outputGrad(TensorShape({}));
+        UniformGen gen(seed);
+        RefTensor input(std::get<0>(testCase), gen);
+        RefTensor outputGrad(TensorShape({}), gen);
         RefTensor inputGrad(std::get<0>(testCase));
-        input.fillRandomly(gen);
-        outputGrad.fillRandomly(gen);
 
         for (std::size_t pos = 0; pos < input.getCount(); ++pos)
             inputGrad.at(pos) = outputGrad.at(0);

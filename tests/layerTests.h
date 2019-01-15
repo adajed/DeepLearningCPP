@@ -20,6 +20,8 @@ using HostVec = std::vector<HostTensor>;
 
 extern std::vector<MemoryLocation> LOCATIONS;
 
+extern unsigned seed;
+
 class LayerTest : public testing::Test
 {
   protected:

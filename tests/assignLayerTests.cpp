@@ -42,9 +42,8 @@ class AssignTest : public LayerTest,
   public:
     void test(const TestCase& testCase)
     {
-        UniformGen gen(0);
-        RefTensor tensor(std::get<0>(testCase));
-        tensor.fillRandomly(gen);
+        UniformGen gen(seed);
+        RefTensor tensor(std::get<0>(testCase), gen);
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
             ITensorPtr in =

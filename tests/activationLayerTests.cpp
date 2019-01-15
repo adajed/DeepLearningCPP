@@ -65,10 +65,9 @@ class ActivationTest : public LayerTest,
   private:
     void setup(const TestCase& testCase)
     {
-        UniformGen gen(0);
-        mInput = RefTensor(std::get<0>(testCase));
+        UniformGen gen(seed);
+        mInput = RefTensor(std::get<0>(testCase), gen);
         mOutput = RefTensor(std::get<0>(testCase));
-        mInput.fillRandomly(gen);
 
         std::function<float(float)> fun;
         switch (std::get<1>(testCase))
@@ -114,12 +113,10 @@ class ActivationTest : public LayerTest,
 
     void setupGradient(const TestCase& testCase)
     {
-        UniformGen gen(0);
-        mInput = RefTensor(std::get<0>(testCase));
-        mOutputGrad = RefTensor(std::get<0>(testCase));
+        UniformGen gen(seed);
+        mInput = RefTensor(std::get<0>(testCase), gen);
+        mOutputGrad = RefTensor(std::get<0>(testCase), gen);
         mGradient = RefTensor(std::get<0>(testCase));
-        mInput.fillRandomly(gen);
-        mOutputGrad.fillRandomly(gen);
 
         std::function<float(float)> fun;
         switch (std::get<1>(testCase))

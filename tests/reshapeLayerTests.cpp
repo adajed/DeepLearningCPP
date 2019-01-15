@@ -49,8 +49,8 @@ class ReshapeTest : public LayerTest,
   public:
     void test(const TestCase& testCase)
     {
-        UniformGen gen(0);
-        RefTensor input = RefTensor(shape0(testCase));
+        UniformGen gen(seed);
+        RefTensor input = RefTensor(shape0(testCase), gen);
         RefTensor output = RefTensor(shape1(testCase));
 
         for (size_t pos = 0; pos < input.getCount(); ++pos)

@@ -44,14 +44,11 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
   public:
     void test(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
         std::vector<RefTensor> inputs;
         RefTensor output(std::get<1>(testCase));
         for (int i = 0; i < std::get<0>(testCase); ++i)
-        {
-            inputs.push_back(RefTensor(std::get<1>(testCase)));
-            inputs[i].fillRandomly(gen);
-        }
+            inputs.push_back(RefTensor(std::get<1>(testCase), gen));
 
         for (std::size_t pos = 0; pos < output.getCount(); ++pos)
         {
@@ -80,17 +77,15 @@ class AddNTest : public LayerTest, public testing::WithParamInterface<TestCase>
 
     void testGradient(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
         std::vector<RefTensor> inputs;
         std::vector<RefTensor> inputGrads;
         for (int i = 0; i < std::get<0>(testCase); ++i)
         {
-            inputs.push_back(RefTensor(std::get<1>(testCase)));
-            inputs[i].fillRandomly(gen);
+            inputs.push_back(RefTensor(std::get<1>(testCase), gen));
             inputGrads.push_back(RefTensor(std::get<1>(testCase)));
         }
-        RefTensor outputGrad(std::get<1>(testCase));
-        outputGrad.fillRandomly(gen);
+        RefTensor outputGrad(std::get<1>(testCase), gen);
 
         for (std::size_t pos = 0; pos < outputGrad.getCount(); ++pos)
         {

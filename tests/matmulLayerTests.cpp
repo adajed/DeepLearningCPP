@@ -96,18 +96,15 @@ class MatmulTest : public LayerTest,
 
     void setup(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
 
         unsigned n = std::get<0>(testCase).first[0];
         unsigned m = std::get<0>(testCase).first[1];
         unsigned k = std::get<0>(testCase).second[1];
 
-        mInput1 = RefTensor({n, m});
-        mInput2 = RefTensor({m, k});
+        mInput1 = RefTensor({n, m}, gen);
+        mInput2 = RefTensor({m, k}, gen);
         mOutput = RefTensor({n, k});
-
-        mInput1.fillRandomly(gen);
-        mInput2.fillRandomly(gen);
 
         // calculate reference output
         for (auto it = mOutput.begin(); it != mOutput.end(); ++it)
@@ -121,21 +118,17 @@ class MatmulTest : public LayerTest,
 
     void setupGradient(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
 
         unsigned n = std::get<0>(testCase).first[0];
         unsigned m = std::get<0>(testCase).first[1];
         unsigned k = std::get<0>(testCase).second[1];
 
-        mInput1 = RefTensor({n, m});
-        mInput2 = RefTensor({m, k});
-        mOutputGrad = RefTensor({n, k});
+        mInput1 = RefTensor({n, m}, gen);
+        mInput2 = RefTensor({m, k}, gen);
+        mOutputGrad = RefTensor({n, k}, gen);
         mGradient1 = RefTensor({n, m});
         mGradient2 = RefTensor({m, k});
-
-        mInput1.fillRandomly(gen);
-        mInput2.fillRandomly(gen);
-        mOutputGrad.fillRandomly(gen);
 
         // calculate reference gradient 1
         for (auto it = mInput1.begin(); it != mInput1.end(); ++it)

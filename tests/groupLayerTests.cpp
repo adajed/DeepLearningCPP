@@ -12,15 +12,11 @@ class GroupTest : public LayerTest, public testing::WithParamInterface<TestCase>
     void test(const TestCase& testCase)
     {
         int n = std::get<0>(testCase);
-        UniformGen gen(0);
+        UniformGen gen(seed);
 
         std::vector<RefTensor> inputs;
         for (int i = 0; i < n; ++i)
-        {
-            RefTensor t(std::vector<unsigned>({}));
-            t.fillRandomly(gen);
-            inputs.push_back(t);
-        }
+            inputs.push_back(RefTensor(std::vector<unsigned>({}), gen));
 
         LayerBuilder builder = [&testCase](const HostVec& ins) {
             InputDict inputs;

@@ -121,16 +121,12 @@ class ElementwiseTest : public LayerTest,
   private:
     void setup(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
 
         // allocate memory
-        mInput1 = RefTensor(shape(testCase, 0));
-        mInput2 = RefTensor(shape(testCase, 1));
+        mInput1 = RefTensor(shape(testCase, 0), gen);
+        mInput2 = RefTensor(shape(testCase, 1), gen);
         mOutput = RefTensor(shape(testCase, 2));
-
-        // fill inputs with random data
-        mInput1.fillRandomly(gen);
-        mInput2.fillRandomly(gen);
 
         std::function<float(float, float)> f;
         switch (op(testCase))
@@ -158,17 +154,13 @@ class ElementwiseTest : public LayerTest,
 
     void setupGradient(const TestCase& testCase)
     {
-        UniformGen gen(0);
+        UniformGen gen(seed);
 
-        mInput1 = RefTensor(shape(testCase, 0));
-        mInput2 = RefTensor(shape(testCase, 1));
-        mOutputGrad = RefTensor(shape(testCase, 2));
+        mInput1 = RefTensor(shape(testCase, 0), gen);
+        mInput2 = RefTensor(shape(testCase, 1), gen);
+        mOutputGrad = RefTensor(shape(testCase, 2), gen);
         mGradient1 = RefTensor(shape(testCase, 0));
         mGradient2 = RefTensor(shape(testCase, 1));
-
-        mInput1.fillRandomly(gen);
-        mInput2.fillRandomly(gen);
-        mOutputGrad.fillRandomly(gen);
 
         std::function<float(float, float)> fun1;
         std::function<float(float, float)> fun2;
