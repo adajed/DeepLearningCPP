@@ -6,9 +6,9 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = std::tuple<std::pair<Vec, Vec>, MemoryLocation>;
+using TestCase = std::tuple<std::pair<UVec, UVec>, MemoryLocation>;
 
-std::vector<std::pair<Vec, Vec>> SHAPES = {
+std::vector<std::pair<UVec, UVec>> SHAPES = {
     // clang-format off
     {{1, 1}, {1, 1}},
     {{2, 2}, {2, 2}},
@@ -19,7 +19,7 @@ std::vector<std::pair<Vec, Vec>> SHAPES = {
     // clang-format on
 };
 
-std::vector<std::pair<Vec, Vec>> ERROR_SHAPES = {
+std::vector<std::pair<UVec, UVec>> ERROR_SHAPES = {
     // clang-format off
     {{1, 1}, {1}},
     {{2}, {2}},
@@ -102,9 +102,9 @@ class MatmulTest : public LayerTest,
         unsigned m = std::get<0>(testCase).first[1];
         unsigned k = std::get<0>(testCase).second[1];
 
-        mInput1 = RefTensor({n, m}, gen);
-        mInput2 = RefTensor({m, k}, gen);
-        mOutput = RefTensor({n, k});
+        mInput1 = RefTensor({int(n), int(m)}, gen);
+        mInput2 = RefTensor({int(m), int(k)}, gen);
+        mOutput = RefTensor({int(n), int(k)});
 
         // calculate reference output
         for (auto it = mOutput.begin(); it != mOutput.end(); ++it)
@@ -124,11 +124,11 @@ class MatmulTest : public LayerTest,
         unsigned m = std::get<0>(testCase).first[1];
         unsigned k = std::get<0>(testCase).second[1];
 
-        mInput1 = RefTensor({n, m}, gen);
-        mInput2 = RefTensor({m, k}, gen);
-        mOutputGrad = RefTensor({n, k}, gen);
-        mGradient1 = RefTensor({n, m});
-        mGradient2 = RefTensor({m, k});
+        mInput1 = RefTensor({int(n), int(m)}, gen);
+        mInput2 = RefTensor({int(m), int(k)}, gen);
+        mOutputGrad = RefTensor({int(n), int(k)}, gen);
+        mGradient1 = RefTensor({int(n), int(m)});
+        mGradient2 = RefTensor({int(m), int(k)});
 
         // calculate reference gradient 1
         for (auto it = mInput1.begin(); it != mInput1.end(); ++it)

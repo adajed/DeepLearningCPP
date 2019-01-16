@@ -7,10 +7,10 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = std::tuple<int, Vec, MemoryLocation>;
-using ErrorTestCase = std::vector<Vec>;
+using TestCase = std::tuple<int, UVec, MemoryLocation>;
+using ErrorTestCase = std::vector<UVec>;
 
-std::vector<Vec> SHAPES = {
+std::vector<UVec> SHAPES = {
     // clang-format off
     {},
     {1},
@@ -27,7 +27,7 @@ std::vector<Vec> SHAPES = {
     // clang-format on
 };
 
-std::vector<std::vector<Vec>> ERROR_SHAPES = {
+std::vector<std::vector<UVec>> ERROR_SHAPES = {
     // clang-format off
     {},
     {{}, {1}},

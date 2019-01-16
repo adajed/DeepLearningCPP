@@ -1,14 +1,27 @@
 #include "tensorShape.h"
 
+#include <cassert>
 #include <utility>
 
 namespace graphdl
 {
 namespace core
 {
-TensorShape::TensorShape(Shape shape) : mDims(std::move(shape)) {}
+TensorShape::TensorShape(Shape shape)
+{
+    mDims.reserve(mDims.size());
+    for (int i : shape) mDims.push_back(int(i));
+}
 
-TensorShape::TensorShape(std::initializer_list<unsigned> list) : mDims(list) {}
+TensorShape::TensorShape(std::vector<int> vals) : mDims(std::move(vals))
+{
+    for (int i : mDims) assert(i >= 0);
+}
+
+TensorShape::TensorShape(std::initializer_list<int> list) : mDims(list)
+{
+    for (int i : mDims) assert(i >= 0);
+}
 
 bool TensorShape::operator==(const TensorShape& other) const
 {
@@ -23,12 +36,12 @@ bool TensorShape::operator!=(const TensorShape& other) const
     return !operator==(other);
 }
 
-unsigned& TensorShape::operator[](std::size_t pos)
+int& TensorShape::operator[](std::size_t pos)
 {
     return mDims[pos];
 }
 
-const unsigned& TensorShape::operator[](std::size_t pos) const
+const int& TensorShape::operator[](std::size_t pos) const
 {
     return mDims[pos];
 }
@@ -47,7 +60,9 @@ std::size_t TensorShape::getCount() const
 
 TensorShape::operator Shape() const
 {
-    return mDims;
+    Shape s(mDims.size(), 0);
+    for (unsigned i = 0; i < mDims.size(); ++i) s[i] = unsigned(mDims[i]);
+    return s;
 }
 
 TensorShape::iterator TensorShape::begin()

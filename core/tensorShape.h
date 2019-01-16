@@ -12,20 +12,21 @@ namespace core
 class TensorShape
 {
   public:
-    using iterator = std::vector<unsigned int>::iterator;
+    using iterator = std::vector<int>::iterator;
 
     TensorShape() = default;
     TensorShape(Shape shape);
+    TensorShape(std::vector<int> vals);
     TensorShape(const TensorShape& other) = default;
-    TensorShape(std::initializer_list<unsigned> list);
+    TensorShape(std::initializer_list<int> list);
 
     TensorShape& operator=(const TensorShape& other) = default;
 
     bool operator==(const TensorShape& other) const;
     bool operator!=(const TensorShape& other) const;
 
-    unsigned& operator[](std::size_t pos);
-    const unsigned& operator[](std::size_t pos) const;
+    int& operator[](std::size_t pos);
+    const int& operator[](std::size_t pos) const;
 
     unsigned size() const;
 
@@ -37,7 +38,7 @@ class TensorShape
     iterator end();
 
   private:
-    std::vector<unsigned int> mDims;
+    std::vector<int> mDims;
 };
 
 }  // namespace core

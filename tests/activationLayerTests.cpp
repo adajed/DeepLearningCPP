@@ -6,9 +6,9 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = std::tuple<Vec, Activation, MemoryLocation>;
+using TestCase = std::tuple<UVec, Activation, MemoryLocation>;
 
-std::vector<Vec> SHAPES = {
+std::vector<UVec> SHAPES = {
     // clang-format off
     {},
     {1},

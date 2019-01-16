@@ -4,7 +4,7 @@
 
 namespace
 {
-using Shapes = std::tuple<Vec, Vec>;
+using Shapes = std::tuple<UVec, UVec>;
 using TestCase = std::tuple<Shapes, MemoryLocation>;
 
 std::vector<Shapes> SHAPES = {
@@ -28,12 +28,12 @@ std::vector<Shapes> ERROR_SHAPES = {
     // clang-format on
 };
 
-Vec shape0(TestCase testCase)
+UVec shape0(TestCase testCase)
 {
     return std::get<0>(std::get<0>(testCase));
 }
 
-Vec shape1(TestCase testCase)
+UVec shape1(TestCase testCase)
 {
     return std::get<1>(std::get<0>(testCase));
 }

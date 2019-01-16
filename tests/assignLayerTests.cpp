@@ -4,10 +4,10 @@
 
 namespace
 {
-using TestCase = std::tuple<Vec, MemoryLocation>;
-using ErrorTestCase = std::tuple<Vec, Vec>;
+using TestCase = std::tuple<UVec, MemoryLocation>;
+using ErrorTestCase = std::tuple<UVec, UVec>;
 
-std::vector<Vec> SHAPES = {
+std::vector<UVec> SHAPES = {
     // clang-format off
     {},
     {1},

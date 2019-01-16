@@ -193,6 +193,13 @@ Tensor::SPtr pooling2D(const Tensor::SPtr& t, layers::PoolingType pooling,
     if (strides.empty() || strides.size() > 2)
         throw std::runtime_error("pool2D: wrong strides");
 
+    for (int d : kernel)
+        if (d <= 0)
+            throw std::runtime_error("pool2D: kernel dims must be positive");
+    for (int d : strides)
+        if (d <= 0)
+            throw std::runtime_error("pool2D: stride dims must be positive");
+
     std::vector<int> kernel2 = kernel;
     if (kernel2.size() == 1) kernel2.push_back(kernel2[0]);
     std::vector<int> strides2 = strides;

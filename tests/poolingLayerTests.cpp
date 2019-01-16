@@ -6,9 +6,11 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using Shapes = std::tuple<Vec, Vec, Vec>;
+using Shapes = std::tuple<UVec, Vec, Vec>;
 using TestCase =
     std::tuple<int, int, Shapes, PoolingType, PaddingType, MemoryLocation>;
+using ErrorTestCase =
+    std::tuple<Shapes, PoolingType, PaddingType, MemoryLocation>;
 
 std::vector<Shapes> SHAPES = {
     // clang-format off
@@ -23,6 +25,25 @@ std::vector<Shapes> SHAPES = {
     {{8, 8}, {2, 2}, {4, 4}},
     {{8, 8}, {3, 1}, {3, 1}},
     {{14, 14}, {14, 14}, {14, 14}} // global
+    // clang-format on
+};
+
+std::vector<Shapes> ERROR_SHAPES = {
+    // clang-format off
+    {{1, }, {2, 2}, {2, 2}}, // not 4-dim
+    {{1, 1}, {2, 2}, {2, 2}}, // not 4-dim
+    {{1, 1, 2}, {2, 2}, {2, 2}}, // not 4-dim
+    {{1, 1, 2, 2, 2}, {2, 2}, {2, 2}}, // not 4-dim
+    {{1, 2, 2, 2}, {}, {2, 2}},
+    {{1, 2, 2, 2}, {2, 2, 2}, {2, 2}},
+    {{1, 2, 2, 2}, {2, 2}, {}},
+    {{1, 2, 2, 2}, {2, 2}, {2, 2, 2}},
+    {{1, 2, 2, 2}, {}, {}},
+    {{1, 2, 2, 2}, {2, 2, 2}, {2, 2, 2}},
+    {{1, 2, 2, 2}, {2, 2}, {2, 0}},
+    {{1, 2, 2, 2}, {2, 0}, {2, 2}},
+    {{1, 2, 2, 2}, {2, 2}, {2, -1}},
+    {{1, 2, 2, 2}, {2, -1}, {2, 2}},
     // clang-format on
 };
 
@@ -43,9 +64,9 @@ std::vector<PaddingType> PADDINGS = {
     // clang-format on
 };
 
-Vec inputShape(const TestCase& testCase)
+UVec inputShape(const TestCase& testCase)
 {
-    Vec shape(4, 0);
+    UVec shape(4, 0);
     shape[0] = std::get<0>(testCase);
     shape[1] = std::get<1>(testCase);
     shape[2] = std::get<0>(std::get<2>(testCase))[0];
@@ -83,9 +104,9 @@ int ceil(int x, int y)
     return x / y + int(x % y > 0);
 }
 
-Vec outputShape(const TestCase& testCase)
+UVec outputShape(const TestCase& testCase)
 {
-    Vec output = inputShape(testCase);
+    UVec output = inputShape(testCase);
     Vec k = kernel(testCase);
     Vec s = strides(testCase);
 
@@ -274,6 +295,29 @@ class Pooling2DTest : public LayerTest,
     RefTensor mInput, mOutput, mOutputGrad, mInputGrad;
 };
 
+class Pooling2DErrorsTest : public LayerTest,
+                            public testing::WithParamInterface<ErrorTestCase>
+{
+  public:
+    void testWrongShapes(const ErrorTestCase& testCase)
+    {
+        UVec inShape = std::get<0>(std::get<0>(testCase));
+        Vec k = std::get<1>(std::get<0>(testCase));
+        Vec s = std::get<2>(std::get<0>(testCase));
+
+        ITensorPtr in = createInput("in", inShape, std::get<3>(testCase));
+        ITensorPtr out;
+
+        std::string p = "SAME";
+        if (std::get<2>(testCase) == PaddingType::kVALID) p = "VALID";
+
+        if (std::get<1>(testCase) == PoolingType::kMAX)
+            EXPECT_THROW({ out = maxPool2D(in, k, s, p); }, std::runtime_error);
+        else  // pooling(testCase) == PoolingType::kAVERAGE
+            EXPECT_THROW({ out = avgPool2D(in, k, s, p); }, std::runtime_error);
+    }
+};
+
 TEST_P(Pooling2DTest, testAPI)
 {
     test(GetParam());
@@ -294,4 +338,12 @@ INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DGradientTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
                                 ValuesIn(POOLINGS), ValuesIn(PADDINGS),
                                 ValuesIn(LOCATIONS)));
+
+TEST_P(Pooling2DErrorsTest, testWrongShapes)
+{
+    testWrongShapes(GetParam());
+};
+INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DErrorsTest,
+                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(POOLINGS),
+                                ValuesIn(PADDINGS), ValuesIn(LOCATIONS)));
 }  // namespace

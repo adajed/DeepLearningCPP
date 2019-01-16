@@ -7,8 +7,9 @@ namespace
 {
 using namespace graphdl::core::layers;
 
-using TestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise, MemoryLocation>;
-using ErrorTestCase = std::tuple<std::tuple<Vec, Vec>, Elementwise>;
+using TestCase =
+    std::tuple<std::tuple<UVec, UVec>, Elementwise, MemoryLocation>;
+using ErrorTestCase = std::tuple<std::tuple<UVec, UVec>, Elementwise>;
 
 //!
 //! n == 0 means to return first shape
@@ -24,8 +25,8 @@ Shape shape(const TestCase& testCase, int n)
         return std::get<1>(std::get<0>(testCase));
     else
     {
-        Vec v1 = shape(testCase, 0);
-        Vec v2 = shape(testCase, 1);
+        UVec v1 = shape(testCase, 0);
+        UVec v2 = shape(testCase, 1);
         return v1.size() > v2.size() ? v1 : v2;
     }
 }
@@ -34,7 +35,7 @@ Elementwise op(const TestCase& testCase)
     return std::get<1>(testCase);
 }
 
-std::vector<std::tuple<Vec, Vec>> SHAPES = {
+std::vector<std::tuple<UVec, UVec>> SHAPES = {
     // clang-format off
     {{}, {}},
     {{1}, {1}},
@@ -74,7 +75,7 @@ std::vector<std::tuple<Vec, Vec>> SHAPES = {
     // clang-format on
 };
 
-std::vector<std::tuple<Vec, Vec>> ERROR_SHAPES = {
+std::vector<std::tuple<UVec, UVec>> ERROR_SHAPES = {
     // clang-format off
     {{2}, {5}},
     {{2, 3}, {2, 5}},
@@ -258,7 +259,7 @@ class ElementwiseErrorTest : public LayerTest,
   public:
     void test(const ErrorTestCase& testCase)
     {
-        std::tuple<Vec, Vec> shapes = std::get<0>(testCase);
+        std::tuple<UVec, UVec> shapes = std::get<0>(testCase);
         ITensorPtr input1 =
             createInput("input1", std::get<0>(shapes), MemoryLocation::kHOST);
         ITensorPtr input2 =

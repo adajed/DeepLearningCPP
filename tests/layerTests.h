@@ -15,7 +15,8 @@ using testing::Combine;
 using testing::Range;
 using testing::ValuesIn;
 
-using Vec = std::vector<unsigned>;
+using Vec = std::vector<int>;
+using UVec = std::vector<unsigned>;
 using HostVec = std::vector<HostTensor>;
 
 extern std::vector<MemoryLocation> LOCATIONS;
