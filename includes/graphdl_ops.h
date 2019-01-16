@@ -68,6 +68,10 @@ ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
                      const std::vector<int>& strides,
                      const std::string& padding);
 
+ITensorPtr conv2D(const ITensorPtr& tensor,
+                  const ITensorPtr& kernel,
+                  const std::vector<int>& strides,
+                  const std::string& padding);
 }  // namespace graphdl
 
 #endif  // GRAPHDL_OPS_H_

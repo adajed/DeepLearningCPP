@@ -229,11 +229,11 @@ class Pooling2DTest : public LayerTest,
              ++it)
         {
             Coord c(
-                {it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
+                {it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
             if (padding(testCase) == PaddingType::kSAME)
             {
-                c[2] -= (int(k[0]) - 1) / 2;
-                c[3] -= (int(k[1]) - 1) / 2;
+                c[2] -= (k[0] - 1) / 2;
+                c[3] -= (k[1] - 1) / 2;
             }
             poolGradient(c, it(), testCase);
         }
