@@ -19,6 +19,8 @@ void copy(T* out, T* in, size_t size)
     cudaMemcpy((void*)out, (void*)in, size * sizeof(T), cudaMemcpyDeviceToDevice);
 }
 
+void fill(float* memory, size_t size, float value);
+
 }  // namespace utils
 }  // namespace cuda
 }  // namespace core

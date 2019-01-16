@@ -3,44 +3,35 @@
 #include "graph.h"
 
 #include <random>
+#include <utility>
 
 namespace graphdl
 {
 namespace core
 {
 WeightsLayer::WeightsLayer(ID id, const std::string& name, const Shape& shape,
-                           MemoryType type)
-    : Layer(id, {}, {createTensor(name, shape, type)})
+                           Initializer::SPtr initializer, MemoryType type)
+    : Layer(id, {}, {createTensor(name, shape, type)}),
+      mInitializer(std::move(initializer))
 {
 }
 
 void WeightsLayer::initialize()
 {
     float* memory = mOutputs[0]->getMemory().getValues();
-    std::size_t size = mOutputs[0]->getMemory().getCount();
     MemoryType type = mOutputs[0]->getMemory().getType();
-
-    if (type == MemoryType::kHOST_MEMORY)
-    {
-        std::random_device rd;
-        std::mt19937 e2(rd());
-        std::uniform_real_distribution<> dist(-1., 1.);
-
-        for (std::size_t i = 0; i < size; ++i) memory[i] = dist(e2);
-    }
-#ifdef CUDA_AVAILABLE
-    else
-        cuda::initWeights(memory, size);
-#endif
+    mInitializer->init(memory, mOutputs[0]->getShape(), type);
 }
 
 // This does nothing, because weights are already in memory.
 void WeightsLayer::execute(const InputDict& /*inputs*/) {}
 
 Tensor::SPtr weights(const std::string& name, const TensorShape& shape,
-                     MemoryType type, const std::string& nspace)
+                     Initializer::SPtr initializer, MemoryType type,
+                     const std::string& nspace)
 {
-    Layer::SPtr layer = createLayer<WeightsLayer>(name, shape, type);
+    Layer::SPtr layer =
+        createLayer<WeightsLayer>(name, shape, std::move(initializer), type);
     Tensor::SPtr tensor = getDefaultGraph()->addWeights(name, layer, nspace);
     return tensor;
 }

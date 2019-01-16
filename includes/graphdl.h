@@ -25,11 +25,14 @@ enum class MemoryLocation
     kDEVICE = 1
 };
 
+template <typename T>
+using SharedPtr = std::shared_ptr<T>;
+
 class ITensor;
-using ITensorPtr = std::shared_ptr<ITensor>;
+using ITensorPtr = SharedPtr<ITensor>;
 
 class IGraph;
-using IGraphPtr = std::shared_ptr<IGraph>;
+using IGraphPtr = SharedPtr<IGraph>;
 
 //! \class ITensor
 //! \brief Interface representing tensor.
@@ -90,6 +93,25 @@ class IGraph
     virtual ~IGraph() {}
 };
 
+//! \class IInitializer
+//! \brief Interface representing methods for initializing weights.
+//!
+class IInitializer
+{
+  public:
+    //! \fn init
+    //!
+    virtual void init(float* memory, const Shape& shape,
+                      MemoryLocation location) const = 0;
+};
+
+SharedPtr<IInitializer> constantInitializer(float value);
+
+SharedPtr<IInitializer> uniformInitializer(float min, float max, size_t seed);
+
+SharedPtr<IInitializer> normalInitializer(float mean, float stddev,
+                                          size_t seed);
+
 //! \fn createIGraph
 //! \brief This function creates new IGraph object.
 //! \param name Name of the graph.
@@ -126,6 +148,7 @@ ITensorPtr createInput(const std::string& name, const Shape& shape,
 //! \param location Location of the weights.
 //!
 ITensorPtr createWeights(const std::string& name, const Shape& shape,
+                         const SharedPtr<IInitializer>& initializer,
                          MemoryLocation location);
 
 //! \fn

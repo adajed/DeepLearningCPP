@@ -27,11 +27,12 @@ LFLAGS_D=$(COMMON_LFLAGS)
 .PHONY: release debug format
 .PHONY: layers_release layers_debug
 .PHONY: trainers_release trainers_debug
+.PHONY: initializers_release initializers_debug
 
 all: release debug
 
-release: layers_release trainers_release $(SHARED_R) $(STATIC_R)
-debug: layers_debug trainers_debug $(SHARED_D) $(STATIC_D)
+release: layers_release trainers_release initializers_release $(SHARED_R) $(STATIC_R)
+debug: layers_debug trainers_debug initializers_debug $(SHARED_D) $(STATIC_D)
 
 #### LAYERS
 layers_release:
@@ -46,6 +47,13 @@ trainers_release:
 
 trainers_debug:
 	@+make -C trainers debug
+
+#### INITIALIZERS
+initializers_release:
+	@+make -C initializers release
+
+initializers_debug:
+	@+make -C initializers debug
 
 #### LINKING
 
@@ -88,13 +96,15 @@ format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(CPP_SOURCES) $(CPP_HEADERS)
 	@+make -C layers format
 	@+make -C trainers format
+	@+make -C initializers format
 
 #### clang-tidy
 tidy: $(TIDY_TARGETS) tidy_layers
 
 tidy_layers:
-	@make -C layers tidy
-	@make -C trainers tidy
+	@+make -C layers tidy
+	@+make -C trainers tidy
+	@+make -C initializers tidy
 
 .tidy_%: %.cpp $(CPP_HEADERS)
 	$(CLANG_TIDY_EXEC) --fix $< -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS)

@@ -1,5 +1,6 @@
 #include "abstractGraph.h"
 
+#include "abstractInitializer.h"
 #include "abstractTensor.h"
 #include "graphdl.h"
 #include "weightsNamespaces.h"
@@ -107,6 +108,7 @@ ITensorPtr createInput(const std::string& name, const Shape& shape,
 }
 
 ITensorPtr createWeights(const std::string& name, const Shape& shape,
+                         const SharedPtr<IInitializer>& initializer,
                          MemoryLocation location)
 {
 #ifndef CUDA_AVAILABLE
@@ -118,9 +120,11 @@ ITensorPtr createWeights(const std::string& name, const Shape& shape,
         if (in.first == name)
             throw std::runtime_error("Weights \"" + name + "\" already exists");
 
+    SharedPtr<core::AbstractInitializer> init =
+        core::castIInitializer(initializer);
     core::MemoryType type = core::memoryLocationToType(location);
     core::Layer::SPtr weights =
-        core::createLayer<core::WeightsLayer>(name, shape, type);
+        core::createLayer<core::WeightsLayer>(name, shape, init->get(), type);
     core::Tensor::SPtr tensor = core::getDefaultGraph()->addWeights(
         name, weights, core::GRAPH_WEIGHTS_NAMESPACE);
     return core::makeAbstractTensor(tensor);

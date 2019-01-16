@@ -28,8 +28,8 @@ class GroupTest : public LayerTest, public testing::WithParamInterface<TestCase>
                 std::string wName = "weights" + std::to_string(i);
                 ITensorPtr iTensor =
                     createInput(iName, {}, std::get<1>(testCase));
-                ITensorPtr wTensor =
-                    createWeights(wName, {}, std::get<1>(testCase));
+                ITensorPtr wTensor = createWeights(
+                    wName, {}, constantInitializer(0.), std::get<1>(testCase));
                 assigns.push_back(assign(wTensor, iTensor));
                 weights.push_back(wTensor);
                 inputs.insert({iName, ins[i]});

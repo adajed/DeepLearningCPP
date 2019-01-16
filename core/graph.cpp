@@ -116,6 +116,11 @@ Layer::ID Graph::nextLayerID()
     return mLayerCounter++;
 }
 
+const WeightsNamespaces& Graph::getWeightsNamespaces() const
+{
+    return mWeights;
+}
+
 GraphRegister& GraphRegister::getGlobalGraphRegister()
 {
     static GraphRegister gRegister;

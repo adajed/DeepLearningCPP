@@ -7,6 +7,9 @@ global:
         graphdl::initializeGraph*;
         graphdl::createInput*;
         graphdl::createWeights*;
+        graphdl::constantInitializer*;
+        graphdl::uniformInitializer*;
+        graphdl::normalInitializer*;
         graphdl::eval*;
         graphdl::gradients*;
         graphdl::constant*;

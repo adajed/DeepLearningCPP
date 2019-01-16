@@ -72,8 +72,10 @@ TEST_F(CoreTest, addWeights)
 {
     const std::string WEIGHTS_NAME = "weights";
     graphdl::MemoryLocation loc = graphdl::MemoryLocation::kHOST;
+    graphdl::SharedPtr<graphdl::IInitializer> init =
+        graphdl::constantInitializer(0.);
     graphdl::ITensorPtr w =
-        graphdl::createWeights(WEIGHTS_NAME, {100, 100}, loc);
+        graphdl::createWeights(WEIGHTS_NAME, {100, 100}, init, loc);
     auto weights = graphdl::getDefaultGraph()->getWeights();
     EXPECT_EQ(weights.size(), 1);
     EXPECT_EQ(weights.count(WEIGHTS_NAME), 1);
@@ -93,8 +95,10 @@ TEST_F(CoreTest, addInputWithTheSameName)
 TEST_F(CoreTest, gradients)
 {
     graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::SharedPtr<graphdl::IInitializer> init =
+        graphdl::constantInitializer(0.);
     graphdl::ITensorPtr i = graphdl::createInput("input", {}, host);
-    graphdl::ITensorPtr w = graphdl::createWeights("weights", {}, host);
+    graphdl::ITensorPtr w = graphdl::createWeights("weights", {}, init, host);
     graphdl::ITensorPtr output = (graphdl::constant(1., {}, host) / i) * w;
     graphdl::ITensorPtr grad = graphdl::gradients(output)[w];
     graphdl::initializeGraph();
@@ -108,8 +112,11 @@ TEST_F(CoreTest, gradients)
 TEST_F(CoreTest, nonScalarGradientException)
 {
     graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::SharedPtr<graphdl::IInitializer> init =
+        graphdl::constantInitializer(0.);
     graphdl::ITensorPtr i = graphdl::createInput("input", {2, 2}, host);
-    graphdl::ITensorPtr w = graphdl::createWeights("weights", {2, 2}, host);
+    graphdl::ITensorPtr w =
+        graphdl::createWeights("weights", {2, 2}, init, host);
     graphdl::ITensorPtr o = i * w;
     graphdl::ITensorPtr grad;
     EXPECT_THROW({ grad = graphdl::gradients(o)[w]; }, std::runtime_error);
@@ -149,4 +156,12 @@ TEST_F(CoreTest, checkWrongShapeOfHostTensor)
             auto t = out->eval({{"i1", h2}, {"i2", h1}});
         },
         std::runtime_error);
+}
+
+TEST_F(CoreTest, assignToNonWeights)
+{
+    graphdl::MemoryLocation host = graphdl::MemoryLocation::kHOST;
+    graphdl::ITensorPtr i1 = graphdl::createInput("i1", {2}, host);
+    graphdl::ITensorPtr i2 = graphdl::createInput("i2", {2}, host);
+    EXPECT_THROW({ assign(i1, i2); }, std::runtime_error);
 }
