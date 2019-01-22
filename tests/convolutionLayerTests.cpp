@@ -27,8 +27,8 @@ std::vector<Shapes> SHAPES = {
     // clang-format on
 };
 
-std::vector<int> N = {1, 2, 4, 8, 16};
-std::vector<int> C = {1, 3, 8, 16};
+std::vector<int> N = {1, 2, 4, 8};
+std::vector<int> C = {1, 3, 8};
 
 std::vector<PaddingType> PADDINGS = {
     // clang-format off

@@ -40,25 +40,141 @@ Tensor::SPtr createOutput(const Tensor::SPtr& t, const Tensor::SPtr& k,
     return createTensor("", shape, t->getType());
 }
 
-template <PaddingType padding>
-void conv2D(const float* x, const float* k, float* y,
-            const std::vector<int>& shape, const std::vector<int>& kernel,
-            const std::vector<int>& strides);
-
-template <>
-void conv2D<PaddingType::kVALID>(const float* x, const float* k, float* y,
-                                 const std::vector<int>& shape,
-                                 const std::vector<int>& kernel,
-                                 const std::vector<int>& strides)
+float convReduce(const float* in, const float* k, const std::vector<int>& shape,
+                 const std::vector<int>& kernel, int x, int y)
 {
+    float val = 0.;
+
+    for (int iC = 0; iC < kernel[1]; ++iC)
+    {
+        for (int iX = x < 0 ? -x : 0; iX < kernel[2]; ++iX)
+        {
+            if (x + iX >= shape[2]) break;
+            for (int iY = y < 0 ? -y : 0; iY < kernel[3]; ++iY)
+            {
+                if (y + iY >= shape[3]) break;
+                val +=
+                    in[(x + iX) * shape[3] + y + iY] * k[iX * kernel[3] + iY];
+            }
+        }
+        in += shape[2] * shape[3];
+        k += kernel[2] * kernel[3];
+    }
+
+    return val;
 }
 
-template <>
-void conv2D<PaddingType::kSAME>(const float* x, const float* k, float* y,
-                                const std::vector<int>& shape,
-                                const std::vector<int>& kernel,
-                                const std::vector<int>& strides)
+template <PaddingType padding>
+void conv2D(const float* xArr, const float* kArr, float* yArr,
+            const std::vector<int>& shape, const std::vector<int>& kernel,
+            const std::vector<int>& strides)
 {
+    int outShape[] = {shape[0], kernel[0], 0, 0};
+    if (padding == PaddingType::kVALID)
+    {
+        outShape[2] = ceil(shape[2] - kernel[2] + 1, strides[0]);
+        outShape[3] = ceil(shape[3] - kernel[3] + 1, strides[1]);
+    }
+    else if (padding == PaddingType::kSAME)
+    {
+        outShape[2] = ceil(shape[2], strides[0]);
+        outShape[3] = ceil(shape[3], strides[1]);
+    }
+
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int c = 0; c < outShape[1]; ++c)
+            for (int x = 0; x < outShape[2]; ++x)
+                for (int y = 0; y < outShape[3]; ++y)
+                {
+                    int x2 = x * strides[0], y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[2] - 1) / 2;
+                        y2 -= (kernel[3] - 1) / 2;
+                    }
+
+                    size_t inPos = n * shape[1] * shape[2] * shape[3];
+                    size_t kerPos = c * kernel[1] * kernel[2] * kernel[3];
+                    size_t outPos = n * outShape[1] + c;
+                    outPos = outPos * outShape[2] + x;
+                    outPos = outPos * outShape[3] + y;
+                    yArr[outPos] = convReduce(xArr + inPos, kArr + kerPos,
+                                              shape, kernel, x2, y2);
+                }
+}
+
+void convGradientReduce(const float* xArr, const float* kArr, float yG,
+                        float* xGArr, float* kGArr,
+                        const std::vector<int>& shape,
+                        const std::vector<int>& kernel, int x, int y)
+{
+    for (int iC = 0; iC < kernel[1]; ++iC)
+    {
+        for (int iX = x < 0 ? -x : 0; iX < kernel[2]; ++iX)
+        {
+            if (x + iX >= shape[2]) break;
+            for (int iY = y < 0 ? -y : 0; iY < kernel[3]; ++iY)
+            {
+                if (y + iY >= shape[3]) break;
+                xGArr[(x + iX) * shape[3] + y + iY] +=
+                    yG * kArr[iX * kernel[3] + iY];
+                kGArr[iX * kernel[3] + iY] +=
+                    yG * xArr[(x + iX) * shape[3] + y + iY];
+            }
+        }
+        xArr += shape[2] * shape[3];
+        xGArr += shape[2] * shape[3];
+        kArr += kernel[2] * kernel[3];
+        kGArr += kernel[2] * kernel[3];
+    }
+}
+
+template <PaddingType padding>
+void conv2DGradient(const float* xArr, const float* kArr, const float* yGArr,
+                    float* xGArr, float* kGArr, const std::vector<int>& shape,
+                    const std::vector<int>& kernel,
+                    const std::vector<int>& strides)
+{
+    int outShape[] = {shape[0], kernel[0], 0, 0};
+    if (padding == PaddingType::kVALID)
+    {
+        outShape[2] = ceil(shape[2] - kernel[2] + 1, strides[0]);
+        outShape[3] = ceil(shape[3] - kernel[3] + 1, strides[1]);
+    }
+    else if (padding == PaddingType::kSAME)
+    {
+        outShape[2] = ceil(shape[2], strides[0]);
+        outShape[3] = ceil(shape[3], strides[1]);
+    }
+
+    for (size_t pos = 0; pos < shape[0] * shape[1] * shape[2] * shape[3]; ++pos)
+        xGArr[pos] = 0.;
+    for (size_t pos = 0; pos < kernel[0] * kernel[1] * kernel[2] * kernel[3];
+         ++pos)
+        kGArr[pos] = 0.;
+
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int c = 0; c < outShape[1]; ++c)
+            for (int x = 0; x < outShape[2]; ++x)
+                for (int y = 0; y < outShape[3]; ++y)
+                {
+                    int x2 = x * strides[0], y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[2] - 1) / 2;
+                        y2 -= (kernel[3] - 1) / 2;
+                    }
+
+                    size_t inPos = n * shape[1] * shape[2] * shape[3];
+                    size_t kerPos = c * kernel[1] * kernel[2] * kernel[3];
+                    size_t outPos = n * outShape[1] + c;
+                    outPos = outPos * outShape[2] + x;
+                    outPos = outPos * outShape[3] + y;
+
+                    convGradientReduce(xArr + inPos, kArr + kerPos,
+                                       yGArr[outPos], xGArr + inPos,
+                                       kGArr + kerPos, shape, kernel, x2, y2);
+                }
 }
 
 void runConv2DHost(const float* x, const float* k, float* y,
@@ -73,11 +189,17 @@ void runConv2DHost(const float* x, const float* k, float* y,
 }
 
 void runConv2DGradientHost(const float* in, const float* ker, const float* out,
-                           const float* outG, float* inG, float* kerG,
+                           float* inG, float* kerG,
                            const std::vector<int>& shape,
                            const std::vector<int>& kernel,
                            const std::vector<int>& strides, PaddingType padding)
 {
+    if (padding == PaddingType::kVALID)
+        conv2DGradient<PaddingType::kVALID>(in, ker, out, inG, kerG, shape,
+                                            kernel, strides);
+    else  // padding == PaddingType::kSAME
+        conv2DGradient<PaddingType::kSAME>(in, ker, out, inG, kerG, shape,
+                                           kernel, strides);
 }
 
 }  // namespace
@@ -148,16 +270,13 @@ void Conv2DGradientLayer::execute(const InputDict& inputs)
 {
     Tensor::SPtr inTensor = mInputs[0].lock();
     Tensor::SPtr kerTensor = mInputs[1].lock();
-    Tensor::SPtr outTensor = mInputs[2].lock();
     Tensor::SPtr outGTensor = mInputs[3].lock();
     inTensor->eval(inputs);
     kerTensor->eval(inputs);
-    outTensor->eval(inputs);
     outGTensor->eval(inputs);
 
     float* in = inTensor->getMemory().getValues();
     float* ker = kerTensor->getMemory().getValues();
-    float* out = outTensor->getMemory().getValues();
     float* outG = outGTensor->getMemory().getValues();
     float* inG = mOutputs[0]->getMemory().getValues();
     float* kerG = mOutputs[1]->getMemory().getValues();
@@ -168,7 +287,7 @@ void Conv2DGradientLayer::execute(const InputDict& inputs)
     std::vector<int> kerShape(kShape.begin(), kShape.end());
 
     if (inTensor->getType() == MemoryType::kHOST_MEMORY)
-        runConv2DGradientHost(in, ker, out, outG, inG, kerG, inShape, kerShape,
+        runConv2DGradientHost(in, ker, outG, inG, kerG, inShape, kerShape,
                               mStrides, mPadding);
 #ifdef CUDA_AVAILABLE
     else
