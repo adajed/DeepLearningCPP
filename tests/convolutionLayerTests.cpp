@@ -115,6 +115,15 @@ class Conv2DTest : public LayerTest,
         EXPECT_TRUE(correct);
     }
 
+    void testGradient(const TestCase& testCase)
+    {
+        setupGradient(testCase);
+        LayerBuilder builder = getGradientBuilder(testCase);
+        bool correct = runTest({mInput, mKernel, mOutputGrad},
+                               {mInputGrad, mKernelGrad}, builder);
+        EXPECT_TRUE(correct);
+    }
+
   private:
     float conv(RefTensor& t, RefTensor& k)
     {
@@ -151,6 +160,47 @@ class Conv2DTest : public LayerTest,
         }
     }
 
+    void setupGradient(const TestCase& testCase)
+    {
+        UniformGen gen(seed);
+        mInput = RefTensor(inputShape(testCase), gen);
+        mKernel = RefTensor(kernelShape(testCase), gen);
+        mOutputGrad = RefTensor(outputShape(testCase), gen);
+        mInputGrad = RefTensor(inputShape(testCase));
+        mKernelGrad = RefTensor(kernelShape(testCase));
+
+        Vec k = kernel(testCase);
+        Vec s = strides(testCase);
+        TensorShape subShape({1, std::get<1>(testCase), k[0], k[1]});
+
+        for (size_t pos = 0; pos < mInputGrad.getCount(); ++pos)
+            mInputGrad.at(pos) = 0.;
+        for (size_t pos = 0; pos < mKernelGrad.getCount(); ++pos)
+            mKernelGrad.at(pos) = 0.;
+
+        for (Coord_iterator i = mOutputGrad.begin(); i != mOutputGrad.end();
+             ++i)
+        {
+            Coord cIn({i()[0], 0, i()[2] * s[0], i()[3] * s[1]});
+            Coord cK({i()[1], 0, 0, 0});
+            if (padding(testCase) == PaddingType::kSAME)
+            {
+                cIn[2] -= (k[0] - 1) / 2;
+                cIn[3] -= (k[1] - 1) / 2;
+            }
+            RefTensor subTensor = mInput.slice(cIn, subShape);
+            RefTensor subKernel = mKernel.slice(cK, subShape);
+
+            for (Coord_iterator j = shapeBegin(subShape);
+                 j != shapeEnd(subShape); ++j)
+            {
+                if (isInside(cIn + j(), mInputGrad.shape()))
+                    mInputGrad[cIn + j()] += mOutputGrad[i()] * subKernel[j()];
+                mKernelGrad[cK + j()] += mOutputGrad[i()] * subTensor[j()];
+            }
+        }
+    }
+
     LayerBuilder getBuilder(const TestCase& testCase)
     {
         return [&testCase](const HostVec& ins) {
@@ -169,6 +219,34 @@ class Conv2DTest : public LayerTest,
         };
     }
 
+    LayerBuilder getGradientBuilder(const TestCase& testCase)
+    {
+        return [&testCase](const HostVec& ins) {
+            MemoryType type = memoryLocationToType(location(testCase));
+            UVec inShape = inputShape(testCase);
+            UVec kerShape = kernelShape(testCase);
+            UVec outShape = outputShape(testCase);
+            Tensor::SPtr in = core::getDefaultGraph()->addInput(
+                "in", createLayer<InputLayer>("in", inShape, type));
+            Tensor::SPtr ker = core::getDefaultGraph()->addInput(
+                "ker", createLayer<InputLayer>("ker", kerShape, type));
+            Tensor::SPtr outG = core::getDefaultGraph()->addInput(
+                "outG", createLayer<InputLayer>("outG", outShape, type));
+
+            Tensor::SPtr out =
+                convolution2D(in, ker, strides(testCase), padding(testCase));
+            Layer::SPtr layer = createLayer<Conv2DGradientLayer>(
+                in, ker, out, outG, strides(testCase), padding(testCase));
+
+            std::vector<Tensor::SPtr> grads = layer->getOutputs();
+            std::vector<ITensorPtr> igrads = {makeAbstractTensor(grads[0]),
+                                              makeAbstractTensor(grads[1])};
+            initializeGraph();
+            return eval(igrads,
+                        {{"in", ins[0]}, {"ker", ins[1]}, {"outG", ins[2]}});
+        };
+    }
+
     RefTensor mInput, mKernel, mOutput, mInputGrad, mKernelGrad, mOutputGrad;
 };
 
@@ -177,6 +255,18 @@ TEST_P(Conv2DTest, testAPI)
     test(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DTest,
+                        Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
+                                ValuesIn(SHAPES), ValuesIn(PADDINGS),
+                                ValuesIn(LOCATIONS)));
+
+class Conv2DGradientTest : public Conv2DTest
+{
+};
+TEST_P(Conv2DGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
+INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DGradientTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
                                 ValuesIn(SHAPES), ValuesIn(PADDINGS),
                                 ValuesIn(LOCATIONS)));

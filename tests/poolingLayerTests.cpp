@@ -228,8 +228,7 @@ class Pooling2DTest : public LayerTest,
         for (Coord_iterator it = mOutputGrad.begin(); it != mOutputGrad.end();
              ++it)
         {
-            Coord c(
-                {it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
+            Coord c({it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
             if (padding(testCase) == PaddingType::kSAME)
             {
                 c[2] -= (k[0] - 1) / 2;
