@@ -18,11 +18,14 @@ class Conv2DLayer : public DifferentiableLayer
 
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
+    void initialize() override;
+
   private:
     void execute(const InputDict& inputs) override;
 
     std::vector<int> mStrides;
     PaddingType mPadding;
+    int* mGpuParams{};
 };
 
 class Conv2DGradientLayer : public Layer
@@ -43,13 +46,16 @@ class Conv2DGradientLayer : public Layer
 namespace cuda
 {
 extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
-                                int* shape, int* kernel, int* strides,
-                                PaddingType padding);
+                                size_t size, int* info, PaddingType padding);
 
 extern "C" void runConv2DGradientDevice(const float* x, const float* k,
                                         const float* yG, float* xG, float* kG,
                                         int* shape, int* kernel, int* strides,
                                         PaddingType padding);
+
+extern "C" void initializeConvGpuParams(void** dest, int* inShape,
+                                        int* kerShape, int* outShape,
+                                        int* strides);
 
 }  // namespace cuda
 #endif

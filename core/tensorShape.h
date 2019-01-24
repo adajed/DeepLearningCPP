@@ -33,6 +33,7 @@ class TensorShape
     size_t getCount() const;
 
     operator Shape() const;
+    operator std::vector<int>() const;
 
     iterator begin();
     iterator end();

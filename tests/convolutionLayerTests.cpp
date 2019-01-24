@@ -111,7 +111,7 @@ class Conv2DTest : public LayerTest,
     {
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
-        bool correct = runTest({mInput, mKernel}, {mOutput}, builder);
+        bool correct = runTest({mInput, mKernel}, {mOutput}, builder, 10e-4);
         EXPECT_TRUE(correct);
     }
 
@@ -257,7 +257,7 @@ TEST_P(Conv2DTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
                                 ValuesIn(SHAPES), ValuesIn(PADDINGS),
-                                ValuesIn({MemoryLocation::kHOST})));
+                                ValuesIn(LOCATIONS)));
 
 class Conv2DGradientTest : public Conv2DTest
 {

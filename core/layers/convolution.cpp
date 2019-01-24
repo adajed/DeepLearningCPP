@@ -248,8 +248,31 @@ void Conv2DLayer::execute(const InputDict& inputs)
         runConv2DHost(in, ker, out, inShape, kerShape, mStrides, mPadding);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runConv2DDevice(in, ker, out, inShape.data(), kerShape.data(),
-                              mStrides.data(), mPadding);
+    {
+        std::vector<int> outShape = mOutputs[0]->getShape();
+        size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3];
+        cuda::runConv2DDevice(in, ker, out, size, mGpuParams, mPadding);
+    }
+#endif
+}
+
+void Conv2DLayer::initialize()
+{
+    Tensor::SPtr inTensor = mInputs[0].lock();
+    Tensor::SPtr kerTensor = mInputs[1].lock();
+
+    std::vector<int> inShape = inTensor->getShape();
+    std::vector<int> kShape = kerTensor->getShape();
+    std::vector<int> outShape = mOutputs[0]->getShape();
+
+    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
+    {
+    }
+#ifdef CUDA_AVAILABLE
+    else
+        cuda::initializeConvGpuParams((void**)&mGpuParams, inShape.data(),
+                                      kShape.data(), outShape.data(),
+                                      mStrides.data());
 #endif
 }
 

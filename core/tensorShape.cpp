@@ -65,6 +65,11 @@ TensorShape::operator Shape() const
     return s;
 }
 
+TensorShape::operator std::vector<int>() const
+{
+    return mDims;
+}
+
 TensorShape::iterator TensorShape::begin()
 {
     return mDims.begin();
