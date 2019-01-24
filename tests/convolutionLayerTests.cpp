@@ -257,7 +257,7 @@ TEST_P(Conv2DTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
                                 ValuesIn(SHAPES), ValuesIn(PADDINGS),
-                                ValuesIn(LOCATIONS)));
+                                ValuesIn({MemoryLocation::kHOST})));
 
 class Conv2DGradientTest : public Conv2DTest
 {
@@ -269,5 +269,5 @@ TEST_P(Conv2DGradientTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DGradientTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
                                 ValuesIn(SHAPES), ValuesIn(PADDINGS),
-                                ValuesIn(LOCATIONS)));
+                                ValuesIn({MemoryLocation::kHOST})));
 }  // namespace

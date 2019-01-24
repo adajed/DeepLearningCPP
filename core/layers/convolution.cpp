@@ -248,7 +248,8 @@ void Conv2DLayer::execute(const InputDict& inputs)
         runConv2DHost(in, ker, out, inShape, kerShape, mStrides, mPadding);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runConv2DDevice();
+        cuda::runConv2DDevice(in, ker, out, inShape.data(), kerShape.data(),
+                              mStrides.data(), mPadding);
 #endif
 }
 
@@ -291,7 +292,9 @@ void Conv2DGradientLayer::execute(const InputDict& inputs)
                               mStrides, mPadding);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runConv2DGradientDevice();
+        cuda::runConv2DGradientDevice(in, ker, outG, inG, kerG, inShape.data(),
+                                      kerShape.data(), mStrides.data(),
+                                      mPadding);
 #endif
 }
 

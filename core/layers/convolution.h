@@ -43,13 +43,12 @@ class Conv2DGradientLayer : public Layer
 namespace cuda
 {
 extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
-                                int* shape, int cOut, int* strides,
+                                int* shape, int* kernel, int* strides,
                                 PaddingType padding);
 
 extern "C" void runConv2DGradientDevice(const float* x, const float* k,
-                                        const float* y, const float* yG,
-                                        float* xG, float* kG, int* shape,
-                                        int cOut, int* strides,
+                                        const float* yG, float* xG, float* kG,
+                                        int* shape, int* kernel, int* strides,
                                         PaddingType padding);
 
 }  // namespace cuda
