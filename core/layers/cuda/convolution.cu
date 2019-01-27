@@ -10,7 +10,20 @@ namespace cuda
 {
 namespace
 {
-// info = [in(N, C, X, Y), ker(outC, inC, kX, kY), out(N, C, X, Y), strides]
+// info = [N, C_IN, X_IN, Y_IN, C_OUT, X_OUT, Y_OUT, X_KER, Y_KER, X_STR, Y_STR]
+
+#define N info[0]
+#define C_IN info[1]
+#define X_IN info[2]
+#define Y_IN info[3]
+#define C_OUT info[4]
+#define X_OUT info[5]
+#define Y_OUT info[6]
+#define X_KER info[7]
+#define Y_KER info[8]
+#define X_STR info[9]
+#define Y_STR info[10]
+
 template <PaddingType padding>
 __global__ void convKernel(const float* xArr, const float* kArr, float* yArr,
                            const int* info)
@@ -18,42 +31,41 @@ __global__ void convKernel(const float* xArr, const float* kArr, float* yArr,
     size_t outPos = blockIdx.x * blockDim.x + threadIdx.x;
     size_t n = outPos;
 
-    int y = n % info[11];
-    n /= info[11];
-    int x = n % info[10];
-    n /= info[10];
-    int c = n % info[9];
-    n /= info[9];
+    int y = n % Y_OUT;
+    n /= Y_OUT;
+    int x = n % X_OUT;
+    n /= X_OUT;
+    int c = n % C_OUT;
+    n /= C_OUT;
 
-    if (n < info[8])
+    if (n < N)
     {
-        xArr += n * info[1] * info[2] * info[3];
-        kArr += c * info[5] * info[6] * info[7];
+        xArr += n * C_IN * X_IN * Y_IN;
+        kArr += c * C_IN * X_KER * Y_KER;
 
-        x *= info[12];
-        y *= info[13];
+        x *= X_STR;
+        y *= Y_STR;
         if (padding == PaddingType::kSAME)
         {
-            x -= (info[6] - 1) / 2;
-            y -= (info[7] - 1) / 2;
+            x -= (X_KER - 1) / 2;
+            y -= (Y_KER - 1) / 2;
         }
 
         float v = 0.;
-        for (int dc = 0; dc < info[5]; ++dc)
+        for (int dc = 0; dc < C_IN; ++dc)
         {
-            for (int dx = x < 0 ? -x : 0; dx < info[6]; ++dx)
+            for (int dx = x < 0 ? -x : 0; dx < X_KER; ++dx)
             {
-                if (x + dx >= info[2]) break;
-                for (int dy = y < 0 ? -y : 0; dy < info[7]; ++dy)
+                if (x + dx >= X_IN) break;
+                for (int dy = y < 0 ? -y : 0; dy < Y_KER; ++dy)
                 {
-                    if (y + dy >= info[3]) break;
-                    v += xArr[(x + dx) * info[3] + y + dy] *
-                         kArr[dx * info[7] + dy];
+                    if (y + dy >= Y_IN) break;
+                    v += xArr[(x + dx) * Y_IN + y + dy] * kArr[dx * Y_KER + dy];
                 }
             }
 
-            xArr += info[2] * info[3];
-            kArr += info[6] * info[7];
+            xArr += X_IN * Y_IN;
+            kArr += X_KER * Y_KER;
         }
 
         yArr[outPos] = v;
@@ -88,14 +100,26 @@ extern "C" void initializeConvGpuParams(void** dest, int* inShape,
                                         int* strides)
 {
     int* ptr;
-    cudaMalloc((void**)&ptr, 14 * sizeof(int));
+    cudaMalloc((void**)&ptr, 11 * sizeof(int));
     cudaMemcpy(ptr, inShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 4, kerShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 8, outShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 12, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(ptr + 4, outShape + 1, 3 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(ptr + 7, kerShape + 2, 2 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(ptr + 9, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
 
     (*dest) = (void*)ptr;
 }
+
+#undef N
+#undef C_IN
+#undef X_IN
+#undef Y_IN
+#undef C_OUT
+#undef X_OUT
+#undef Y_OUT
+#undef X_KER
+#undef Y_KER
+#undef X_STR
+#undef Y_STR
 
 }  // namespace cuda
 }  // namespace layers
