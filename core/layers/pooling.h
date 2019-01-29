@@ -30,6 +30,8 @@ class Pooling2DLayer : public DifferentiableLayer
 
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
+    void initialize() override;
+
   private:
     void execute(const InputDict& inputs) override;
 
@@ -37,6 +39,7 @@ class Pooling2DLayer : public DifferentiableLayer
     std::vector<int> mKernelWindow;
     std::vector<int> mStrides;
     PaddingType mPadding;
+    int* mGpuParams{};
 };
 
 class Pooling2DGradientLayer : public Layer
@@ -47,6 +50,8 @@ class Pooling2DGradientLayer : public Layer
                            PoolingType pooling, std::vector<int> kernel,
                            std::vector<int> strides, PaddingType padding);
 
+    void initialize() override;
+
   private:
     void execute(const InputDict& inputs) override;
 
@@ -54,20 +59,23 @@ class Pooling2DGradientLayer : public Layer
     std::vector<int> mKernelWindow;
     std::vector<int> mStrides;
     PaddingType mPadding;
+    int* mGpuParams{};
 };
 
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runPool2DDevice(const float* x, float* y, int* shape,
-                                int* kernel, int* strides, PoolingType pooling,
+extern "C" void runPool2DDevice(const float* x, float* y, int* info,
+                                size_t size, PoolingType pooling,
                                 PaddingType padding);
 
 extern "C" void runPool2DGradientDevice(const float* x, const float* y,
-                                        const float* yG, float* xG, int* shape,
-                                        int* kernel, int* strides,
-                                        PoolingType pooling,
+                                        const float* yG, float* xG, int* info,
+                                        size_t size, PoolingType pooling,
                                         PaddingType padding);
+
+extern "C" void initializePoolGpuParams(void** dest, int* inShape, int* kernel,
+                                        int* strides, int* outShape);
 
 }  // namespace cuda
 #endif
