@@ -33,6 +33,7 @@ global:
         graphdl::reduceSum*;
         graphdl::addN*;
         graphdl::group*;
+        graphdl::reshape*;
         graphdl::maxPool2D*;
         graphdl::avgPool2D*;
         graphdl::conv2D*;

@@ -45,3 +45,9 @@ samples/mnist/train-images-idx3-ubyte
 samples/mnist/train-labels-idx1-ubyte
 samples/mnist/t10k-images-idx3-ubyte
 samples/mnist/t10k-labels-idx1-ubyte
+
+# mnist_conv sample dataset
+samples/mnist_conv/train-images-idx3-ubyte
+samples/mnist_conv/train-labels-idx1-ubyte
+samples/mnist_conv/t10k-images-idx3-ubyte
+samples/mnist_conv/t10k-labels-idx1-ubyte

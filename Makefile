@@ -9,12 +9,14 @@ release:
 	@+make -C tests release
 	@+make -C samples/toySample release
 	@+make -C samples/mnist release
+	@+make -C samples/mnist_conv release
 
 debug:
 	@+make -C core debug
 	@+make -C tests debug
 	@+make -C samples/toySample debug
 	@+make -C samples/mnist debug
+	@+make -C samples/mnist_conv debug
 
 clean:
 	rm -r $(OUTDIR)
@@ -28,11 +30,13 @@ format:
 	@+make -C tests format
 	@+make -C samples/toySample format
 	@+make -C samples/mnist format
+	@+make -C samples/mnist_conv format
 
 tidy:
 	@+make -C core tidy
 	@+make -C samples/toySample tidy
 	@+make -C samples/mnist tidy
+	@+make -C samples/mnist_conv tidy
 
 help:
 	@echo "Possible commands:"
