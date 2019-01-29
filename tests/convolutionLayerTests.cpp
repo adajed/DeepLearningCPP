@@ -120,7 +120,7 @@ class Conv2DTest : public LayerTest,
         setupGradient(testCase);
         LayerBuilder builder = getGradientBuilder(testCase);
         bool correct = runTest({mInput, mKernel, mOutputGrad},
-                               {mInputGrad, mKernelGrad}, builder);
+                               {mInputGrad, mKernelGrad}, builder, 10e-4);
         EXPECT_TRUE(correct);
     }
 
@@ -269,5 +269,5 @@ TEST_P(Conv2DGradientTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DGradientTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
                                 ValuesIn(SHAPES), ValuesIn(PADDINGS),
-                                ValuesIn({MemoryLocation::kHOST})));
+                                ValuesIn(LOCATIONS)));
 }  // namespace

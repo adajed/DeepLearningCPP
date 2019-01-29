@@ -35,11 +35,14 @@ class Conv2DGradientLayer : public Layer
                         const Tensor::SPtr& out, const Tensor::SPtr& outG,
                         std::vector<int> strides, PaddingType padding);
 
+    void initialize() override;
+
   private:
     void execute(const InputDict& inputs) override;
 
     std::vector<int> mStrides;
     PaddingType mPadding;
+    int* mGpuParams{};
 };
 
 #ifdef CUDA_AVAILABLE
@@ -50,7 +53,7 @@ extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
 
 extern "C" void runConv2DGradientDevice(const float* x, const float* k,
                                         const float* yG, float* xG, float* kG,
-                                        int* shape, int* kernel, int* strides,
+                                        size_t xSize, size_t kSize, int* info,
                                         PaddingType padding);
 
 extern "C" void initializeConvGpuParams(void** dest, int* inShape,

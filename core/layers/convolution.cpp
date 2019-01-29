@@ -315,9 +315,35 @@ void Conv2DGradientLayer::execute(const InputDict& inputs)
                               mStrides, mPadding);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runConv2DGradientDevice(in, ker, outG, inG, kerG, inShape.data(),
-                                      kerShape.data(), mStrides.data(),
-                                      mPadding);
+    {
+        std::vector<int> inShape = mInputs[0].lock()->getShape();
+        std::vector<int> kerShape = mInputs[1].lock()->getShape();
+        size_t inSize = inShape[0] * inShape[1] * inShape[2] * inShape[3];
+        size_t kerSize = kerShape[0] * kerShape[1] * kerShape[2] * kerShape[3];
+        cuda::runConv2DGradientDevice(in, ker, outG, inG, kerG, inSize, kerSize,
+                                      mGpuParams, mPadding);
+    }
+#endif
+}
+
+void Conv2DGradientLayer::initialize()
+{
+    Tensor::SPtr inTensor = mInputs[0].lock();
+    Tensor::SPtr kerTensor = mInputs[1].lock();
+    Tensor::SPtr outTensor = mInputs[2].lock();
+
+    std::vector<int> inShape = inTensor->getShape();
+    std::vector<int> kShape = kerTensor->getShape();
+    std::vector<int> outShape = outTensor->getShape();
+
+    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
+    {
+    }
+#ifdef CUDA_AVAILABLE
+    else
+        cuda::initializeConvGpuParams((void**)&mGpuParams, inShape.data(),
+                                      kShape.data(), outShape.data(),
+                                      mStrides.data());
 #endif
 }
 
