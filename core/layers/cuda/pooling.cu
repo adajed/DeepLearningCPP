@@ -233,12 +233,11 @@ extern "C" void runPool2DGradientDevice(const float* x, const float* y,
     }
 }
 
-extern "C" void initializePoolGpuParams(void** dest, int* inShape, int* kernel,
+extern "C" void initializePoolGpuParams(void* dest, int* inShape, int* kernel,
                                         int* strides, int* outShape)
 {
-    int* ptr;
+    int* ptr = (int*)dest;
     float grad = 1. / float(kernel[0] * kernel[1]);
-    cudaMalloc((void**)&ptr, 10 * sizeof(int) + sizeof(float));
     cudaMemcpy(ptr, inShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(ptr + 4, outShape + 2, 2 * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(ptr + 6, kernel, 2 * sizeof(int), cudaMemcpyHostToDevice);
@@ -246,8 +245,6 @@ extern "C" void initializePoolGpuParams(void** dest, int* inShape, int* kernel,
 
     // necessary for gradient calculating
     cudaMemcpy(ptr + 10, &grad, sizeof(float), cudaMemcpyHostToDevice);
-
-    (*dest) = (void*)ptr;
 }
 
 #undef N

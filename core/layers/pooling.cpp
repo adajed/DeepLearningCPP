@@ -102,7 +102,8 @@ Pooling2DLayer::Pooling2DLayer(ID id, const Tensor::SPtr& t,
       mPooling(pooling),
       mKernelWindow(kernel),
       mStrides(strides),
-      mPadding(padding)
+      mPadding(padding),
+      mGpuParams(t->getType(), 11)
 {
 }
 
@@ -135,7 +136,8 @@ void Pooling2DLayer::execute(const InputDict& inputs)
     {
         std::vector<int> outShape = mOutputs[0]->getShape();
         size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3];
-        cuda::runPool2DDevice(in, out, mGpuParams, size, mPooling, mPadding);
+        cuda::runPool2DDevice(in, out, mGpuParams.getValues(), size, mPooling,
+                              mPadding);
     }
 #endif
 }
@@ -152,10 +154,18 @@ void Pooling2DLayer::initialize()
     }
 #ifdef CUDA_AVAILABLE
     else
-        cuda::initializePoolGpuParams((void**)&mGpuParams, inShape.data(),
+    {
+        mGpuParams.allocate();
+        cuda::initializePoolGpuParams(mGpuParams.getValues(), inShape.data(),
                                       mKernelWindow.data(), mStrides.data(),
                                       outShape.data());
+    }
 #endif
+}
+
+Pooling2DLayer::~Pooling2DLayer()
+{
+    mGpuParams.free();
 }
 
 Pooling2DGradientLayer::Pooling2DGradientLayer(
@@ -167,7 +177,8 @@ Pooling2DGradientLayer::Pooling2DGradientLayer(
       mPooling(pooling),
       mKernelWindow(std::move(kernel)),
       mStrides(std::move(strides)),
-      mPadding(padding)
+      mPadding(padding),
+      mGpuParams(t->getType(), 11)
 {
 }
 
@@ -194,8 +205,9 @@ void Pooling2DGradientLayer::execute(const InputDict& inputs)
     else  // outGradTensor->getType() == MemoryType::kDEVICE_MEMORY
     {
         size_t size = inShape[0] * inShape[1] * inShape[2] * inShape[3];
-        cuda::runPool2DGradientDevice(in, out, outG, inG, mGpuParams, size,
-                                      mPooling, mPadding);
+        cuda::runPool2DGradientDevice(in, out, outG, inG,
+                                      mGpuParams.getValues(), size, mPooling,
+                                      mPadding);
     }
 #endif
 }
@@ -212,10 +224,18 @@ void Pooling2DGradientLayer::initialize()
     }
 #ifdef CUDA_AVAILABLE
     else
-        cuda::initializePoolGpuParams((void**)&mGpuParams, inShape.data(),
+    {
+        mGpuParams.allocate();
+        cuda::initializePoolGpuParams(mGpuParams.getValues(), inShape.data(),
                                       mKernelWindow.data(), mStrides.data(),
                                       outShape.data());
+    }
 #endif
+}
+
+Pooling2DGradientLayer::~Pooling2DGradientLayer()
+{
+    mGpuParams.free();
 }
 
 }  // namespace layers

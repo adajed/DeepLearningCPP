@@ -71,5 +71,7 @@ void Layer::reset()
     for (const Tensor::SPtr& output : mOutputs) output->reset();
 }
 
+Layer::~Layer() = default;
+
 }  // namespace core
 }  // namespace graphdl

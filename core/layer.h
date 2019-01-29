@@ -65,7 +65,7 @@ class Tensor
 
     //! \fn getMemory
     //!
-    Memory getMemory();
+    Memory<float> getMemory();
 
     //! \fn allocateMemory
     //! \brief Allocates tensor memory for a computation.
@@ -93,7 +93,7 @@ class Tensor
     //!
     void reset();
 
-    ~Tensor();
+    virtual ~Tensor();
 
   private:
     ID mID;
@@ -102,7 +102,7 @@ class Tensor
 
     bool mIsEvaluated;
     std::weak_ptr<Layer> mLayer;
-    Memory mMemory;
+    Memory<float> mMemory;
 };
 
 Tensor::SPtr createTensor(const std::string& name, const TensorShape& shape,
@@ -178,6 +178,8 @@ class Layer
     //! \brief Resets layer before next graph evaulation.
     //!
     void reset();
+
+    virtual ~Layer();
 
   private:
     //! \fn executeOper

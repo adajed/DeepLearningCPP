@@ -21,7 +21,7 @@ void InputLayer::execute(const InputDict& inputs)
 {
     std::string name = mOutputs[0]->getName();
     HostTensor input = inputs.at(name);
-    Memory output = mOutputs[0]->getMemory();
+    Memory<float> output = mOutputs[0]->getMemory();
 
     if (output.getType() == MemoryType::kHOST_MEMORY)
     {

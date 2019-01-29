@@ -20,12 +20,14 @@ class Conv2DLayer : public DifferentiableLayer
 
     void initialize() override;
 
+    ~Conv2DLayer();
+
   private:
     void execute(const InputDict& inputs) override;
 
     std::vector<int> mStrides;
     PaddingType mPadding;
-    int* mGpuParams{};
+    Memory<int> mGpuParams;
 };
 
 class Conv2DGradientLayer : public Layer
@@ -37,12 +39,14 @@ class Conv2DGradientLayer : public Layer
 
     void initialize() override;
 
+    ~Conv2DGradientLayer();
+
   private:
     void execute(const InputDict& inputs) override;
 
     std::vector<int> mStrides;
     PaddingType mPadding;
-    int* mGpuParams{};
+    Memory<int> mGpuParams;
 };
 
 #ifdef CUDA_AVAILABLE
@@ -56,9 +60,8 @@ extern "C" void runConv2DGradientDevice(const float* x, const float* k,
                                         size_t xSize, size_t kSize, int* info,
                                         PaddingType padding);
 
-extern "C" void initializeConvGpuParams(void** dest, int* inShape,
-                                        int* kerShape, int* outShape,
-                                        int* strides);
+extern "C" void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
+                                        int* outShape, int* strides);
 
 }  // namespace cuda
 #endif

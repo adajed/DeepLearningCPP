@@ -21,6 +21,8 @@ class DifferentiableLayer : public Layer
                                 Tensor::SPtr outputGrad) override = 0;
 
     bool hasGradient() const override final { return true; }
+
+    virtual ~DifferentiableLayer() {}
 };
 
 }  // namespace core

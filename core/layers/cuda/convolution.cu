@@ -234,18 +234,14 @@ extern "C" void runConv2DGradientDevice(const float* x, const float* k,
     }
 }
 
-extern "C" void initializeConvGpuParams(void** dest, int* inShape,
-                                        int* kerShape, int* outShape,
-                                        int* strides)
+extern "C" void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
+                                        int* outShape, int* strides)
 {
-    int* ptr;
-    cudaMalloc((void**)&ptr, 11 * sizeof(int));
+    int* ptr = (int*)dest;
     cudaMemcpy(ptr, inShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(ptr + 4, outShape + 1, 3 * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(ptr + 7, kerShape + 2, 2 * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(ptr + 9, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
-
-    (*dest) = (void*)ptr;
 }
 
 #undef N

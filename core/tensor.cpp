@@ -58,7 +58,7 @@ MemoryType Tensor::getType() const
     return mMemory.getType();
 }
 
-Memory Tensor::getMemory()
+Memory<float> Tensor::getMemory()
 {
     return mMemory;
 }

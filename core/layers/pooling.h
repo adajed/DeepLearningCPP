@@ -32,6 +32,8 @@ class Pooling2DLayer : public DifferentiableLayer
 
     void initialize() override;
 
+    ~Pooling2DLayer() override;
+
   private:
     void execute(const InputDict& inputs) override;
 
@@ -39,7 +41,7 @@ class Pooling2DLayer : public DifferentiableLayer
     std::vector<int> mKernelWindow;
     std::vector<int> mStrides;
     PaddingType mPadding;
-    int* mGpuParams{};
+    Memory<int> mGpuParams;
 };
 
 class Pooling2DGradientLayer : public Layer
@@ -52,6 +54,8 @@ class Pooling2DGradientLayer : public Layer
 
     void initialize() override;
 
+    ~Pooling2DGradientLayer() override;
+
   private:
     void execute(const InputDict& inputs) override;
 
@@ -59,7 +63,7 @@ class Pooling2DGradientLayer : public Layer
     std::vector<int> mKernelWindow;
     std::vector<int> mStrides;
     PaddingType mPadding;
-    int* mGpuParams{};
+    Memory<int> mGpuParams;
 };
 
 #ifdef CUDA_AVAILABLE
@@ -74,7 +78,7 @@ extern "C" void runPool2DGradientDevice(const float* x, const float* y,
                                         size_t size, PoolingType pooling,
                                         PaddingType padding);
 
-extern "C" void initializePoolGpuParams(void** dest, int* inShape, int* kernel,
+extern "C" void initializePoolGpuParams(void* dest, int* inShape, int* kernel,
                                         int* strides, int* outShape);
 
 }  // namespace cuda

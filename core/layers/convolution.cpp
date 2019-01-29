@@ -210,7 +210,8 @@ Conv2DLayer::Conv2DLayer(ID id, const Tensor::SPtr& t,
     : DifferentiableLayer(id, {t, kernel},
                           {createOutput(t, kernel, strides, padding)}),
       mStrides(strides),
-      mPadding(padding)
+      mPadding(padding),
+      mGpuParams(t->getType(), 11)
 {
     assert(t->getType() == kernel->getType());
 }
@@ -251,7 +252,8 @@ void Conv2DLayer::execute(const InputDict& inputs)
     {
         std::vector<int> outShape = mOutputs[0]->getShape();
         size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3];
-        cuda::runConv2DDevice(in, ker, out, size, mGpuParams, mPadding);
+        cuda::runConv2DDevice(in, ker, out, size, mGpuParams.getValues(),
+                              mPadding);
     }
 #endif
 }
@@ -270,10 +272,18 @@ void Conv2DLayer::initialize()
     }
 #ifdef CUDA_AVAILABLE
     else
-        cuda::initializeConvGpuParams((void**)&mGpuParams, inShape.data(),
+    {
+        mGpuParams.allocate();
+        cuda::initializeConvGpuParams(mGpuParams.getValues(), inShape.data(),
                                       kShape.data(), outShape.data(),
                                       mStrides.data());
+    }
 #endif
+}
+
+Conv2DLayer::~Conv2DLayer()
+{
+    mGpuParams.free();
 }
 
 Conv2DGradientLayer::Conv2DGradientLayer(ID id, const Tensor::SPtr& t,
@@ -286,7 +296,8 @@ Conv2DGradientLayer::Conv2DGradientLayer(ID id, const Tensor::SPtr& t,
             {createTensor("", t->getShape(), t->getType()),
              createTensor("", k->getShape(), k->getType())}),
       mStrides(std::move(strides)),
-      mPadding(padding)
+      mPadding(padding),
+      mGpuParams(t->getType(), 11)
 {
 }
 
@@ -321,7 +332,7 @@ void Conv2DGradientLayer::execute(const InputDict& inputs)
         size_t inSize = inShape[0] * inShape[1] * inShape[2] * inShape[3];
         size_t kerSize = kerShape[0] * kerShape[1] * kerShape[2] * kerShape[3];
         cuda::runConv2DGradientDevice(in, ker, outG, inG, kerG, inSize, kerSize,
-                                      mGpuParams, mPadding);
+                                      mGpuParams.getValues(), mPadding);
     }
 #endif
 }
@@ -341,10 +352,18 @@ void Conv2DGradientLayer::initialize()
     }
 #ifdef CUDA_AVAILABLE
     else
-        cuda::initializeConvGpuParams((void**)&mGpuParams, inShape.data(),
+    {
+        mGpuParams.allocate();
+        cuda::initializeConvGpuParams(mGpuParams.getValues(), inShape.data(),
                                       kShape.data(), outShape.data(),
                                       mStrides.data());
+    }
 #endif
+}
+
+Conv2DGradientLayer::~Conv2DGradientLayer()
+{
+    mGpuParams.free();
 }
 
 }  // namespace layers
