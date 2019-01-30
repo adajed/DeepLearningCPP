@@ -10,6 +10,7 @@ release:
 	@+make -C samples/toySample release
 	@+make -C samples/mnist release
 	@+make -C samples/mnist_conv release
+	@+make -C samples/cifar10_conv release
 
 debug:
 	@+make -C core debug
@@ -17,6 +18,7 @@ debug:
 	@+make -C samples/toySample debug
 	@+make -C samples/mnist debug
 	@+make -C samples/mnist_conv debug
+	@+make -C samples/cifar10_conv debug
 
 clean:
 	rm -r $(OUTDIR)
