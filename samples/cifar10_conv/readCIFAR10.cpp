@@ -14,12 +14,11 @@ void parse(const std::string& path, std::vector<std::vector<float>>& xs,
     for (int n = 0; n < 10000; ++n)
     {
         std::vector<float> x(3072);
-        std::vector<float> y(10);
+        std::vector<float> y(10, 0.);
         char byte;
 
         file.read(&byte, sizeof(char));
-        for (int i = 0; i < 10; ++i)
-            y[i] = i == int(byte) ? 1. : 0.;
+        y[int(byte)] = 1.;
 
         for (int i = 0; i < 3072; ++i)
         {
