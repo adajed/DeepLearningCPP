@@ -17,13 +17,13 @@ const int PRINT_EVERY = 100;
 const float LEARNING_RATE = 0.001;
 
 const std::string TRAIN_IMAGES_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/train-images-idx3-ubyte";
+    "/home/adam/Projects/DLL/samples/mnist_conv/train-images-idx3-ubyte";
 const std::string TRAIN_LABELS_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/train-labels-idx1-ubyte";
+    "/home/adam/Projects/DLL/samples/mnist_conv/train-labels-idx1-ubyte";
 const std::string VALID_IMAGES_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/t10k-images-idx3-ubyte";
+    "/home/adam/Projects/DLL/samples/mnist_conv/t10k-images-idx3-ubyte";
 const std::string VALID_LABELS_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/t10k-labels-idx1-ubyte";
+    "/home/adam/Projects/DLL/samples/mnist_conv/t10k-labels-idx1-ubyte";
 
 using namespace graphdl;
 
@@ -88,12 +88,9 @@ Network buildNetwork()
 #endif
 
     SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);
-    SharedPtr<IInitializer> initW1 =
-        normalInitializer(-sqrt(1. / 5.), sqrt(1. / 5.), 0);
-    SharedPtr<IInitializer> initW2 =
-        normalInitializer(-sqrt(1. / 20.), sqrt(1. / 20.), 0);
-    SharedPtr<IInitializer> initW3 =
-        normalInitializer(-sqrt(1. / 48.), sqrt(1. / 48.), 0);
+    SharedPtr<IInitializer> initW1 = normalInitializer(0., 1. / 5., 0);
+    SharedPtr<IInitializer> initW2 = normalInitializer(0., 1. / 20., 0);
+    SharedPtr<IInitializer> initW3 = normalInitializer(0., 1. / 48., 0);
     ITensorPtr X = createInput("X", {BATCH_SIZE, 1, 28, 28}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 
@@ -116,7 +113,7 @@ Network buildNetwork()
     a = reshape(a, {BATCH_SIZE, 32 * 7 * 7});
     a = relu(matmul(a, W4) + b1);
     a = sigmoid(matmul(a, W5) + b2);
-    a = clip(a, 0.001, 0.999);
+    a = clip(a, 10e-6, 1 - 10e-6);
 
     ITensorPtr loss = neg(reduceSum(Y * log(a) + (1. - Y) * log(1. - a)));
     loss = loss / float(BATCH_SIZE);
