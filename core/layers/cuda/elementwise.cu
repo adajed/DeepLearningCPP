@@ -167,8 +167,8 @@ void runElementwiseGradientKernels(float* x1, size_t size1, float* x2,
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, temp);
 
         for (int i = 0; i < size2; ++i)
-            reduce<ReduceOpCuda::kSUM>(temp + i * (size1 / size2),
-                                       size1 / size2, x2G + i);
+            reduce<ReduceOpCuda::kSUM>(temp + i * (size1 / size2), x2G + i,
+                                       size1 / size2);
     }
     else
     {
@@ -178,8 +178,8 @@ void runElementwiseGradientKernels(float* x1, size_t size1, float* x2,
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x2G);
 
         for (int i = 0; i < size1; ++i)
-            reduce<ReduceOpCuda::kSUM>(temp + i * (size2 / size1),
-                                       size2 / size1, x1G + i);
+            reduce<ReduceOpCuda::kSUM>(temp + i * (size2 / size1), x1G + i,
+                                       size2 / size1);
     }
 
     cudaFree(temp);

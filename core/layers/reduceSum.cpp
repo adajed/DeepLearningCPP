@@ -15,23 +15,40 @@ namespace layers
 {
 namespace
 {
-void runReduceSumHost(std::size_t size, const float* x, float* y)
+Tensor::SPtr createOutput(const Tensor::SPtr& t, int numAxes)
 {
-    y[0] = 0.;
-    for (std::size_t pos = 0; pos < size; ++pos) y[0] += x[pos];
+    std::vector<int> shape(t->getShape().size() - numAxes, 1);
+    for (unsigned i = 0; i < shape.size(); ++i) shape[i] = t->getShape()[i];
+
+    return createTensor("", shape, t->getType());
 }
 
-void runReduceSumGradientHost(std::size_t size, const float* yGrad,
-                              float* xGrad)
+void runReduceSumHost(const float* x, float* y, size_t outSize,
+                      size_t reduceSize)
 {
-    for (std::size_t pos = 0; pos < size; ++pos) xGrad[pos] = yGrad[0];
+    for (size_t posY = 0; posY < outSize; ++posY)
+    {
+        y[posY] = 0.;
+        for (size_t i = 0; i < reduceSize; ++i) y[posY] += x[i];
+        x += reduceSize;
+    }
+}
+
+void runReduceSumGradientHost(const float* yGrad, float* xGrad, size_t outSize,
+                              size_t reduceSize)
+{
+    for (size_t posY = 0; posY < outSize; ++posY)
+    {
+        for (size_t i = 0; i < reduceSize; ++i) xGrad[i] = yGrad[posY];
+        xGrad += reduceSize;
+    }
 }
 
 }  // namespace
 
-ReduceSumLayer::ReduceSumLayer(ID id, const Tensor::SPtr& tensor)
-    : DifferentiableLayer(id, {tensor},
-                          {createTensor("", {}, tensor->getType())})
+ReduceSumLayer::ReduceSumLayer(ID id, const Tensor::SPtr& tensor, int numAxes)
+    : DifferentiableLayer(id, {tensor}, {createOutput(tensor, numAxes)}),
+      mNumAxes(numAxes)
 {
 }
 
@@ -42,13 +59,17 @@ void ReduceSumLayer::execute(const InputDict& inputs)
 
     float* input = in->getMemory().getValues();
     float* output = mOutputs[0]->getMemory().getValues();
-    std::size_t size = in->getMemory().getCount();
+    std::vector<int> shape = in->getShape();
+    size_t outSize = 1, reduceSize = 1;
+    for (unsigned i = 0; i < shape.size() - mNumAxes; ++i) outSize *= shape[i];
+    for (unsigned i = shape.size() - mNumAxes; i < shape.size(); ++i)
+        reduceSize *= shape[i];
 
     if (in->getType() == MemoryType::kHOST_MEMORY)
-        runReduceSumHost(size, input, output);
+        runReduceSumHost(input, output, outSize, reduceSize);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runReduceSumDevice(input, size, output);
+        cuda::runReduceSumDevice(input, output, outSize, reduceSize);
 #endif
 }
 
@@ -58,15 +79,17 @@ Layer::TensorMap ReduceSumLayer::gradients(Tensor::SPtr out,
     assert(out == mOutputs[0]);
 
     Tensor::SPtr in = getInputs()[0];
-    Layer::SPtr layer = createLayer<ReduceSumGradientLayer>(in, out, outGrad);
+    Layer::SPtr layer =
+        createLayer<ReduceSumGradientLayer>(in, mNumAxes, out, outGrad);
     return {{in, layer->getOutputs()[0]}};
 }
 
 ReduceSumGradientLayer::ReduceSumGradientLayer(ID id, const Tensor::SPtr& in,
-                                               Tensor::SPtr out,
+                                               int numAxes, Tensor::SPtr out,
                                                Tensor::SPtr outGrad)
     : Layer(id, {in, std::move(out), std::move(outGrad)},
-            {createTensor("", in->getShape(), in->getType())})
+            {createTensor("", in->getShape(), in->getType())}),
+      mNumAxes(numAxes)
 {
 }
 
@@ -77,30 +100,36 @@ void ReduceSumGradientLayer::execute(const InputDict& inputs)
 
     float* outGrad = outputGrad->getMemory().getValues();
     float* inGrad = mOutputs[0]->getMemory().getValues();
-    std::size_t size = mOutputs[0]->getMemory().getCount();
+    std::vector<int> shape = mOutputs[0]->getShape();
+    size_t outSize = 1, reduceSize = 1;
+    for (unsigned i = 0; i < shape.size() - mNumAxes; ++i) outSize *= shape[i];
+    for (unsigned i = shape.size() - mNumAxes; i < shape.size(); ++i)
+        reduceSize *= shape[i];
 
     if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
-        runReduceSumGradientHost(size, outGrad, inGrad);
+        runReduceSumGradientHost(outGrad, inGrad, outSize, reduceSize);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runReduceSumGradientDevice(outGrad, size, inGrad);
+        cuda::runReduceSumGradientDevice(outGrad, inGrad, outSize, reduceSize);
 #endif
 }
 
 }  // namespace layers
 
-Tensor::SPtr reduceSum(Tensor::SPtr t)
+Tensor::SPtr reduceSum(Tensor::SPtr t, int numAxes)
 {
-    Layer::SPtr layer = createLayer<layers::ReduceSumLayer>(std::move(t));
+    if (numAxes <= 0) numAxes = t->getShape().size();
+    Layer::SPtr layer =
+        createLayer<layers::ReduceSumLayer>(std::move(t), numAxes);
     return layer->getOutputs()[0];
 }
 
 }  // namespace core
 
-ITensorPtr reduceSum(const ITensorPtr& t)
+ITensorPtr reduceSum(const ITensorPtr& t, int numAxes)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::reduceSum(tensor->get()));
+    return makeAbstractTensor(core::reduceSum(tensor->get(), numAxes));
 }
 
 }  // namespace graphdl

@@ -101,7 +101,7 @@ __global__ void reduceKernel(size_t size, const float* x, float* y)
 }
 
 template <ReduceOpCuda op>
-void reduce(const float* vals, size_t size, float* out)
+void reduce(const float* vals, float* out, size_t size)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;

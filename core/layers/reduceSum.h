@@ -12,37 +12,42 @@ namespace layers
 class ReduceSumLayer : public DifferentiableLayer
 {
   public:
-    ReduceSumLayer(ID id, const Tensor::SPtr& tensor);
+    ReduceSumLayer(ID id, const Tensor::SPtr& tensor, int numAxes);
 
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
   private:
     void execute(const InputDict& inputs) override;
+
+    int mNumAxes;
 };
 
 class ReduceSumGradientLayer : public Layer
 {
   public:
-    ReduceSumGradientLayer(ID id, const Tensor::SPtr& in, Tensor::SPtr out,
-                           Tensor::SPtr outGrad);
+    ReduceSumGradientLayer(ID id, const Tensor::SPtr& in, int numAxes,
+                           Tensor::SPtr out, Tensor::SPtr outGrad);
 
   private:
     void execute(const InputDict& inputs) override;
+
+    int mNumAxes;
 };
 
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runReduceSumDevice(const float* x, size_t size, float* y);
+extern "C" void runReduceSumDevice(const float* x, float* y, size_t outSize,
+                                   size_t reduceSize);
 
-extern "C" void runReduceSumGradientDevice(float* yGrad, size_t size,
-                                           float* xGrad);
+extern "C" void runReduceSumGradientDevice(float* yGrad, float* xGrad,
+                                           size_t outSize, size_t reduceSize);
 
 }  // namespace cuda
 #endif
 }  // namespace layers
 
-Tensor::SPtr reduceSum(Tensor::SPtr t);
+Tensor::SPtr reduceSum(Tensor::SPtr t, int numAxes);
 
 }  // namespace core
 

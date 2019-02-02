@@ -6,24 +6,46 @@
 namespace
 {
 using namespace graphdl::core::layers;
-using TestCase = std::tuple<UVec, MemoryLocation>;
+using Param = std::tuple<UVec, int>;
+using TestCase = std::tuple<Param, MemoryLocation>;
 
-std::vector<UVec> SHAPES = {
+std::vector<Param> PARAMS = {
     // clang-format off
-    {},
-    {1},
-    {1, 1},
-    {1, 1, 1},
-    {2},
-    {2, 2},
-    {2, 2, 2},
-    {2, 2, 2, 2},
-    {2, 2, 2, 2, 2},
-    {2, 2, 2, 2, 2, 2},
-    {10},
-    {10, 10},
-    {10, 10, 10},
-    {2, 100}
+    {{1}, 1},
+    {{1, 1}, 1},
+    {{1, 1}, 2},
+    {{1, 1, 1}, 1},
+    {{1, 1, 1}, 2},
+    {{1, 1, 1}, 3},
+    {{2}, 1},
+    {{2, 2}, 1},
+    {{2, 2}, 2},
+    {{2, 2, 2}, 1},
+    {{2, 2, 2}, 2},
+    {{2, 2, 2}, 3},
+    {{2, 2, 2, 2}, 1},
+    {{2, 2, 2, 2}, 2},
+    {{2, 2, 2, 2}, 3},
+    {{2, 2, 2, 2}, 4},
+    {{2, 2, 2, 2, 2}, 1},
+    {{2, 2, 2, 2, 2}, 2},
+    {{2, 2, 2, 2, 2}, 3},
+    {{2, 2, 2, 2, 2}, 4},
+    {{2, 2, 2, 2, 2}, 5},
+    {{2, 2, 2, 2, 2, 2}, 1},
+    {{2, 2, 2, 2, 2, 2}, 2},
+    {{2, 2, 2, 2, 2, 2}, 3},
+    {{2, 2, 2, 2, 2, 2}, 4},
+    {{2, 2, 2, 2, 2, 2}, 5},
+    {{2, 2, 2, 2, 2, 2}, 6},
+    {{10}, 1},
+    {{10, 10}, 1},
+    {{10, 10}, 2},
+    {{10, 10, 10}, 1},
+    {{10, 10, 10}, 2},
+    {{10, 10, 10}, 3},
+    {{2, 100}, 1},
+    {{2, 100}, 2}
     // clang-format on
 };
 
@@ -35,17 +57,27 @@ class ReduceSumTest : public LayerTest,
     {
         UniformGen gen(seed);
 
-        RefTensor input(std::get<0>(testCase), gen);
-        RefTensor output(TensorShape({}));
+        UVec shape = std::get<0>(std::get<0>(testCase));
+        int numAxes = std::get<1>(std::get<0>(testCase));
+        size_t outSize = 1, reduceSize = 1;
+        for (unsigned i = 0; i < shape.size() - numAxes; ++i)
+            outSize *= shape[i];
+        for (unsigned i = shape.size() - numAxes; i < shape.size(); ++i)
+            reduceSize *= shape[i];
 
-        output.at(0) = 0.;
-        for (std::size_t pos = 0; pos < input.getCount(); ++pos)
-            output.at(0) += input.at(pos);
+        RefTensor input(shape, gen);
+        RefTensor output(outputShape(testCase));
 
-        LayerBuilder builder = [&testCase](const HostVec& ins) {
-            ITensorPtr in =
-                createInput("in", std::get<0>(testCase), std::get<1>(testCase));
-            ITensorPtr out = reduceSum(in);
+        for (size_t posY = 0; posY < outSize; ++posY)
+        {
+            output.at(posY) = 0.;
+            for (size_t posX = 0; posX < reduceSize; ++posX)
+                output.at(posY) += input.at(posY * reduceSize + posX);
+        }
+
+        LayerBuilder builder = [&](const HostVec& ins) {
+            ITensorPtr in = createInput("in", shape, std::get<1>(testCase));
+            ITensorPtr out = reduceSum(in, numAxes);
             initializeGraph();
 
             return HostVec({out->eval({{"in", ins[0]}})});
@@ -57,23 +89,33 @@ class ReduceSumTest : public LayerTest,
     void testGradient(const TestCase& testCase)
     {
         UniformGen gen(seed);
-        RefTensor input(std::get<0>(testCase), gen);
-        RefTensor outputGrad(TensorShape({}), gen);
-        RefTensor inputGrad(std::get<0>(testCase));
 
-        for (std::size_t pos = 0; pos < input.getCount(); ++pos)
-            inputGrad.at(pos) = outputGrad.at(0);
+        UVec shape = std::get<0>(std::get<0>(testCase));
+        UVec outShape = outputShape(testCase);
+        int numAxes = std::get<1>(std::get<0>(testCase));
+        size_t outSize = 1, reduceSize = 1;
+        for (unsigned i = 0; i < shape.size() - numAxes; ++i)
+            outSize *= shape[i];
+        for (unsigned i = shape.size() - numAxes; i < shape.size(); ++i)
+            reduceSize *= shape[i];
 
-        LayerBuilder builder = [&testCase](const HostVec& ins) {
+        RefTensor input(shape, gen);
+        RefTensor outputGrad(outShape, gen);
+        RefTensor inputGrad(shape);
+
+        for (size_t posY = 0; posY < outSize; ++posY)
+            for (size_t posX = 0; posX < reduceSize; ++posX)
+                inputGrad.at(posY * reduceSize + posX) = outputGrad.at(posY);
+
+        LayerBuilder builder = [&](const HostVec& ins) {
             MemoryType type = memoryLocationToType(std::get<1>(testCase));
             Tensor::SPtr in = core::getDefaultGraph()->addInput(
-                "in",
-                createLayer<InputLayer>("in", std::get<0>(testCase), type));
+                "in", createLayer<InputLayer>("in", shape, type));
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
-                "outG", createLayer<InputLayer>("outG", Shape({}), type));
-            Tensor::SPtr out = core::reduceSum(in);
+                "outG", createLayer<InputLayer>("outG", outShape, type));
+            Tensor::SPtr out = core::reduceSum(in, numAxes);
             Layer::SPtr layer =
-                createLayer<ReduceSumGradientLayer>(in, out, outG);
+                createLayer<ReduceSumGradientLayer>(in, numAxes, out, outG);
             Tensor::SPtr inG = layer->getOutputs()[0];
             initializeGraph();
 
@@ -83,6 +125,18 @@ class ReduceSumTest : public LayerTest,
         bool correct = runTest({input, outputGrad}, {inputGrad}, builder);
         EXPECT_TRUE(correct);
     }
+
+  private:
+    UVec outputShape(const TestCase& testCase)
+    {
+        UVec shape = std::get<0>(std::get<0>(testCase));
+        int numAxes = std::get<1>(std::get<0>(testCase));
+        UVec outShape;
+        for (unsigned i = 0; i < shape.size() - numAxes; ++i)
+            outShape.push_back(shape[i]);
+
+        return outShape;
+    }
 };
 
 TEST_P(ReduceSumTest, testAPI)
@@ -90,7 +144,7 @@ TEST_P(ReduceSumTest, testAPI)
     test(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+                        Combine(ValuesIn(PARAMS), ValuesIn(LOCATIONS)));
 
 class ReduceSumGradientTest : public ReduceSumTest
 {
@@ -100,6 +154,6 @@ TEST_P(ReduceSumGradientTest, testAPI)
     testGradient(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, ReduceSumGradientTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+                        Combine(ValuesIn(PARAMS), ValuesIn(LOCATIONS)));
 
 }  // namespace
