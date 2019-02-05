@@ -40,11 +40,18 @@ namespace cuda
 extern "C" void runReduceSumDevice(const float* x, float* y, size_t outSize,
                                    size_t reduceSize);
 
-extern "C" void runReduceSumGradientDevice(float* yGrad, float* xGrad,
+extern "C" void runReduceSumGradientDevice(const float* yGrad, float* xGrad,
                                            size_t outSize, size_t reduceSize);
 
 }  // namespace cuda
 #endif
+
+void runReduceSumHost(const float* x, float* y, size_t outSize,
+                      size_t reduceSize);
+
+void runReduceSumGradientHost(const float* yGrad, float* xGrad, size_t outSize,
+                              size_t reduceSize);
+
 }  // namespace layers
 
 Tensor::SPtr reduceSum(Tensor::SPtr t, int numAxes);

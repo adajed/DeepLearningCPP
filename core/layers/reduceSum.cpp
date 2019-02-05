@@ -23,6 +23,8 @@ Tensor::SPtr createOutput(const Tensor::SPtr& t, int numAxes)
     return createTensor("", shape, t->getType());
 }
 
+}  // namespace
+
 void runReduceSumHost(const float* x, float* y, size_t outSize,
                       size_t reduceSize)
 {
@@ -43,8 +45,6 @@ void runReduceSumGradientHost(const float* yGrad, float* xGrad, size_t outSize,
         xGrad += reduceSize;
     }
 }
-
-}  // namespace
 
 ReduceSumLayer::ReduceSumLayer(ID id, const Tensor::SPtr& tensor, int numAxes)
     : DifferentiableLayer(id, {tensor}, {createOutput(tensor, numAxes)}),
