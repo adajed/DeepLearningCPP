@@ -71,6 +71,9 @@ ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
 
 ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
                   const std::vector<int>& strides, const std::string& padding);
+
+ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
+
 }  // namespace graphdl
 
 #endif  // GRAPHDL_OPS_H_

@@ -55,17 +55,15 @@ class ActivationGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runActivationDevice(const float* x, float* y, size_t size,
-                                    Activation op);
+void runActivationDevice(const float* x, float* y, size_t size, Activation op);
 
-extern "C" void runActivationGradientDevice(const float* x, const float* y,
-                                            const float* yGrad, float* xGrad,
-                                            size_t size, Activation op);
+void runActivationGradientDevice(const float* x, const float* y,
+                                 const float* yGrad, float* xGrad, size_t size,
+                                 Activation op);
 }  // namespace cuda
 #endif
 
-void runActivationGradientHost(const float* x, float* y, size_t size,
-                               Activation op);
+void runActivationHost(const float* x, float* y, size_t size, Activation op);
 
 void runActivationGradientHost(const float* x, const float* y,
                                const float* yGrad, float* xGrad, size_t size,

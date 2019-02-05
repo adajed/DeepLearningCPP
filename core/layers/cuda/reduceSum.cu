@@ -9,15 +9,15 @@ namespace layers
 {
 namespace cuda
 {
-__global__ void reduceSumGradientKernel(float* yGrad, float* xGrad, size_t size,
-                                        size_t reduceSize)
+__global__ void reduceSumGradientKernel(const float* yGrad, float* xGrad,
+                                        size_t size, size_t reduceSize)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < size) xGrad[id] = yGrad[id / reduceSize];
 }
 
-extern "C" void runReduceSumDevice(const float* x, float* y, size_t outSize,
-                                   size_t reduceSize)
+void runReduceSumDevice(const float* x, float* y, size_t outSize,
+                        size_t reduceSize)
 {
     for (size_t pos = 0; pos < outSize; ++pos)
     {
@@ -27,8 +27,8 @@ extern "C" void runReduceSumDevice(const float* x, float* y, size_t outSize,
     }
 }
 
-extern "C" void runReduceSumGradientDevice(float* yGrad, float* xGrad,
-                                           size_t outSize, size_t reduceSize)
+void runReduceSumGradientDevice(const float* yGrad, float* xGrad,
+                                size_t outSize, size_t reduceSize)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (outSize * reduceSize + BLOCK_SIZE - 1) / BLOCK_SIZE;

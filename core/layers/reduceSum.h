@@ -37,11 +37,11 @@ class ReduceSumGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runReduceSumDevice(const float* x, float* y, size_t outSize,
-                                   size_t reduceSize);
+void runReduceSumDevice(const float* x, float* y, size_t outSize,
+                        size_t reduceSize);
 
-extern "C" void runReduceSumGradientDevice(const float* yGrad, float* xGrad,
-                                           size_t outSize, size_t reduceSize);
+void runReduceSumGradientDevice(const float* yGrad, float* xGrad,
+                                size_t outSize, size_t reduceSize);
 
 }  // namespace cuda
 #endif

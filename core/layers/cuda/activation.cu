@@ -151,8 +151,7 @@ __global__ void activationGradientKernel(const float* x, const float* y,
         xGrad[id] = yGrad[id] * activationGradient<act>(x[id], y[id]);
 }
 
-extern "C" void runActivationDevice(const float* x, float* y, size_t size,
-                                    Activation op)
+void runActivationDevice(const float* x, float* y, size_t size, Activation op)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -202,9 +201,9 @@ extern "C" void runActivationDevice(const float* x, float* y, size_t size,
     }
 }
 
-extern "C" void runActivationGradientDevice(const float* x, const float* y,
-                                            const float* yGrad, float* xGrad,
-                                            size_t size, Activation op)
+void runActivationGradientDevice(const float* x, const float* y,
+                                 const float* yGrad, float* xGrad, size_t size,
+                                 Activation op)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;

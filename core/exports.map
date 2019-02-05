@@ -38,6 +38,7 @@ global:
         graphdl::maxPool2D*;
         graphdl::avgPool2D*;
         graphdl::conv2D*;
+        graphdl::softmax*;
         graphdl::train::gradientDescent*;
         graphdl::train::momentum*;
         graphdl::train::adam*;
