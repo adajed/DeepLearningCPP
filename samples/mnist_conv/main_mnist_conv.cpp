@@ -12,7 +12,7 @@ const int BATCH_SIZE = 64;
 #else
 const int BATCH_SIZE = 16;
 #endif
-const int NUM_EPOCHS = 10;
+const int NUM_EPOCHS = 1;
 const int PRINT_EVERY = 100;
 const float LEARNING_RATE = 0.001;
 
@@ -34,12 +34,6 @@ struct Network
     ITensorPtr output, loss, optimize;
 };
 
-ITensorPtr clip(const ITensorPtr& x, float min, float max)
-{
-    ITensorPtr a = relu(x - min) + min;
-    a = max - relu(max - a);
-    return a;
-}
 int numCorrect(const HostTensor& y, const HostTensor& pred)
 {
     int cnt = 0;
@@ -112,11 +106,10 @@ Network buildNetwork()
     a = conv2D(a, W3, {1, 1}, "SAME");
     a = reshape(a, {BATCH_SIZE, 32 * 7 * 7});
     a = relu(matmul(a, W4) + b1);
-    a = sigmoid(matmul(a, W5) + b2);
-    a = clip(a, 10e-6, 1 - 10e-6);
+    a = matmul(a, W5) + b2;
+    a = softmax(a, 1);
 
-    ITensorPtr loss = neg(reduceSum(Y * log(a) + (1. - Y) * log(1. - a)));
-    loss = loss / float(BATCH_SIZE);
+    ITensorPtr loss = neg(reduceSum(Y * log(a))) / float(BATCH_SIZE);
 
     ITensorPtr opt =
         train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
