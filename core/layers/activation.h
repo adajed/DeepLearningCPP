@@ -21,7 +21,8 @@ enum class Activation
     kNEG = 5,
     kRECIPROCAL = 6,
     kLOG = 7,
-    kSQRT = 8
+    kSQRT = 8,
+    kEXP = 9
 };
 
 class ActivationLayer : public DifferentiableLayer
@@ -54,14 +55,21 @@ class ActivationGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runActivationDevice(std::size_t size, float* x, float* y,
+extern "C" void runActivationDevice(const float* x, float* y, size_t size,
                                     Activation op);
 
-extern "C" void runActivationGradientDevice(std::size_t size, float* x,
-                                            float* y, float* yGrad,
-                                            float* xGrad, Activation op);
+extern "C" void runActivationGradientDevice(const float* x, const float* y,
+                                            const float* yGrad, float* xGrad,
+                                            size_t size, Activation op);
 }  // namespace cuda
 #endif
+
+void runActivationGradientHost(const float* x, float* y, size_t size,
+                               Activation op);
+
+void runActivationGradientHost(const float* x, const float* y,
+                               const float* yGrad, float* xGrad, size_t size,
+                               Activation op);
 
 }  // namespace layers
 
@@ -76,6 +84,7 @@ Tensor::SPtr neg(Tensor::SPtr);
 Tensor::SPtr reciprocal(Tensor::SPtr);
 Tensor::SPtr log(Tensor::SPtr);
 Tensor::SPtr sqrt(Tensor::SPtr);
+Tensor::SPtr exp(Tensor::SPtr);
 
 }  // namespace core
 }  // namespace graphdl

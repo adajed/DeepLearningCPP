@@ -47,6 +47,7 @@ ITensorPtr neg(const ITensorPtr& t);
 ITensorPtr reciprocal(const ITensorPtr& t);
 ITensorPtr log(const ITensorPtr& t);
 ITensorPtr sqrt(const ITensorPtr& t);
+ITensorPtr exp(const ITensorPtr& t);
 
 ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src);
 

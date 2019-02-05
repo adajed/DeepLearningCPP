@@ -37,7 +37,8 @@ std::vector<Activation> OPS = {
     Activation::kNEG,
     Activation::kRECIPROCAL,
     Activation::kLOG,
-    Activation::kSQRT
+    Activation::kSQRT,
+    Activation::kEXP
     // clang-format on
 };
 
@@ -49,7 +50,7 @@ class ActivationTest : public LayerTest,
     {
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
-        bool correct = runTest({mInput}, {mOutput}, builder);
+        bool correct = runTest({mInput}, {mOutput}, builder, 10e-5);
         EXPECT_TRUE(correct);
     };
 
@@ -58,7 +59,7 @@ class ActivationTest : public LayerTest,
         setupGradient(testCase);
         LayerBuilder builder = getGradientBuilder(testCase);
         bool correct =
-            runTest({mInput, mOutputGrad}, {mGradient}, builder, 10e-4);
+            runTest({mInput, mOutputGrad}, {mGradient}, builder, 10e-3);
         EXPECT_TRUE(correct);
     };
 
@@ -105,6 +106,7 @@ class ActivationTest : public LayerTest,
         case Activation::kSQRT:
             fun = [](float x) { return std::sqrt(std::abs(x)); };
             break;
+        case Activation::kEXP: fun = [](float x) { return std::exp(x); }; break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -157,6 +159,7 @@ class ActivationTest : public LayerTest,
         case Activation::kSQRT:
             fun = [](float x) { return 1. / (2 * std::sqrt(std::abs(x))); };
             break;
+        case Activation::kEXP: fun = [](float x) { return std::exp(x); }; break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -180,6 +183,7 @@ class ActivationTest : public LayerTest,
             case Activation::kRECIPROCAL: out = reciprocal(in); break;
             case Activation::kLOG: out = log(abs(in)); break;
             case Activation::kSQRT: out = sqrt(abs(in)); break;
+            case Activation::kEXP: out = exp(in); break;
             }
             initializeGraph();
 
