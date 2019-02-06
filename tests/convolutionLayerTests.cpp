@@ -11,6 +11,9 @@ using Shapes = std::tuple<UVec, Vec, Vec>;
 // n, cIn, cOut, shapes, padding, location
 using TestCase = std::tuple<int, int, int, Shapes, PaddingType, MemoryLocation>;
 
+using ErrorShapes = std::tuple<UVec, UVec, Vec>;
+using ErrorTestCase = std::tuple<ErrorShapes, PaddingType, MemoryLocation>;
+
 std::vector<Shapes> SHAPES = {
     // clang-format off
     {{2, 2}, {2, 2}, {2, 2}},
@@ -24,6 +27,26 @@ std::vector<Shapes> SHAPES = {
     {{8, 8}, {2, 2}, {4, 4}},
     {{8, 8}, {3, 1}, {3, 1}},
     {{14, 14}, {14, 14}, {14, 14}} // global
+    // clang-format on
+};
+
+std::vector<ErrorShapes> ERROR_SHAPES = {
+    // clang-format off
+    {{1}, {1, 1, 1, 1}, {2, 2}},
+    {{1, 1}, {1, 1, 1, 1}, {2, 2}},
+    {{1, 1, 1}, {1, 1, 1, 1}, {2, 2}},
+    {{1, 1, 1, 1, 1}, {1, 1, 1, 1}, {2, 2}},
+    {{2, 2, 2, 2}, {2}, {2, 2}},
+    {{2, 2, 2, 2}, {2, 2}, {2, 2}},
+    {{2, 2, 2, 2}, {2, 2, 2}, {2, 2}},
+    {{2, 2, 2, 2}, {2, 2, 2, 2, 2}, {2, 2}},
+    {{1, 2, 2, 2}, {3, 3, 2, 2}, {2, 2}},
+    {{1, 2, 2, 2}, {3, 2, 2, 2}, {}},
+    {{1, 2, 2, 2}, {3, 2, 2, 2}, {2, 2, 2}},
+    {{1, 2, 2, 2}, {3, 2, 2, 2}, {2, 0}},
+    {{1, 2, 2, 2}, {3, 2, 2, 2}, {0, 2}},
+    {{1, 2, 2, 2}, {3, 2, 2, 2}, {2, -1}},
+    {{1, 2, 2, 2}, {3, 2, 2, 2}, {-1, 2}},
     // clang-format on
 };
 
@@ -250,6 +273,29 @@ class Conv2DTest : public LayerTest,
     RefTensor mInput, mKernel, mOutput, mInputGrad, mKernelGrad, mOutputGrad;
 };
 
+class Conv2DErrorsTest : public LayerTest,
+                         public testing::WithParamInterface<ErrorTestCase>
+{
+  public:
+    void testWrongShapes(const ErrorTestCase& testCase)
+    {
+        UVec inShape = std::get<0>(std::get<0>(testCase));
+        UVec kerShape = std::get<1>(std::get<0>(testCase));
+        Vec strides = std::get<2>(std::get<0>(testCase));
+        PaddingType pad = std::get<1>(testCase);
+        MemoryLocation loc = std::get<2>(testCase);
+        std::string p = "SAME";
+        if (pad == PaddingType::kVALID) p = "VALID";
+
+        ITensorPtr in = createInput("in", inShape, loc);
+        ITensorPtr ker = createInput("ker", kerShape, loc);
+        ITensorPtr out;
+
+        EXPECT_THROW({ out = conv2D(in, ker, strides, p); },
+                     std::runtime_error);
+    }
+};
+
 TEST_P(Conv2DTest, testAPI)
 {
     test(GetParam());
@@ -269,5 +315,13 @@ TEST_P(Conv2DGradientTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DGradientTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
                                 ValuesIn(SHAPES), ValuesIn(PADDINGS),
+                                ValuesIn(LOCATIONS)));
+
+TEST_P(Conv2DErrorsTest, testWrongShapes)
+{
+    testWrongShapes(GetParam());
+};
+INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DErrorsTest,
+                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(PADDINGS),
                                 ValuesIn(LOCATIONS)));
 }  // namespace

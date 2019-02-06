@@ -2,23 +2,21 @@ include ./makes/defines.inc
 
 .PHONY: release debug clean ctags format help
 
+SAMPLE_NAMES = toySample mnist mnist_conv cifar10_conv
+
 all: release debug
 
 release:
 	@+make -C core release
 	@+make -C tests release
-	@+make -C samples/toySample release
-	@+make -C samples/mnist release
-	@+make -C samples/mnist_conv release
-	@+make -C samples/cifar10_conv release
+	$(foreach sample,$(SAMPLE_NAMES),make -C samples/$(sample) release;)
 
 debug:
 	@+make -C core debug
 	@+make -C tests debug
-	@+make -C samples/toySample debug
-	@+make -C samples/mnist debug
-	@+make -C samples/mnist_conv debug
-	@+make -C samples/cifar10_conv debug
+	$(foreach sample,$(SAMPLE_NAMES),make -C samples/$(sample) debug;)
+
+# utils
 
 clean:
 	rm -r $(OUTDIR)

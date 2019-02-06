@@ -147,9 +147,9 @@ void conv2DGradient(const float* xArr, const float* kArr, const float* yGArr,
         outShape[3] = ceil(shape[3], strides[1]);
     }
 
-    for (size_t pos = 0; pos < shape[0] * shape[1] * shape[2] * shape[3]; ++pos)
+    for (int pos = 0; pos < shape[0] * shape[1] * shape[2] * shape[3]; ++pos)
         xGArr[pos] = 0.;
-    for (size_t pos = 0; pos < kernel[0] * kernel[1] * kernel[2] * kernel[3];
+    for (int pos = 0; pos < kernel[0] * kernel[1] * kernel[2] * kernel[3];
          ++pos)
         kGArr[pos] = 0.;
 
@@ -372,12 +372,18 @@ Tensor::SPtr convolution2D(const Tensor::SPtr& t, const Tensor::SPtr& kernel,
                            const std::vector<int>& strides,
                            layers::PaddingType padding)
 {
-    if (t->getShape().size() != 4)
+    TensorShape xShape = t->getShape();
+    TensorShape kShape = kernel->getShape();
+
+    if (xShape.size() != 4)
         throw std::runtime_error("conv2D: wrong input shape");
-    if (kernel->getShape().size() != 4)
+    if (kShape.size() != 4)
         throw std::runtime_error("conv2D: wrong kernel shape");
     if (strides.empty() || strides.size() > 2)
         throw std::runtime_error("conv2D: wrong strides");
+
+    if (xShape[1] != kShape[1])
+        throw std::runtime_error("conv2D: kernel doesn\'t match tensor");
 
     for (int d : strides)
         if (d <= 0)
