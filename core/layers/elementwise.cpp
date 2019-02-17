@@ -57,26 +57,6 @@ void elementwise(const float* x1, size_t size1, const float* x2, size_t size2,
     }
 }
 
-void runElementwiseHost(const float* x1, size_t size1, const float* x2,
-                        size_t size2, float* y, Elementwise op)
-{
-    switch (op)
-    {
-    case Elementwise::kADD:
-        elementwise<Elementwise::kADD>(x1, size1, x2, size2, y);
-        return;
-    case Elementwise::kSUB:
-        elementwise<Elementwise::kSUB>(x1, size1, x2, size2, y);
-        return;
-    case Elementwise::kMUL:
-        elementwise<Elementwise::kMUL>(x1, size1, x2, size2, y);
-        return;
-    case Elementwise::kDIV:
-        elementwise<Elementwise::kDIV>(x1, size1, x2, size2, y);
-        return;
-    }
-}
-
 template <Elementwise elem>
 float opGrad1(float f1, float f2);
 template <>
@@ -153,6 +133,49 @@ void elementwiseGradient(const float* x1, size_t size1, const float* x2,
     }
 }
 
+TensorShape getBigger(const TensorShape& s1, const TensorShape& s2)
+{
+    return s1.size() > s2.size() ? s1 : s2;
+}
+
+std::vector<Tensor::SPtr> createOutputs(const Tensor::SPtr& t1,
+                                        const Tensor::SPtr& t2)
+{
+    assert(t1->getType() == t2->getType());
+    TensorShape shape = getBigger(t1->getShape(), t2->getShape());
+    return {createTensor("", shape, t1->getType())};
+}
+
+std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& t1,
+                                                const Tensor::SPtr& t2)
+{
+    assert(t1->getType() == t2->getType());
+    return {createTensor("", t1->getShape(), t1->getType()),
+            createTensor("", t2->getShape(), t2->getType())};
+}
+
+}  // namespace
+
+void runElementwiseHost(const float* x1, size_t size1, const float* x2,
+                        size_t size2, float* y, Elementwise op)
+{
+    switch (op)
+    {
+    case Elementwise::kADD:
+        elementwise<Elementwise::kADD>(x1, size1, x2, size2, y);
+        return;
+    case Elementwise::kSUB:
+        elementwise<Elementwise::kSUB>(x1, size1, x2, size2, y);
+        return;
+    case Elementwise::kMUL:
+        elementwise<Elementwise::kMUL>(x1, size1, x2, size2, y);
+        return;
+    case Elementwise::kDIV:
+        elementwise<Elementwise::kDIV>(x1, size1, x2, size2, y);
+        return;
+    }
+}
+
 void runElementwiseGradientHost(const float* x1, size_t size1, const float* x2,
                                 size_t size2, const float* yG, float* x1G,
                                 float* x2G, Elementwise op)
@@ -177,29 +200,6 @@ void runElementwiseGradientHost(const float* x1, size_t size1, const float* x2,
         return;
     }
 }
-
-TensorShape getBigger(const TensorShape& s1, const TensorShape& s2)
-{
-    return s1.size() > s2.size() ? s1 : s2;
-}
-
-std::vector<Tensor::SPtr> createOutputs(const Tensor::SPtr& t1,
-                                        const Tensor::SPtr& t2)
-{
-    assert(t1->getType() == t2->getType());
-    TensorShape shape = getBigger(t1->getShape(), t2->getShape());
-    return {createTensor("", shape, t1->getType())};
-}
-
-std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& t1,
-                                                const Tensor::SPtr& t2)
-{
-    assert(t1->getType() == t2->getType());
-    return {createTensor("", t1->getShape(), t1->getType()),
-            createTensor("", t2->getShape(), t2->getType())};
-}
-
-}  // namespace
 
 ElementwiseLayer::ElementwiseLayer(ID id, const Tensor::SPtr& t1,
                                    const Tensor::SPtr& t2, Elementwise op)

@@ -17,8 +17,14 @@ class AddNLayer : public DifferentiableLayer
     DifferentiableLayer::TensorMap gradients(Tensor::SPtr out,
                                              Tensor::SPtr outGrad) override;
 
+    void initialize() override;
+
+    ~AddNLayer();
+
   private:
     void execute(const InputDict& inputs) override;
+
+    Memory<float*> mArray;
 };
 
 class AddNGradientLayer : public Layer
@@ -27,20 +33,30 @@ class AddNGradientLayer : public Layer
     AddNGradientLayer(ID id, const std::vector<Tensor::SPtr>& ins,
                       const Tensor::SPtr& out, const Tensor::SPtr& outGrad);
 
+    void initialize() override;
+
+    ~AddNGradientLayer();
+
   private:
     void execute(const InputDict& inputs) override;
+
+    Memory<float*> mArray;
 };
 
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runAddNDevice(int n, std::size_t size, float** xs, float* y);
+void runAddNDevice(float** xs, int n, float* y, size_t size);
 
-extern "C" void runAddNGradientDevice(int n, std::size_t size, float* yGrad,
-                                      float** xGrads);
+void runAddNGradientDevice(const float* yGrad, float** xGrads, int n, size_t size);
 
 }  // namespace cuda
 #endif
+
+void runAddNHost(float** xs, int n, float* y, size_t size);
+
+void runAddNGradientHost(const float* yGrad, float** xGrads, int n, size_t size);
+
 }  // namespace layers
 
 Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors);

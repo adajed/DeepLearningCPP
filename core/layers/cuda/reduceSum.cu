@@ -19,12 +19,7 @@ __global__ void reduceSumGradientKernel(const float* yGrad, float* xGrad,
 void runReduceSumDevice(const float* x, float* y, size_t outSize,
                         size_t reduceSize)
 {
-    for (size_t pos = 0; pos < outSize; ++pos)
-    {
-        reduce<ReduceOpCuda::kSUM>(x, y, reduceSize);
-        y += 1;
-        x += reduceSize;
-    }
+    reduce<ReduceOpCuda::kSUM>(x, y, outSize, reduceSize);
 }
 
 void runReduceSumGradientDevice(const float* yGrad, float* xGrad,

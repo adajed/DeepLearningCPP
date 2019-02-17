@@ -15,24 +15,6 @@ namespace layers
 {
 namespace
 {
-void runAddNHost(int n, std::size_t size, float** xs, float* y)
-{
-    for (std::size_t pos = 0; pos < size; ++pos)
-    {
-        y[pos] = 0.;
-        for (int i = 0; i < n; ++i) y[pos] += xs[i][pos];
-    }
-}
-
-void runAddNGradientHost(int n, std::size_t size, const float* yGrad,
-                         float** xGrads)
-{
-    for (std::size_t pos = 0; pos < size; ++pos)
-    {
-        for (int i = 0; i < n; ++i) xGrads[i][pos] = yGrad[pos];
-    }
-}
-
 std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
                                                const Tensor::SPtr& out,
                                                const Tensor::SPtr& outGrad)
@@ -53,31 +35,45 @@ std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
 
 }  // namespace
 
+void runAddNHost(float** xs, int n, float* y, size_t size)
+{
+    for (size_t pos = 0; pos < size; ++pos)
+    {
+        y[pos] = 0.;
+        for (int i = 0; i < n; ++i) y[pos] += xs[i][pos];
+    }
+}
+
+void runAddNGradientHost(const float* yGrad, float** xGrads, int n, size_t size)
+{
+    for (size_t pos = 0; pos < size; ++pos)
+    {
+        for (int i = 0; i < n; ++i) xGrads[i][pos] = yGrad[pos];
+    }
+}
+
 AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
     : DifferentiableLayer(
           id, tensors,
-          {createTensor("", tensors[0]->getShape(), tensors[0]->getType())})
+          {createTensor("", tensors[0]->getShape(), tensors[0]->getType())}),
+      mArray(tensors[0]->getType(), tensors.size())
 {
 }
 
 void AddNLayer::execute(const InputDict& inputs)
 {
-    std::vector<Tensor::SPtr> ins = getInputs();
-    std::vector<float*> xs;
-    xs.reserve(ins.size());
-    for (const Tensor::SPtr& in : ins)
-    {
-        in->eval(inputs);
-        xs.push_back(in->getMemory().getValues());
-    }
-    float* output = mOutputs[0]->getMemory().getValues();
-    std::size_t size = mOutputs[0]->getMemory().getCount();
+    std::vector<Tensor::SPtr> xsTensor = getInputs();
+    for (const Tensor::SPtr& xTensor : xsTensor)
+        xTensor->eval(inputs);
+
+    float* y = mOutputs[0]->getMemory().getValues();
+    size_t size = mOutputs[0]->getMemory().getCount();
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
-        runAddNHost(xs.size(), size, xs.data(), output);
+        runAddNHost(mArray.getValues(), mArray.getCount(), y, size);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runAddNDevice(xs.size(), size, xs.data(), output);
+        cuda::runAddNDevice(mArray.getValues(), mArray.getCount(), y, size);
 #endif
 }
 
@@ -95,12 +91,31 @@ Layer::TensorMap AddNLayer::gradients(Tensor::SPtr out, Tensor::SPtr outGrad)
     return gradMap;
 }
 
+void AddNLayer::initialize()
+{
+    mArray.allocate();
+
+    std::vector<Tensor::SPtr> tensors = getInputs();
+    std::vector<float*> arr;
+    arr.reserve(tensors.size());
+    for (auto& t : tensors)
+        arr.push_back(t->getMemory().getValues());
+
+    mArray.fillFrom(arr.data());
+}
+
+AddNLayer::~AddNLayer()
+{
+    mArray.free();
+}
+
 AddNGradientLayer::AddNGradientLayer(ID id,
                                      const std::vector<Tensor::SPtr>& ins,
                                      const Tensor::SPtr& out,
                                      const Tensor::SPtr& outGrad)
     : Layer(id, createGradientInputs(ins, out, outGrad),
-            createGradientOutputs(ins))
+            createGradientOutputs(ins)),
+      mArray(ins[0]->getType(), ins.size())
 {
     for (unsigned i = 1; i < ins.size(); ++i)
         assert(ins[0]->getType() == ins[i]->getType());
@@ -113,20 +128,33 @@ void AddNGradientLayer::execute(const InputDict& inputs)
     Tensor::SPtr outputGrad = mInputs.back().lock();
     outputGrad->eval(inputs);
 
-    std::size_t size = outputGrad->getMemory().getCount();
+    size_t size = outputGrad->getMemory().getCount();
     float* yGrad = outputGrad->getMemory().getValues();
-    std::vector<float*> xGrads;
-    xGrads.reserve(mOutputs.size());
-    for (const Tensor::SPtr& xG : mOutputs)
-        xGrads.push_back(xG->getMemory().getValues());
 
     if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
-        runAddNGradientHost(xGrads.size(), size, yGrad, xGrads.data());
+        runAddNGradientHost(yGrad, mArray.getValues(), mArray.getCount(), size);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runAddNGradientDevice(xGrads.size(), size, yGrad, xGrads.data());
+        cuda::runAddNGradientDevice(yGrad, mArray.getValues(), mArray.getCount(), size);
 #endif
 }
+
+void AddNGradientLayer::initialize()
+{
+    mArray.allocate();
+
+    std::vector<float*> arr;
+    for (auto& t : mOutputs)
+        arr.push_back(t->getMemory().getValues());
+
+    mArray.fillFrom(arr.data());
+}
+
+AddNGradientLayer::~AddNGradientLayer()
+{
+    mArray.free();
+}
+
 
 }  // namespace layers
 

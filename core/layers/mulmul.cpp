@@ -13,38 +13,6 @@ namespace layers
 {
 namespace
 {
-void runMatmulHost(int n, int m, int k, const float* X1, const float* X2,
-                   float* Y)
-{
-    for (int x = 0; x < n; ++x)
-        for (int y = 0; y < k; ++y)
-        {
-            Y[k * x + y] = 0.;
-            for (int i = 0; i < m; ++i)
-                Y[k * x + y] += X1[m * x + i] * X2[k * i + y];
-        }
-}
-
-void runMatmulGradientHost(int n, int m, int k, const float* X1,
-                           const float* X2, const float* Ygrad, float* X1grad,
-                           float* X2grad)
-{
-    for (int x = 0; x < n; ++x)
-        for (int y = 0; y < m; ++y)
-        {
-            X1grad[m * x + y] = 0.;
-            for (int i = 0; i < k; ++i)
-                X1grad[m * x + y] += X2[k * y + i] * Ygrad[k * x + i];
-        }
-    for (int x = 0; x < m; ++x)
-        for (int y = 0; y < k; ++y)
-        {
-            X2grad[k * x + y] = 0.;
-            for (int i = 0; i < n; ++i)
-                X2grad[k * x + y] += X1[m * i + x] * Ygrad[k * i + y];
-        }
-}
-
 std::vector<Tensor::SPtr> createOutput(const Tensor::SPtr& m1,
                                        const Tensor::SPtr& m2)
 {
@@ -63,6 +31,45 @@ std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& m1,
 
 }  // namespace
 
+void runMatmulHost(const float* x1, const float* x2,
+                   float* y, int n, int m, int k)
+{
+    for (int xPos = 0; xPos < n; ++xPos)
+        for (int yPos = 0; yPos < k; ++yPos)
+        {
+            y[k * xPos + yPos] = 0.;
+            for (int i = 0; i < m; ++i)
+                y[k * xPos + yPos] += x1[m * xPos + i] * x2[k * i + yPos];
+        }
+}
+
+void runMatmulGradientHost(const float* x1, const float* x2,
+                           const float* yGrad, float* x1Grad,
+                           float* x2Grad, int n, int m, int k)
+{
+    // calculate x1Grad
+    for (int xPos = 0; xPos < n; ++xPos)
+    {
+        for (int yPos = 0; yPos < m; ++yPos)
+        {
+            x1Grad[m * xPos + yPos] = 0.;
+            for (int i = 0; i < k; ++i)
+                x1Grad[m * xPos + yPos] += x2[k * yPos + i] * yGrad[k * xPos + i];
+        }
+    }
+
+    // calculate x2Grad
+    for (int xPos = 0; xPos < m; ++xPos)
+    {
+        for (int yPos = 0; yPos < k; ++yPos)
+        {
+            x2Grad[k * xPos + yPos] = 0.;
+            for (int i = 0; i < n; ++i)
+                x2Grad[k * xPos + yPos] += x1[m * i + xPos] * yGrad[k * i + yPos];
+        }
+    }
+}
+
 MatmulLayer::MatmulLayer(ID id, const Tensor::SPtr& m1, const Tensor::SPtr& m2)
     : DifferentiableLayer(id, {m1, m2}, createOutput(m1, m2))
 {
@@ -73,23 +80,23 @@ MatmulLayer::MatmulLayer(ID id, const Tensor::SPtr& m1, const Tensor::SPtr& m2)
 
 void MatmulLayer::execute(const InputDict& inputs)
 {
-    Tensor::SPtr m1 = mInputs[0].lock();
-    Tensor::SPtr m2 = mInputs[1].lock();
-    m1->eval(inputs);
-    m2->eval(inputs);
+    Tensor::SPtr x1Tensor = mInputs[0].lock();
+    Tensor::SPtr x2Tensor = mInputs[1].lock();
+    x1Tensor->eval(inputs);
+    x2Tensor->eval(inputs);
 
-    float* in1 = m1->getMemory().getValues();
-    float* in2 = m2->getMemory().getValues();
-    float* out = mOutputs[0]->getMemory().getValues();
-    int n = m1->getShape()[0];
-    int m = m2->getShape()[0];
-    int k = m2->getShape()[1];
+    float* x1 = x1Tensor->getMemory().getValues();
+    float* x2 = x2Tensor->getMemory().getValues();
+    float* y = mOutputs[0]->getMemory().getValues();
+    int n = x1Tensor->getShape()[0];
+    int m = x2Tensor->getShape()[0];
+    int k = x2Tensor->getShape()[1];
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
-        runMatmulHost(n, m, k, in1, in2, out);
+        runMatmulHost(x1, x2, y, n, m, k);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runMatmulDevice(n, m, k, in1, in2, out);
+        cuda::runMatmulDevice(x1, x2, y, n, m, k);
 #endif
 }
 
@@ -122,28 +129,28 @@ MatmulGradientLayer::MatmulGradientLayer(ID id, const Tensor::SPtr& m1,
 
 void MatmulGradientLayer::execute(const InputDict& inputs)
 {
-    Tensor::SPtr m1 = mInputs[0].lock();
-    Tensor::SPtr m2 = mInputs[1].lock();
-    Tensor::SPtr outGrad = mInputs[3].lock();
-    m1->eval(inputs);
-    m2->eval(inputs);
-    outGrad->eval(inputs);
+    Tensor::SPtr x1Tensor = mInputs[0].lock();
+    Tensor::SPtr x2Tensor = mInputs[1].lock();
+    Tensor::SPtr yGradTensor = mInputs[3].lock();
+    x1Tensor->eval(inputs);
+    x2Tensor->eval(inputs);
+    yGradTensor->eval(inputs);
 
-    float* in1 = m1->getMemory().getValues();
-    float* in2 = m2->getMemory().getValues();
-    float* outG = outGrad->getMemory().getValues();
-    float* grad1 = mOutputs[0]->getMemory().getValues();
-    float* grad2 = mOutputs[1]->getMemory().getValues();
+    float* x1 = x1Tensor->getMemory().getValues();
+    float* x2 = x2Tensor->getMemory().getValues();
+    float* yGrad = yGradTensor->getMemory().getValues();
+    float* x1Grad = mOutputs[0]->getMemory().getValues();
+    float* x2Grad = mOutputs[1]->getMemory().getValues();
 
-    std::size_t n = m1->getShape()[0];
-    std::size_t m = m1->getShape()[1];
-    std::size_t k = m2->getShape()[1];
+    int n = x1Tensor->getShape()[0];
+    int m = x1Tensor->getShape()[1];
+    int k = x2Tensor->getShape()[1];
 
-    if (m1->getType() == MemoryType::kHOST_MEMORY)
-        runMatmulGradientHost(n, m, k, in1, in2, outG, grad1, grad2);
+    if (x1Tensor->getType() == MemoryType::kHOST_MEMORY)
+        runMatmulGradientHost(x1, x2, yGrad, x1Grad, x2Grad, n, m, k);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runMatmulGradientDevice(n, m, k, in1, in2, outG, grad1, grad2);
+        cuda::runMatmulGradientDevice(x1, x2, yGrad, x1Grad, x2Grad, n, m, k);
 #endif
 }
 

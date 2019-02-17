@@ -12,14 +12,47 @@ namespace cuda
 
 enum class ReduceOpCuda
 {
+    // y = x_1 + x_2 + x_3 + ... + x_n 
     kSUM = 0,
+
+    // y = x_1 * x_1 + x_2 * x_2 + ... + x_n * x_n
+    kSQUARED_SUM = 1
 };
 
+namespace
+{
+//! \fn initialReduceOp
+//! \brief Represents initial operation on elements
+//!
+template <ReduceOpCuda op>
+__device__ float initialReduceOp(float x);
+
+template <> inline
+__device__ float initialReduceOp<ReduceOpCuda::kSUM>(float x)
+{
+    return x;
+}
+
+template <> inline
+__device__ float initialReduceOp<ReduceOpCuda::kSQUARED_SUM>(float x)
+{
+    return x * x;
+}
+
+//! \fn reduceOp
+//! \brief Describes how to reduce elements.
+//!
 template <ReduceOpCuda op>
 __device__ float reduceOp(float f1, float f2);
 
 template <> inline
 __device__ float reduceOp<ReduceOpCuda::kSUM>(float f1, float f2)
+{
+    return f1 + f2;
+}
+
+template <> inline
+__device__ float reduceOp<ReduceOpCuda::kSQUARED_SUM>(float f1, float f2)
 {
     return f1 + f2;
 }
@@ -42,11 +75,13 @@ __global__ void reduceKernel(size_t size, const float* x, float* y)
 
     int tid = threadIdx.x;
     int id = blockIdx.x * blockDim.x + threadIdx.x;
+    float v;
 
     sData[tid] = 0.;
     while (id < size)
     {
-        sData[tid] = reduceOp<op>(sData[tid], x[id]);
+        v = initialReduceOp<op>(x[id]);
+        sData[tid] = reduceOp<op>(sData[tid], v);
         id += BS * gridDim.x;
     }
     __syncthreads();
@@ -101,7 +136,7 @@ __global__ void reduceKernel(size_t size, const float* x, float* y)
 }
 
 template <ReduceOpCuda op>
-void reduce(const float* vals, float* out, size_t size)
+void singleReduce(const float* vals, float* out, size_t size)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -117,6 +152,21 @@ void reduce(const float* vals, float* out, size_t size)
     }
     else
         reduceKernel<op, BLOCK_SIZE><<<1, BLOCK_SIZE>>>(size, vals, out);
+}
+
+
+
+}  // namespace
+
+template <ReduceOpCuda op>
+void reduce(const float* x, float* y, size_t outSize, size_t reduceSize)
+{
+    for (size_t i = 0; i < outSize; ++i)
+    {
+        singleReduce<op>(x, y, reduceSize);
+        x += reduceSize;
+        y += 1;
+    }
 }
 
 }  // namespace cuda

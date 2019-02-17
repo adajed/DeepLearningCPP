@@ -8,65 +8,67 @@ namespace layers
 {
 namespace cuda
 {
-__global__ void matmulKernel(int n, int m, int k, float* X1, float* X2,
-                             float* Y)
+namespace
+{
+__global__ void matmulKernel(const float* x1, const float* x2, float* y,
+                             int n, int m, int k)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n * k)
     {
-        int x = id / k;
-        int y = id % k;
-        Y[id] = 0;
-        for (int i = 0; i < m; ++i) Y[id] += X1[m * x + i] * X2[k * i + y];
+        int xPos = id / k;
+        int yPos = id % k;
+        y[id] = 0;
+        for (int i = 0; i < m; ++i)
+            y[id] += x1[m * xPos + i] * x2[k * i + yPos];
     }
 }
 
-__global__ void matmulGradientKernel(int n, int m, int k, float* X1, float* X2,
-                                     float* Ygrad, float* X1grad, float* X2grad)
+__global__ void matmulGradientKernel(const float* x1, const float* x2, const float* yGrad,
+                                     float* x1Grad, float* x2Grad, int n, int m, int k)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n * m)
     {
-        int x = id / m;
-        int y = id % m;
-        X1grad[id] = 0.;
+        int xPos = id / m;
+        int yPos = id % m;
+        x1Grad[id] = 0.;
         for (int i = 0; i < k; ++i)
-            X1grad[id] += X2[k * y + i] * Ygrad[k * x + i];
+            x1Grad[id] += x2[k * yPos + i] * yGrad[k * xPos + i];
     }
     else
     {
         id -= n * m;
         if (id < m * k)
         {
-            int x = id / k;
-            int y = id % k;
-            X2grad[id] = 0.;
+            int xPos = id / k;
+            int yPos = id % k;
+            x2Grad[id] = 0.;
             for (int i = 0; i < n; ++i)
-                X2grad[id] += X1[m * i + x] * Ygrad[k * i + y];
+                x2Grad[id] += x1[m * i + xPos] * yGrad[k * i + yPos];
         }
     }
 }
 
-extern "C" void runMatmulDevice(int n, int m, int k, float* X1, float* X2,
-                                float* Y)
+}  // namespace
+
+void runMatmulDevice(const float* x1, const float* x2,
+                     float* y, int n, int m, int k)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (n * k + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    matmulKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(n, m, k, X1, X2, Y);
-    cudaDeviceSynchronize();
+    matmulKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, y, n, m, k);
 }
 
-extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1,
-                                        float* X2, float* Ygrad, float* X1grad,
-                                        float* X2grad)
+void runMatmulGradientDevice(const float* x1, const float* x2,
+                             const float* yGrad, float* x1Grad,
+                             float* x2Grad, int n, int m, int k)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (n * m + m * k + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    matmulGradientKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(n, m, k, X1, X2, Ygrad,
-                                                     X1grad, X2grad);
-    cudaDeviceSynchronize();
+    matmulGradientKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, yGrad, x1Grad, x2Grad, n, m, k);
 }
 
 }  // namespace cuda

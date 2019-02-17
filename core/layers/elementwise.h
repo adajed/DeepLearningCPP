@@ -55,15 +55,26 @@ class ElementwiseGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-void runElementwiseDevice(float* x1, size_t size1, float* x2, size_t size2,
+void runElementwiseDevice(const float* x1, size_t size1,
+                          const float* x2, size_t size2,
                           float* y, Elementwise op);
 
-void runElementwiseGradientDevice(float* x1, size_t size1, float* x2,
-                                  size_t size2, float* yG, float* x1G,
-                                  float* x2G, Elementwise op);
+void runElementwiseGradientDevice(const float* x1, size_t size1,
+                                  const float* x2, size_t size2,
+                                  const float* yGrad, float* x1Grad,
+                                  float* x2Grad, Elementwise op);
 
 }  // namespace cuda
 #endif
+
+void runElementwiseHost(const float* x1, size_t size1,
+                        const float* x2, size_t size2,
+                        float* y, Elementwise op);
+
+void runElementwiseGradientHost(const float* x1, size_t size1,
+                                const float* x2, size_t size2,
+                                const float* yG, float* x1G,
+                                float* x2G, Elementwise op);
 }  // namespace layers
 
 Tensor::SPtr createElementwise(const Tensor::SPtr&, const Tensor::SPtr&,

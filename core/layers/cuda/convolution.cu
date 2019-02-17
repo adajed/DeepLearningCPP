@@ -195,7 +195,7 @@ __global__ void convGradientKernel_K(const float* xArr, const float* yGArr,
 
 }  // namespace
 
-extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
+void runConv2DDevice(const float* x, const float* k, float* y,
                                 size_t size, int* info, PaddingType padding)
 {
     const int BLOCK_SIZE = 256;
@@ -209,7 +209,7 @@ extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, k, y, info);
 }
 
-extern "C" void runConv2DGradientDevice(const float* x, const float* k,
+void runConv2DGradientDevice(const float* x, const float* k,
                                         const float* yG, float* xG, float* kG,
                                         size_t xSize, size_t kSize, int* info,
                                         PaddingType padding)
@@ -234,7 +234,7 @@ extern "C" void runConv2DGradientDevice(const float* x, const float* k,
     }
 }
 
-extern "C" void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
+void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
                                         int* outShape, int* strides)
 {
     int* ptr = (int*)dest;

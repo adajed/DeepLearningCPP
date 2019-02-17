@@ -23,15 +23,7 @@ void InputLayer::execute(const InputDict& inputs)
     HostTensor input = inputs.at(name);
     Memory<float> output = mOutputs[0]->getMemory();
 
-    if (output.getType() == MemoryType::kHOST_MEMORY)
-    {
-        std::memcpy(output.getValues(), input.data(),
-                    output.getCount() * sizeof(float));
-    }
-#ifdef CUDA_AVAILABLE
-    else  // output.getType() == MemoryType::kDEVICE_MEMORY
-        cuda::copyInput(output.getValues(), input.data(), output.getCount());
-#endif
+    output.fillFrom(input.data());
 }
 
 }  // namespace core
