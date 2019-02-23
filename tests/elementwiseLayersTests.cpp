@@ -235,8 +235,8 @@ class ElementwiseTest : public LayerTest,
             Tensor::SPtr outG = core::getDefaultGraph()->addInput(
                 "outG",
                 createLayer<InputLayer>("outG", shape(testCase, 2), type));
-            Tensor::SPtr output = createElementwise(in1, in2, op(testCase));
-            Layer::SPtr layer = createLayer<ElementwiseGradientLayer>(
+            Tensor::SPtr output = elementwiseBack(in1, in2, op(testCase));
+            Layer::SPtr layer = createLayer<ElementwiseBackGradientLayer>(
                 in1, in2, output, outG, op(testCase));
             initializeGraph();
             std::vector<Tensor::SPtr> grads = layer->getOutputs();
