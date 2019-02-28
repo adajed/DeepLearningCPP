@@ -16,16 +16,21 @@ const int NUM_EPOCHS = 10;
 const int PRINT_EVERY = 100;
 const float LEARNING_RATE = 0.001;
 
+#define Q(x) std::string(#x)
+#define QUOTE(x) Q(x)
+
 const std::vector<std::string> TRAIN_PATHS = {
-    "/home/adam/Projects/DLL/samples/cifar10_conv/data_batch_1.bin",
-    "/home/adam/Projects/DLL/samples/cifar10_conv/data_batch_2.bin",
-    "/home/adam/Projects/DLL/samples/cifar10_conv/data_batch_3.bin",
-    "/home/adam/Projects/DLL/samples/cifar10_conv/data_batch_4.bin",
-    "/home/adam/Projects/DLL/samples/cifar10_conv/data_batch_5.bin",
+    QUOTE(PROJECT_DIR) + "/samples/cifar10_conv/data_batch_1.bin",
+    QUOTE(PROJECT_DIR) + "/samples/cifar10_conv/data_batch_2.bin",
+    QUOTE(PROJECT_DIR) + "/samples/cifar10_conv/data_batch_3.bin",
+    QUOTE(PROJECT_DIR) + "/samples/cifar10_conv/data_batch_4.bin",
+    QUOTE(PROJECT_DIR) + "/samples/cifar10_conv/data_batch_5.bin",
 };
 const std::vector<std::string> VALID_PATHS = {
-    "/home/adam/Projects/DLL/samples/cifar10_conv/test_batch.bin"
-};
+    QUOTE(PROJECT_DIR) + "/samples/cifar10_conv/test_batch.bin"};
+
+#undef Q
+#undef QUOTE
 
 using namespace graphdl;
 
@@ -75,7 +80,7 @@ float meanAcc(const std::vector<int>& vec)
     return float(sum) / float(vec.size() * BATCH_SIZE);
 }
 
-ITensorPtr conv2DAndMaxPool2D(ITensorPtr x, ITensorPtr k)
+ITensorPtr conv2DAndMaxPool2D(const ITensorPtr& x, const ITensorPtr& k)
 {
     ITensorPtr a = conv2D(x, k, {1, 1}, "SAME");
     return relu(maxPool2D(a, {2, 2}, {2, 2}, "SAME"));

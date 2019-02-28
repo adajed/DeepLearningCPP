@@ -5,7 +5,20 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
-#include <random> 
+#include <random>
+
+bool fileExists(const std::string& path)
+{
+    std::ifstream f(path.c_str());
+    if (!f.good())
+    {
+        std::cout << "File \"" << path
+                  << "\" does not exists, please download it." << std::endl;
+        return false;
+    }
+
+    return true;
+}
 
 void parse(const std::string& path, std::vector<std::vector<float>>& xs,
            std::vector<std::vector<float>>& ys)
@@ -35,8 +48,9 @@ Cifar10Dataset::Cifar10Dataset(const std::vector<std::string>& paths,
                                int batchSize)
     : mBatchSize(batchSize), mPos(0)
 {
-    for (const auto& path : paths)
-        parse(path, mX, mY);
+    for (const auto& path : paths) assert(fileExists(path));
+
+    for (const auto& path : paths) parse(path, mX, mY);
     mIndexes = std::vector<int>(mX.size());
     std::iota(mIndexes.begin(), mIndexes.end(), 0);
     std::shuffle(mIndexes.begin(), mIndexes.end(),

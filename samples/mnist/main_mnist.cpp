@@ -16,14 +16,20 @@ const int NUM_EPOCHS = 1;
 const int PRINT_EVERY = 100;
 const float LEARNING_RATE = 0.001;
 
+#define Q(x) std::string(#x)
+#define QUOTE(x) Q(x)
+
 const std::string TRAIN_IMAGES_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/train-images-idx3-ubyte";
+    QUOTE(PROJECT_DIR) + "/samples/mnist/train-images-idx3-ubyte";
 const std::string TRAIN_LABELS_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/train-labels-idx1-ubyte";
+    QUOTE(PROJECT_DIR) + "/samples/mnist/train-labels-idx1-ubyte";
 const std::string VALID_IMAGES_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/t10k-images-idx3-ubyte";
+    QUOTE(PROJECT_DIR) + "/samples/mnist/t10k-images-idx3-ubyte";
 const std::string VALID_LABELS_PATH =
-    "/home/adam/Projects/DLL/samples/mnist/t10k-labels-idx1-ubyte";
+    QUOTE(PROJECT_DIR) + "/samples/mnist/t10k-labels-idx1-ubyte";
+
+#undef Q
+#undef QUOTE
 
 using namespace graphdl;
 

@@ -10,7 +10,7 @@ OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
 TIDY_TARGETS=$(patsubst %.cpp,.tidy_%,$(CPP_SOURCES))
 
-COMMON_CFLAGS += -std=c++17 -Wunused-parameter
+COMMON_CFLAGS += -std=c++17 -Wunused-parameter -DPROJECT_DIR=$(ROOT_DIR)
 CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
 

@@ -31,12 +31,14 @@ format:
 	@+make -C samples/toySample format
 	@+make -C samples/mnist format
 	@+make -C samples/mnist_conv format
+	@+make -C samples/cifar10_conv format
 
 tidy:
 	@+make -C core tidy
 	@+make -C samples/toySample tidy
 	@+make -C samples/mnist tidy
 	@+make -C samples/mnist_conv tidy
+	@+make -C samples/cifar10_conv tidy
 
 help:
 	@echo "Possible commands:"

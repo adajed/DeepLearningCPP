@@ -7,8 +7,7 @@
 class Cifar10Dataset
 {
   public:
-    Cifar10Dataset(const std::vector<std::string>& paths,
-                 int batchSize);
+    Cifar10Dataset(const std::vector<std::string>& paths, int batchSize);
 
     int getNumBatches() const;
 

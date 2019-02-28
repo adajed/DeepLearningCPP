@@ -7,6 +7,19 @@
 #include <numeric>
 #include <random>
 
+bool fileExists(const std::string& path)
+{
+    std::ifstream f(path.c_str());
+    if (!f.good())
+    {
+        std::cout << "File \"" << path
+                  << "\" does not exists, please download it." << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 unsigned rev(unsigned n)
 {
     unsigned char c1 = n & 255;
@@ -78,6 +91,9 @@ MnistDataset::MnistDataset(const std::string& imagesPath,
                            const std::string& labelsPath, int batchSize)
     : mBatchSize(batchSize), mPos(0)
 {
+    assert(fileExists(imagesPath));
+    assert(fileExists(labelsPath));
+
     parseImages(imagesPath, mX);
     parseLabels(labelsPath, mY);
     mIndexes = std::vector<int>(mX.size());
