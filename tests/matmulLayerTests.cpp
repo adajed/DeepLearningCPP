@@ -16,6 +16,7 @@ std::vector<std::pair<UVec, UVec>> SHAPES = {
     {{10, 10}, {10, 10}},
     {{1, 30}, {30, 1}},
     {{10, 100}, {100, 20}}, // big test
+    {{100, 100}, {100, 100}}
     // clang-format on
 };
 
