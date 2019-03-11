@@ -7,14 +7,11 @@
 #include <numeric>
 #include <random>
 
-#ifdef CUDA_AVAILABLE
-const int BATCH_SIZE = 64;
-#else
-const int BATCH_SIZE = 16;
-#endif
-const int NUM_EPOCHS = 1;
-const int PRINT_EVERY = 100;
-const float LEARNING_RATE = 0.001;
+// learning parameters
+const int BATCH_SIZE = 64;  // how many samples per computation
+const int NUM_EPOCHS = 1;  // # of runs over whole dataset
+const int PRINT_EVERY = 100;  // after how many batches print info
+const float LEARNING_RATE = 0.001;  // learning parameter to the optimizer
 
 #define Q(x) std::string(#x)
 #define QUOTE(x) Q(x)
@@ -40,7 +37,10 @@ struct Network
     ITensorPtr output, loss, optimize;
 };
 
-int numCorrect(const HostTensor& y, const HostTensor& pred)
+//! \fn calcNumCorrect
+//! \brief Calculcate number of correct preditions.
+//!
+int calcNumCorrect(const HostTensor& y, const HostTensor& pred)
 {
     int cnt = 0;
     for (int b = 0; b < BATCH_SIZE; ++b)
@@ -79,6 +79,9 @@ float meanAcc(const std::vector<int>& vec)
     return float(sum) / float(vec.size() * BATCH_SIZE);
 }
 
+//! \fn buildNetwork
+//! \brief Builds computation graph.
+//!
 Network buildNetwork()
 {
 #ifdef CUDA_AVAILABLE
@@ -88,13 +91,17 @@ Network buildNetwork()
 #endif
 
     SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);
+
+    // network inputs
     ITensorPtr X = createInput("X", {BATCH_SIZE, 28 * 28}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 
+    // weights
     ITensorPtr W1 = createWeights("W1", {28 * 28, 512}, init, loc);
     ITensorPtr W2 = createWeights("W2", {512, 128}, init, loc);
     ITensorPtr W3 = createWeights("W3", {128, 10}, init, loc);
 
+    // biases
     ITensorPtr b1 = createWeights("b1", {512}, init, loc);
     ITensorPtr b2 = createWeights("b2", {128}, init, loc);
     ITensorPtr b3 = createWeights("b3", {10}, init, loc);
@@ -103,12 +110,15 @@ Network buildNetwork()
     ITensorPtr a2 = sigmoid(matmul(a1, W2) + b2);
     ITensorPtr a3 = sigmoid(matmul(a2, W3) + b3);
 
+    // calculate loss
     ITensorPtr loss = neg(reduceSum(Y * log(a3) + (1. - Y) * log(1. - a3)));
     loss = loss / float(BATCH_SIZE);
 
+    // optimize weights and biases
     ITensorPtr opt =
         train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
 
+    // create network
     Network net;
     net.inputs = {{"X", X}, {"Y", Y}};
     net.weights = {W1, W2, W3};
@@ -123,12 +133,13 @@ int main()
     std::cout << "Reading MNIST dataset..." << std::endl;
     MnistDataset train_mnist(TRAIN_IMAGES_PATH, TRAIN_LABELS_PATH, BATCH_SIZE);
     MnistDataset valid_mnist(VALID_IMAGES_PATH, VALID_LABELS_PATH, BATCH_SIZE);
+
     std::cout << "Building network..." << std::endl;
     Network net = buildNetwork();
     initializeGraph();
 
     std::vector<float> losses;
-    std::vector<int> accs;
+    std::vector<int> accuracies;
     for (int e = 0; e < NUM_EPOCHS; ++e)
     {
         losses.clear();
@@ -139,10 +150,10 @@ int main()
         for (int i = 0; i < train_mnist.getNumBatches(); ++i)
         {
             auto batch = train_mnist.getNextBatch();
-            auto outputs = eval({net.loss, net.output, net.optimize},
-                                {{"X", batch[0]}, {"Y", batch[1]}});
+            auto input = {{"X", batch[0]}, {"Y", batch[1]}};
+            auto outputs = eval({net.loss, net.output, net.optimize}, input);
             losses.push_back(outputs[0][0]);
-            accs.push_back(numCorrect(batch[1], outputs[1]));
+            accs.push_back(calcNumCorrect(batch[1], outputs[1]));
             if (i % PRINT_EVERY == PRINT_EVERY - 1)
             {
                 std::cout << "Step " << i << ": "
@@ -162,7 +173,7 @@ int main()
             auto outputs = eval({net.loss, net.output},
                                 {{"X", batch[0]}, {"Y", batch[1]}});
             losses.push_back(outputs[0][0]);
-            accs.push_back(numCorrect(batch[1], outputs[1]));
+            accs.push_back(calcNumCorrect(batch[1], outputs[1]));
         }
         std::cout << "Valid. loss " << mean(losses) << ", Valid. acc "
                   << meanAcc(accs) << std::endl;
