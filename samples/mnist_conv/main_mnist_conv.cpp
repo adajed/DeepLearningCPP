@@ -2,19 +2,15 @@
 #include "graphdl_ops.h"
 #include "graphdl_train.h"
 #include "readMNIST.h"
+#include "utils.h"
 
 #include <iostream>
-#include <numeric>
 #include <random>
 
-#ifdef CUDA_AVAILABLE
-const int BATCH_SIZE = 64;
-#else
-const int BATCH_SIZE = 16;
-#endif
-const int NUM_EPOCHS = 1;
-const int PRINT_EVERY = 100;
-const float LEARNING_RATE = 0.001;
+const int BATCH_SIZE = 64;  // how many samples per computation
+const int NUM_EPOCHS = 1;  // # of runs over whole dataset
+const int PRINT_EVERY = 100;  // after how many batches print info
+const float LEARNING_RATE = 0.001;  // learning parameter to the optimizer
 
 #define Q(x) std::string(#x)
 #define QUOTE(x) Q(x)
@@ -33,53 +29,7 @@ const std::string VALID_LABELS_PATH =
 
 using namespace graphdl;
 
-struct Network
-{
-    std::map<std::string, ITensorPtr> inputs;
-    std::vector<ITensorPtr> weights;
-    ITensorPtr output, loss, optimize;
-};
-
-int numCorrect(const HostTensor& y, const HostTensor& pred)
-{
-    int cnt = 0;
-    for (int b = 0; b < BATCH_SIZE; ++b)
-    {
-        int bestY = 0, bestPred = 0;
-        float maxY = y[10 * b], maxPred = pred[10 * b];
-        for (int i = 0; i < 10; ++i)
-        {
-            if (y[10 * b + i] > maxY)
-            {
-                bestY = i;
-                maxY = y[10 * b + i];
-            }
-            if (pred[10 * b + i] > maxPred)
-            {
-                bestPred = i;
-                maxPred = pred[10 * b + i];
-            }
-        }
-
-        if (bestY == bestPred) cnt++;
-    }
-
-    return cnt;
-}
-
-float mean(const std::vector<float>& vec)
-{
-    float m = std::accumulate(vec.begin(), vec.end(), 0.);
-    return m / float(vec.size());
-}
-
-float meanAcc(const std::vector<int>& vec)
-{
-    int sum = std::accumulate(vec.begin(), vec.end(), 0);
-    return float(sum) / float(vec.size() * BATCH_SIZE);
-}
-
-Network buildNetwork()
+ComputationalGraph buildNetwork()
 {
 #ifdef CUDA_AVAILABLE
     MemoryLocation loc = MemoryLocation::kDEVICE;
@@ -120,7 +70,7 @@ Network buildNetwork()
     ITensorPtr opt =
         train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
 
-    Network net;
+    ComputationalGraph net;
     net.inputs = {{"X", X}, {"Y", Y}};
     net.weights = {W1, W2, W3};
     net.output = a;
@@ -135,7 +85,7 @@ int main()
     MnistDataset train_mnist(TRAIN_IMAGES_PATH, TRAIN_LABELS_PATH, BATCH_SIZE);
     MnistDataset valid_mnist(VALID_IMAGES_PATH, VALID_LABELS_PATH, BATCH_SIZE);
     std::cout << "Building network..." << std::endl;
-    Network net = buildNetwork();
+    ComputationalGraph net = buildNetwork();
     initializeGraph();
 
     std::vector<float> losses;
@@ -154,12 +104,12 @@ int main()
             auto outputs = eval({net.loss, net.output, net.optimize},
                                 {{"X", batch[0]}, {"Y", batch[1]}});
             losses.push_back(outputs[0][0]);
-            accs.push_back(numCorrect(batch[1], outputs[1]));
+            accs.push_back(calcNumCorrect(batch[1], outputs[1], BATCH_SIZE));
             if (i % PRINT_EVERY == PRINT_EVERY - 1)
             {
                 std::cout << "Step " << i << ": "
                           << "loss " << mean(losses) << ", acc "
-                          << meanAcc(accs) << std::endl;
+                          << accuracy(accs, BATCH_SIZE) << std::endl;
 
                 losses.clear();
                 accs.clear();
@@ -174,10 +124,10 @@ int main()
             auto outputs = eval({net.loss, net.output},
                                 {{"X", batch[0]}, {"Y", batch[1]}});
             losses.push_back(outputs[0][0]);
-            accs.push_back(numCorrect(batch[1], outputs[1]));
+            accs.push_back(calcNumCorrect(batch[1], outputs[1], BATCH_SIZE));
         }
         std::cout << "Valid. loss " << mean(losses) << ", Valid. acc "
-                  << meanAcc(accs) << std::endl;
+                  << accuracy(accs, BATCH_SIZE) << std::endl;
         train_mnist.reset();
         valid_mnist.reset();
     }

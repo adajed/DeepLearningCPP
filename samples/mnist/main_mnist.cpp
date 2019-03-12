@@ -2,9 +2,9 @@
 #include "graphdl_ops.h"
 #include "graphdl_train.h"
 #include "readMNIST.h"
+#include "utils.h"
 
 #include <iostream>
-#include <numeric>
 #include <random>
 
 // learning parameters
@@ -30,59 +30,10 @@ const std::string VALID_LABELS_PATH =
 
 using namespace graphdl;
 
-struct Network
-{
-    std::map<std::string, ITensorPtr> inputs;
-    std::vector<ITensorPtr> weights;
-    ITensorPtr output, loss, optimize;
-};
-
-//! \fn calcNumCorrect
-//! \brief Calculcate number of correct preditions.
-//!
-int calcNumCorrect(const HostTensor& y, const HostTensor& pred)
-{
-    int cnt = 0;
-    for (int b = 0; b < BATCH_SIZE; ++b)
-    {
-        int bestY = 0, bestPred = 0;
-        float maxY = y[10 * b], maxPred = pred[10 * b];
-        for (int i = 0; i < 10; ++i)
-        {
-            if (y[10 * b + i] > maxY)
-            {
-                bestY = i;
-                maxY = y[10 * b + i];
-            }
-            if (pred[10 * b + i] > maxPred)
-            {
-                bestPred = i;
-                maxPred = pred[10 * b + i];
-            }
-        }
-
-        if (bestY == bestPred) cnt++;
-    }
-
-    return cnt;
-}
-
-float mean(const std::vector<float>& vec)
-{
-    float m = std::accumulate(vec.begin(), vec.end(), 0.);
-    return m / float(vec.size());
-}
-
-float meanAcc(const std::vector<int>& vec)
-{
-    int sum = std::accumulate(vec.begin(), vec.end(), 0);
-    return float(sum) / float(vec.size() * BATCH_SIZE);
-}
-
 //! \fn buildNetwork
 //! \brief Builds computation graph.
 //!
-Network buildNetwork()
+ComputationalGraph buildNetwork()
 {
 #ifdef CUDA_AVAILABLE
     MemoryLocation loc = MemoryLocation::kDEVICE;
@@ -119,7 +70,7 @@ Network buildNetwork()
         train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
 
     // create network
-    Network net;
+    ComputationalGraph net;
     net.inputs = {{"X", X}, {"Y", Y}};
     net.weights = {W1, W2, W3};
     net.output = a3;
@@ -135,7 +86,7 @@ int main()
     MnistDataset valid_mnist(VALID_IMAGES_PATH, VALID_LABELS_PATH, BATCH_SIZE);
 
     std::cout << "Building network..." << std::endl;
-    Network net = buildNetwork();
+    ComputationalGraph net = buildNetwork();
     initializeGraph();
 
     std::vector<float> losses;
@@ -143,40 +94,46 @@ int main()
     for (int e = 0; e < NUM_EPOCHS; ++e)
     {
         losses.clear();
-        accs.clear();
+        accuracies.clear();
         std::cout << "Epoch " << e << std::endl;
         std::cout << "Number of batches " << train_mnist.getNumBatches()
                   << std::endl;
         for (int i = 0; i < train_mnist.getNumBatches(); ++i)
         {
             auto batch = train_mnist.getNextBatch();
-            auto input = {{"X", batch[0]}, {"Y", batch[1]}};
-            auto outputs = eval({net.loss, net.output, net.optimize}, input);
-            losses.push_back(outputs[0][0]);
-            accs.push_back(calcNumCorrect(batch[1], outputs[1]));
+            auto outputs = eval({net.loss, net.output, net.optimize},
+                                {{"X", batch[0]}, {"Y", batch[1]}});
+
+            float loss = outputs[0][0];
+            float acc = calcNumCorrect(batch[1], outputs[1], BATCH_SIZE);
+            losses.push_back(loss);
+            accuracies.push_back(acc);
+
             if (i % PRINT_EVERY == PRINT_EVERY - 1)
             {
                 std::cout << "Step " << i << ": "
                           << "loss " << mean(losses) << ", acc "
-                          << meanAcc(accs) << std::endl;
+                          << accuracy(accuracies, BATCH_SIZE) << std::endl;
 
                 losses.clear();
-                accs.clear();
+                accuracies.clear();
             }
         }
 
         losses.clear();
-        accs.clear();
+        accuracies.clear();
         for (int i = 0; i < valid_mnist.getNumBatches(); ++i)
         {
             auto batch = valid_mnist.getNextBatch();
             auto outputs = eval({net.loss, net.output},
                                 {{"X", batch[0]}, {"Y", batch[1]}});
-            losses.push_back(outputs[0][0]);
-            accs.push_back(calcNumCorrect(batch[1], outputs[1]));
+            float loss = outputs[0][0];
+            float acc = calcNumCorrect(batch[1], outputs[1], BATCH_SIZE);
+            losses.push_back(loss);
+            accuracies.push_back(acc);
         }
         std::cout << "Valid. loss " << mean(losses) << ", Valid. acc "
-                  << meanAcc(accs) << std::endl;
+                  << accuracy(accuracies, BATCH_SIZE) << std::endl;
         train_mnist.reset();
         valid_mnist.reset();
     }

@@ -10,7 +10,7 @@ OBJS_D=$(patsubst %.cpp,$(OUTDIR_D)/%.o,$(CPP_SOURCES))
 
 TIDY_TARGETS=$(patsubst %.cpp,.tidy_%,$(CPP_SOURCES))
 
-COMMON_CFLAGS += -std=c++17 -Wunused-parameter -DPROJECT_DIR=$(ROOT_DIR)
+COMMON_CFLAGS += -std=c++17 -I$(ROOT_DIR)/samples -Wunused-parameter -DPROJECT_DIR=$(ROOT_DIR)
 CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
 
@@ -66,5 +66,5 @@ format:
 tidy: $(TIDY_TARGETS)
 
 .tidy_%: %.cpp $(CPP_HEADERS)
-	$(CLANG_TIDY_EXEC) --fix $< -quiet -- $(CLANG_TIDY_INCLUDES) $(CLANG_TIDY_ARGS)
+	$(CLANG_TIDY_EXEC) --fix $< -quiet -- $(CLANG_TIDY_INCLUDES) -I$(ROOT_DIR)/samples $(CLANG_TIDY_ARGS)
 	@touch $@
