@@ -207,25 +207,22 @@ ElementwiseLayer::ElementwiseLayer(ID id, const Tensor::SPtr& t1,
 {
 }
 
-void ElementwiseLayer::execute(const InputDict& inputs)
+void ElementwiseLayer::execute(const std::vector<float*>& inputs,
+                               const std::vector<float*>& outputs,
+                               const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr i0 = mInputs[0].lock();
-    Tensor::SPtr i1 = mInputs[1].lock();
+    float* x1 = inputs[0];
+    float* x2 = inputs[1];
+    float* y = outputs[0];
 
-    i0->eval(inputs);
-    i1->eval(inputs);
+    size_t size1 = mInputs[0].lock()->getCount();
+    size_t size2 = mInputs[1].lock()->getCount();
 
-    float* input0 = i0->getMemory().getValues();
-    float* input1 = i1->getMemory().getValues();
-    float* output = mOutputs[0]->getMemory().getValues();
-    size_t size0 = i0->getMemory().getCount();
-    size_t size1 = i1->getMemory().getCount();
-
-    if (i0->getType() == MemoryType::kHOST_MEMORY)
-        runElementwiseHost(input0, size0, input1, size1, output, mOp);
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
+        runElementwiseHost(x1, size1, x2, size2, y, mOp);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runElementwiseDevice(input0, size0, input1, size1, output, mOp);
+        cuda::runElementwiseDevice(x1, size1, x2, size2, y, mOp);
 #endif
 }
 
@@ -249,30 +246,25 @@ ElementwiseGradientLayer::ElementwiseGradientLayer(
             createGradientOutputs(t1, t2)),
       mOp(op){};
 
-void ElementwiseGradientLayer::execute(const InputDict& inputs)
+void ElementwiseGradientLayer::execute(const std::vector<float*>& inputs,
+                                       const std::vector<float*>& outputs,
+                                       const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr input1 = mInputs[0].lock();
-    Tensor::SPtr input2 = mInputs[1].lock();
-    Tensor::SPtr outputGrad = mInputs[3].lock();
-    input1->eval(inputs);
-    input2->eval(inputs);
-    outputGrad->eval(inputs);
+    float* x1 = inputs[0];
+    float* x2 = inputs[1];
+    float* yGrad = inputs[3];
+    float* x1Grad = outputs[0];
+    float* x2Grad = outputs[1];
+    size_t size1 = getInputs()[0]->getCount();
+    size_t size2 = getInputs()[1]->getCount();
 
-    float* in1 = input1->getMemory().getValues();
-    float* in2 = input2->getMemory().getValues();
-    float* outGrad = outputGrad->getMemory().getValues();
-    float* gradient1 = mOutputs[0]->getMemory().getValues();
-    float* gradient2 = mOutputs[1]->getMemory().getValues();
-    size_t size1 = input1->getMemory().getCount();
-    size_t size2 = input2->getMemory().getCount();
-
-    if (input1->getType() == MemoryType::kHOST_MEMORY)
-        runElementwiseGradientHost(in1, size1, in2, size2, outGrad, gradient1,
-                                   gradient2, mOp);
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
+        runElementwiseGradientHost(x1, size1, x2, size2, yGrad, x1Grad, x2Grad,
+                                   mOp);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runElementwiseGradientDevice(in1, size1, in2, size2, outGrad,
-                                           gradient1, gradient2, mOp);
+        cuda::runElementwiseGradientDevice(x1, size1, x2, size2, yGrad, x1Grad,
+                                           x2Grad, mOp);
 #endif
 }
 

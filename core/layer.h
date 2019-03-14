@@ -44,8 +44,13 @@ class Tensor
     //!
     TensorShape getShape() const;
 
+    //! \fn getCount
+    //! \brief Returns number of elements in tensor.
+    //!
+    size_t getCount() const;
+
     //! \fn getOper
-    //! \brief Return layer which is producing this tensor.
+    //! \brief Returns layer which is producing this tensor.
     //!
     std::shared_ptr<Layer> getLayer() const;
 
@@ -152,7 +157,7 @@ class Layer
     //! \fn eval
     //! \brief Evaluates layer, recursive.
     //!
-    virtual void eval(const InputDict& inputs);
+    virtual void eval(const InputDict& inputDict);
 
     //! \fn hasGradient
     //!
@@ -184,13 +189,15 @@ class Layer
   private:
     //! \fn executeOper
     //!
-    virtual void execute(const InputDict& inputs) = 0;
+    virtual void execute(const std::vector<float*>& inputs,
+                         const std::vector<float*>& outputs,
+                         const InputDict& inputDict) = 0;
 
     ID mID;
-    bool mIsEvaluated;
     std::weak_ptr<Graph> mGraph;
 
   protected:
+    bool mIsEvaluated;
     std::vector<Tensor::WeakPtr> mInputs;
     std::vector<Tensor::SPtr> mOutputs;
 };

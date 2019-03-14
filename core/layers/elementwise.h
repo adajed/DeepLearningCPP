@@ -30,7 +30,9 @@ class ElementwiseLayer : public DifferentiableLayer
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     Elementwise mOp;
     ElementwiseFun mFun;
@@ -46,7 +48,9 @@ class ElementwiseGradientLayer : public Layer
   private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr, Tensor::SPtr);
 
-    void execute(const InputDict&) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     Elementwise mOp;
     ElementwiseFun mFun1, mFun2;

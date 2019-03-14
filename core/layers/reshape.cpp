@@ -29,18 +29,18 @@ Layer::TensorMap ReshapeLayer::gradients(Tensor::SPtr /* out */,
     return {{input, layer->getOutputs()[0]}};
 }
 
-void ReshapeLayer::execute(const InputDict& inputs)
+void ReshapeLayer::execute(const std::vector<float*>& inputs,
+                           const std::vector<float*>& outputs,
+                           const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr input = mInputs[0].lock();
-    input->eval(inputs);
-
-    float* in = input->getMemory().getValues();
-    float* out = mOutputs[0]->getMemory().getValues();
-    if (input->getType() == MemoryType::kHOST_MEMORY)
-        std::memcpy(out, in, input->getShape().getCount() * sizeof(float));
+    Tensor::SPtr tX = getInputs()[0];
+    float* x = inputs[0];
+    float* y = outputs[0];
+    if (tX->getType() == MemoryType::kHOST_MEMORY)
+        std::memcpy(y, x, tX->getCount() * sizeof(float));
 #ifdef CUDA_AVAILABLE
     else  // input->getType() == MemoryType::kDEVICE_MEMORY
-        cuda::utils::copy(out, in, input->getShape().getCount());
+        cuda::utils::copy(y, x, tX->getCount());
 #endif
 }
 

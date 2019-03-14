@@ -14,8 +14,14 @@ class QueueLayer : public Layer
   public:
     QueueLayer(ID id, const std::vector<Tensor::SPtr>& ops);
 
+    void eval(const InputDict& inputDict) override;
+
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
+
+    std::vector<Tensor::WeakPtr> mOps;
 };
 
 }  // namespace layers

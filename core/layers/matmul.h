@@ -17,7 +17,9 @@ class MatmulLayer : public DifferentiableLayer
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 };
 
 class MatmulGradientLayer : public Layer
@@ -27,7 +29,9 @@ class MatmulGradientLayer : public Layer
                         const Tensor::SPtr& out, const Tensor::SPtr& outGrad);
 
   private:
-    void execute(const InputDict&) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 };
 
 #ifdef CUDA_AVAILABLE

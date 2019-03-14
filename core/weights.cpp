@@ -24,7 +24,11 @@ void WeightsLayer::initialize()
 }
 
 // This does nothing, because weights are already in memory.
-void WeightsLayer::execute(const InputDict& /*inputs*/) {}
+void WeightsLayer::execute(const std::vector<float*>& /*inputs*/,
+                           const std::vector<float*>& /*outputs*/,
+                           const InputDict& /*inputDict*/)
+{
+}
 
 Tensor::SPtr weights(const std::string& name, const TensorShape& shape,
                      Initializer::SPtr initializer, MemoryType type,

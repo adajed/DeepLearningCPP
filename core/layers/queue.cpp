@@ -11,12 +11,24 @@ namespace layers
 {
 QueueLayer::QueueLayer(ID id, const std::vector<Tensor::SPtr>& ops)
     : Layer(id, ops, {createTensor("", {0}, MemoryType::kHOST_MEMORY)})
+
 {
+    for (auto& op : ops) mOps.push_back(Tensor::SPtr(op));
 }
 
-void QueueLayer::execute(const InputDict& inputs)
+void QueueLayer::eval(const InputDict& inputDict)
 {
-    for (auto& mInput : mInputs) mInput.lock()->eval(inputs);
+    if (!mIsEvaluated)
+    {
+        for (auto& op : mOps) op.lock()->eval(inputDict);
+        mIsEvaluated = true;
+    }
+}
+
+void QueueLayer::execute(const std::vector<float*>& /*inputs*/,
+                         const std::vector<float*>& /*outputs*/,
+                         const InputDict& /*inputDict*/)
+{
 }
 
 }  // namespace layers

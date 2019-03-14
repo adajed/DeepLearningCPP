@@ -16,9 +16,11 @@ GroupLayer::GroupLayer(ID id, const std::vector<Tensor::SPtr>& tensors)
 {
 }
 
-void GroupLayer::execute(const InputDict& inputs)
+// already calculated in eval
+void GroupLayer::execute(const std::vector<float*>& /*inputs*/,
+                         const std::vector<float*>& /*outputs*/,
+                         const InputDict& /*inputDict*/)
 {
-    for (const Tensor::WeakPtr& in : mInputs) in.lock()->eval(inputs);
 }
 
 }  // namespace layers

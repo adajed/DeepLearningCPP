@@ -118,25 +118,25 @@ Layer::TensorMap Pooling2DLayer::gradients(Tensor::SPtr out,
     return {{input, layer->getOutputs()[0]}};
 }
 
-void Pooling2DLayer::execute(const InputDict& inputs)
+void Pooling2DLayer::execute(const std::vector<float*>& inputs,
+                             const std::vector<float*>& outputs,
+                             const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    inTensor->eval(inputs);
+    float* x = inputs[0];
+    float* y = outputs[0];
 
-    float* in = inTensor->getMemory().getValues();
-    float* out = mOutputs[0]->getMemory().getValues();
+    Tensor::SPtr tX = getInputs()[0];
+    std::vector<int> shape = tX->getShape();
 
-    std::vector<int> shape = inTensor->getShape();
-
-    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
-        runPooling2DHost(in, out, shape, mKernelWindow, mStrides, mPooling,
+    if (tX->getType() == MemoryType::kHOST_MEMORY)
+        runPooling2DHost(x, y, shape, mKernelWindow, mStrides, mPooling,
                          mPadding);
 #ifdef CUDA_AVAILABLE
     else  // inTensor->getType() == MemoryType::kDEVICE_MEMORY
     {
-        std::vector<int> outShape = mOutputs[0]->getShape();
-        size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3];
-        cuda::runPool2DDevice(in, out, mGpuParams.getValues(), size, mPooling,
+        std::vector<int> shapeY = mOutputs[0]->getShape();
+        size_t size = shapeY[0] * shapeY[1] * shapeY[2] * shapeY[3];
+        cuda::runPool2DDevice(x, y, mGpuParams.getValues(), size, mPooling,
                               mPadding);
     }
 #endif
@@ -144,21 +144,20 @@ void Pooling2DLayer::execute(const InputDict& inputs)
 
 void Pooling2DLayer::initialize()
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    Tensor::SPtr outTensor = mOutputs[0];
-    std::vector<int> inShape = inTensor->getShape();
-    std::vector<int> outShape = outTensor->getShape();
+    Tensor::SPtr tX = getInputs()[0];
+    std::vector<int> shapeX = tX->getShape();
+    std::vector<int> shapeY = mOutputs[0]->getShape();
 
-    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (tX->getType() == MemoryType::kHOST_MEMORY)
     {
     }
 #ifdef CUDA_AVAILABLE
     else
     {
         mGpuParams.allocate();
-        cuda::initializePoolGpuParams(mGpuParams.getValues(), inShape.data(),
+        cuda::initializePoolGpuParams(mGpuParams.getValues(), shapeX.data(),
                                       mKernelWindow.data(), mStrides.data(),
-                                      outShape.data());
+                                      shapeY.data());
     }
 #endif
 }
@@ -182,30 +181,26 @@ Pooling2DGradientLayer::Pooling2DGradientLayer(
 {
 }
 
-void Pooling2DGradientLayer::execute(const InputDict& inputs)
+void Pooling2DGradientLayer::execute(const std::vector<float*>& inputs,
+                                     const std::vector<float*>& outputs,
+                                     const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    Tensor::SPtr outTensor = mInputs[1].lock();
-    Tensor::SPtr outGradTensor = mInputs[2].lock();
-    inTensor->eval(inputs);
-    outTensor->eval(inputs);
-    outGradTensor->eval(inputs);
+    float* x = inputs[0];
+    float* y = inputs[1];
+    float* yGrad = inputs[2];
+    float* xGrad = outputs[0];
 
-    float* in = inTensor->getMemory().getValues();
-    float* out = outTensor->getMemory().getValues();
-    float* outG = outGradTensor->getMemory().getValues();
-    float* inG = mOutputs[0]->getMemory().getValues();
+    Tensor::SPtr tX = getInputs()[0];
+    std::vector<int> shapeX = tX->getShape();
 
-    std::vector<int> inShape = inTensor->getShape();
-
-    if (outGradTensor->getType() == MemoryType::kHOST_MEMORY)
-        runPooling2DGradientHost(in, out, outG, inG, inShape, mKernelWindow,
+    if (tX->getType() == MemoryType::kHOST_MEMORY)
+        runPooling2DGradientHost(x, y, yGrad, xGrad, shapeX, mKernelWindow,
                                  mStrides, mPooling, mPadding);
 #ifdef CUDA_AVAILABLE
     else  // outGradTensor->getType() == MemoryType::kDEVICE_MEMORY
     {
-        size_t size = inShape[0] * inShape[1] * inShape[2] * inShape[3];
-        cuda::runPool2DGradientDevice(in, out, outG, inG,
+        size_t size = shapeX[0] * shapeX[1] * shapeX[2] * shapeX[3];
+        cuda::runPool2DGradientDevice(x, y, yGrad, xGrad,
                                       mGpuParams.getValues(), size, mPooling,
                                       mPadding);
     }

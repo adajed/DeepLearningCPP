@@ -15,7 +15,9 @@ class AssignLayer : public Layer
     AssignLayer(ID id, const Tensor::SPtr& dest, const Tensor::SPtr& src);
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     Tensor::WeakPtr mDest;
 };

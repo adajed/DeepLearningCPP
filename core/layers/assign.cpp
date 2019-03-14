@@ -20,23 +20,21 @@ AssignLayer::AssignLayer(ID id, const Tensor::SPtr& dest,
     assert(dest->getShape() == src->getShape());
 }
 
-void AssignLayer::execute(const InputDict& inputs)
+void AssignLayer::execute(const std::vector<float*>& inputs,
+                          const std::vector<float*>& /*outputs*/,
+                          const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr src = mInputs[0].lock();
-    Tensor::SPtr dest = mDest.lock();
-    src->eval(inputs);
+    Tensor::SPtr tDest = mDest.lock();
 
-    float* in = src->getMemory().getValues();
-    float* out = dest->getMemory().getValues();
-    std::size_t size = src->getMemory().getCount();
+    size_t size = tDest->getCount();
+    float* src = inputs[0];
+    float* dest = tDest->getMemory().getValues();
 
-    if (src->getType() == MemoryType::kHOST_MEMORY)
-    {
-        for (std::size_t pos = 0; pos < size; ++pos) out[pos] = in[pos];
-    }
+    if (tDest->getType() == MemoryType::kHOST_MEMORY)
+        std::memcpy(dest, src, size * sizeof(float));
 #ifdef CUDA_AVAILABLE
     else
-        cuda::assignDevice(out, in, size);
+        cuda::assignDevice(dest, src, size);
 #endif
 }
 

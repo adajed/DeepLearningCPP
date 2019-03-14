@@ -17,7 +17,9 @@ class ReduceSumLayer : public DifferentiableLayer
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     int mNumAxes;
 };
@@ -29,7 +31,9 @@ class ReduceSumGradientLayer : public Layer
                            Tensor::SPtr out, Tensor::SPtr outGrad);
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     int mNumAxes;
 };

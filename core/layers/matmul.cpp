@@ -1,7 +1,8 @@
+#include "matmul.h"
+
 #include "abstractTensor.h"
 #include "graph.h"
 #include "graphdl_ops.h"
-#include "matmul.h"
 
 #include <cassert>
 
@@ -71,25 +72,24 @@ MatmulLayer::MatmulLayer(ID id, const Tensor::SPtr& m1, const Tensor::SPtr& m2)
     assert(m1->getShape()[1] == m2->getShape()[0]);
 }
 
-void MatmulLayer::execute(const InputDict& inputs)
+void MatmulLayer::execute(const std::vector<float*>& inputs,
+                          const std::vector<float*>& outputs,
+                          const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr m1 = mInputs[0].lock();
-    Tensor::SPtr m2 = mInputs[1].lock();
-    m1->eval(inputs);
-    m2->eval(inputs);
+    Tensor::SPtr tX1 = getInputs()[0];
+    Tensor::SPtr tX2 = getInputs()[1];
+    float* x1 = inputs[0];
+    float* x2 = inputs[1];
+    float* y = outputs[0];
+    int n = tX1->getShape()[0];
+    int m = tX2->getShape()[0];
+    int k = tX2->getShape()[1];
 
-    float* in1 = m1->getMemory().getValues();
-    float* in2 = m2->getMemory().getValues();
-    float* out = mOutputs[0]->getMemory().getValues();
-    int n = m1->getShape()[0];
-    int m = m2->getShape()[0];
-    int k = m2->getShape()[1];
-
-    if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
-        runMatmulHost(n, m, k, in1, in2, out);
+    if (tX1->getType() == MemoryType::kHOST_MEMORY)
+        runMatmulHost(n, m, k, x1, x2, y);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runMatmulDevice(n, m, k, in1, in2, out);
+        cuda::runMatmulDevice(n, m, k, x1, x2, y);
 #endif
 }
 
@@ -120,30 +120,27 @@ MatmulGradientLayer::MatmulGradientLayer(ID id, const Tensor::SPtr& m1,
     assert(out->getShape() == outGrad->getShape());
 }
 
-void MatmulGradientLayer::execute(const InputDict& inputs)
+void MatmulGradientLayer::execute(const std::vector<float*>& inputs,
+                                  const std::vector<float*>& outputs,
+                                  const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr m1 = mInputs[0].lock();
-    Tensor::SPtr m2 = mInputs[1].lock();
-    Tensor::SPtr outGrad = mInputs[3].lock();
-    m1->eval(inputs);
-    m2->eval(inputs);
-    outGrad->eval(inputs);
+    Tensor::SPtr tX1 = getInputs()[0];
+    Tensor::SPtr tX2 = getInputs()[1];
+    float* x1 = inputs[0];
+    float* x2 = inputs[1];
+    float* yGrad = inputs[3];
+    float* x1Grad = outputs[0];
+    float* x2Grad = outputs[1];
 
-    float* in1 = m1->getMemory().getValues();
-    float* in2 = m2->getMemory().getValues();
-    float* outG = outGrad->getMemory().getValues();
-    float* grad1 = mOutputs[0]->getMemory().getValues();
-    float* grad2 = mOutputs[1]->getMemory().getValues();
+    size_t n = tX1->getShape()[0];
+    size_t m = tX2->getShape()[0];
+    size_t k = tX2->getShape()[1];
 
-    std::size_t n = m1->getShape()[0];
-    std::size_t m = m1->getShape()[1];
-    std::size_t k = m2->getShape()[1];
-
-    if (m1->getType() == MemoryType::kHOST_MEMORY)
-        runMatmulGradientHost(n, m, k, in1, in2, outG, grad1, grad2);
+    if (tX1->getType() == MemoryType::kHOST_MEMORY)
+        runMatmulGradientHost(n, m, k, x1, x2, yGrad, x1Grad, x2Grad);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runMatmulGradientDevice(n, m, k, in1, in2, outG, grad1, grad2);
+        cuda::runMatmulGradientDevice(n, m, k, x1, x2, yGrad, x1Grad, x2Grad);
 #endif
 }
 
