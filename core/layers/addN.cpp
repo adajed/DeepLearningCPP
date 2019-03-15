@@ -64,14 +64,15 @@ void AddNLayer::execute(const std::vector<float*>& inputs,
                         const std::vector<float*>& outputs,
                         const InputDict& /*inputDict*/)
 {
+    auto** xs = const_cast<float**>(inputs.data());
     float* y = outputs[0];
     size_t size = mOutputs[0]->getCount();
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
-        runAddNHost(inputs.size(), size, const_cast<float**>(inputs.data()), y);
+        runAddNHost(inputs.size(), size, xs, y);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runAddNDevice(inputs.size(), size, inputs.data(), y);
+        cuda::runAddNDevice(inputs.size(), size, xs, y);
 #endif
 }
 
@@ -109,14 +110,13 @@ void AddNGradientLayer::execute(const std::vector<float*>& inputs,
     Tensor::SPtr t = getInputs().back();
     size_t size = t->getCount();
     float* yGrad = inputs.back();
+    auto** xGrads = const_cast<float**>(outputs.data());
 
     if (t->getType() == MemoryType::kHOST_MEMORY)
-        runAddNGradientHost(outputs.size(), size, yGrad,
-                            const_cast<float**>(outputs.data()));
+        runAddNGradientHost(outputs.size(), size, yGrad, xGrads);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runAddNGradientDevice(outputs.size(), size, yGrad,
-                                    outputs.data());
+        cuda::runAddNGradientDevice(outputs.size(), size, yGrad, xGrads);
 #endif
 }
 
