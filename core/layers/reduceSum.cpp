@@ -52,24 +52,23 @@ ReduceSumLayer::ReduceSumLayer(ID id, const Tensor::SPtr& tensor, int numAxes)
 {
 }
 
-void ReduceSumLayer::execute(const InputDict& inputs)
+void ReduceSumLayer::execute(const std::vector<float*>& inputs,
+                             const std::vector<float*>& outputs,
+                             const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr in = mInputs[0].lock();
-    in->eval(inputs);
-
-    float* input = in->getMemory().getValues();
-    float* output = mOutputs[0]->getMemory().getValues();
-    std::vector<int> shape = in->getShape();
+    float* x = inputs[0];
+    float* y = outputs[0];
+    std::vector<int> shape = mInputs[0].lock()->getShape();
     size_t outSize = 1, reduceSize = 1;
     for (unsigned i = 0; i < shape.size() - mNumAxes; ++i) outSize *= shape[i];
     for (unsigned i = shape.size() - mNumAxes; i < shape.size(); ++i)
         reduceSize *= shape[i];
 
-    if (in->getType() == MemoryType::kHOST_MEMORY)
-        runReduceSumHost(input, output, outSize, reduceSize);
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
+        runReduceSumHost(x, y, outSize, reduceSize);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runReduceSumDevice(input, output, outSize, reduceSize);
+        cuda::runReduceSumDevice(x, y, outSize, reduceSize);
 #endif
 }
 
@@ -93,24 +92,23 @@ ReduceSumGradientLayer::ReduceSumGradientLayer(ID id, const Tensor::SPtr& in,
 {
 }
 
-void ReduceSumGradientLayer::execute(const InputDict& inputs)
+void ReduceSumGradientLayer::execute(const std::vector<float*>& inputs,
+                                     const std::vector<float*>& outputs,
+                                     const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr outputGrad = mInputs[2].lock();
-    outputGrad->eval(inputs);
-
-    float* outGrad = outputGrad->getMemory().getValues();
-    float* inGrad = mOutputs[0]->getMemory().getValues();
+    float* yGrad = inputs[2];
+    float* xGrad = outputs[0];
     std::vector<int> shape = mOutputs[0]->getShape();
     size_t outSize = 1, reduceSize = 1;
     for (unsigned i = 0; i < shape.size() - mNumAxes; ++i) outSize *= shape[i];
     for (unsigned i = shape.size() - mNumAxes; i < shape.size(); ++i)
         reduceSize *= shape[i];
 
-    if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
-        runReduceSumGradientHost(outGrad, inGrad, outSize, reduceSize);
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
+        runReduceSumGradientHost(yGrad, xGrad, outSize, reduceSize);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runReduceSumGradientDevice(outGrad, inGrad, outSize, reduceSize);
+        cuda::runReduceSumGradientDevice(yGrad, xGrad, outSize, reduceSize);
 #endif
 }
 

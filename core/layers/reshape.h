@@ -17,7 +17,9 @@ class ReshapeLayer : public DifferentiableLayer
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 };
 
 }  // namespace layers

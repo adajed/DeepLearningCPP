@@ -18,7 +18,9 @@ class AddNLayer : public DifferentiableLayer
                                              Tensor::SPtr outGrad) override;
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 };
 
 class AddNGradientLayer : public Layer
@@ -28,7 +30,9 @@ class AddNGradientLayer : public Layer
                       const Tensor::SPtr& out, const Tensor::SPtr& outGrad);
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 };
 
 #ifdef CUDA_AVAILABLE

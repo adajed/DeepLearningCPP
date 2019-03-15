@@ -229,30 +229,27 @@ Layer::TensorMap Conv2DLayer::gradients(Tensor::SPtr out, Tensor::SPtr outGrad)
     return {{in, layer->getOutputs()[0]}, {k, layer->getOutputs()[1]}};
 }
 
-void Conv2DLayer::execute(const InputDict& inputs)
+void Conv2DLayer::execute(const std::vector<float*>& inputs,
+                          const std::vector<float*>& outputs,
+                          const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    Tensor::SPtr kerTensor = mInputs[1].lock();
-    inTensor->eval(inputs);
-    kerTensor->eval(inputs);
+    float* x = inputs[0];
+    float* ker = inputs[1];
+    float* y = outputs[0];
 
-    float* in = inTensor->getMemory().getValues();
-    float* ker = kerTensor->getMemory().getValues();
-    float* out = mOutputs[0]->getMemory().getValues();
-
-    TensorShape tShape = inTensor->getShape();
-    TensorShape kShape = kerTensor->getShape();
+    TensorShape tShape = mInputs[0].lock()->getShape();
+    TensorShape kShape = mInputs[1].lock()->getShape();
     std::vector<int> inShape(tShape.begin(), tShape.end());
     std::vector<int> kerShape(kShape.begin(), kShape.end());
 
-    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
-        runConv2DHost(in, ker, out, inShape, kerShape, mStrides, mPadding);
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
+        runConv2DHost(x, ker, y, inShape, kerShape, mStrides, mPadding);
 #ifdef CUDA_AVAILABLE
     else
     {
         std::vector<int> outShape = mOutputs[0]->getShape();
         size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3];
-        cuda::runConv2DDevice(in, ker, out, size, mGpuParams.getValues(),
+        cuda::runConv2DDevice(x, ker, y, size, mGpuParams.getValues(),
                               mPadding);
     }
 #endif
@@ -301,29 +298,24 @@ Conv2DGradientLayer::Conv2DGradientLayer(ID id, const Tensor::SPtr& t,
 {
 }
 
-void Conv2DGradientLayer::execute(const InputDict& inputs)
+void Conv2DGradientLayer::execute(const std::vector<float*>& inputs,
+                                  const std::vector<float*>& outputs,
+                                  const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    Tensor::SPtr kerTensor = mInputs[1].lock();
-    Tensor::SPtr outGTensor = mInputs[3].lock();
-    inTensor->eval(inputs);
-    kerTensor->eval(inputs);
-    outGTensor->eval(inputs);
+    float* x = inputs[0];
+    float* ker = inputs[1];
+    float* yG = inputs[3];
+    float* xG = outputs[0];
+    float* kerG = outputs[1];
 
-    float* in = inTensor->getMemory().getValues();
-    float* ker = kerTensor->getMemory().getValues();
-    float* outG = outGTensor->getMemory().getValues();
-    float* inG = mOutputs[0]->getMemory().getValues();
-    float* kerG = mOutputs[1]->getMemory().getValues();
-
-    TensorShape tShape = inTensor->getShape();
-    TensorShape kShape = kerTensor->getShape();
+    TensorShape tShape = mInputs[0].lock()->getShape();
+    TensorShape kShape = mInputs[1].lock()->getShape();
     std::vector<int> inShape(tShape.begin(), tShape.end());
     std::vector<int> kerShape(kShape.begin(), kShape.end());
 
-    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
-        runConv2DGradientHost(in, ker, outG, inG, kerG, inShape, kerShape,
-                              mStrides, mPadding);
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
+        runConv2DGradientHost(x, ker, yG, xG, kerG, inShape, kerShape, mStrides,
+                              mPadding);
 #ifdef CUDA_AVAILABLE
     else
     {
@@ -331,7 +323,7 @@ void Conv2DGradientLayer::execute(const InputDict& inputs)
         std::vector<int> kerShape = mInputs[1].lock()->getShape();
         size_t inSize = inShape[0] * inShape[1] * inShape[2] * inShape[3];
         size_t kerSize = kerShape[0] * kerShape[1] * kerShape[2] * kerShape[3];
-        cuda::runConv2DGradientDevice(in, ker, outG, inG, kerG, inSize, kerSize,
+        cuda::runConv2DGradientDevice(x, ker, yG, xG, kerG, inSize, kerSize,
                                       mGpuParams.getValues(), mPadding);
     }
 #endif

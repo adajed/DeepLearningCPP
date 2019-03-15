@@ -33,7 +33,9 @@ class ActivationLayer : public DifferentiableLayer
     TensorMap gradients(Tensor::SPtr, Tensor::SPtr) override;
 
   private:
-    void execute(const InputDict&) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     Activation mOp;
     std::function<float(float)> mFun;
@@ -46,7 +48,9 @@ class ActivationGradientLayer : public Layer
                             const Tensor::SPtr&, Activation);
 
   private:
-    void execute(const InputDict&) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     Activation mOp;
     std::function<float(float, float)> mFun;

@@ -38,6 +38,11 @@ TensorShape Tensor::getShape() const
     return mShape;
 }
 
+size_t Tensor::getCount() const
+{
+    return mShape.getCount();
+}
+
 Layer::SPtr Tensor::getLayer() const
 {
     return mLayer.lock();

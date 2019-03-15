@@ -83,16 +83,15 @@ void SoftmaxLayer::initialize()
     mWorkingSpace.allocate();
 }
 
-void SoftmaxLayer::execute(const InputDict& inputs)
+void SoftmaxLayer::execute(const std::vector<float*>& inputs,
+                           const std::vector<float*>& outputs,
+                           const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr xTensor = mInputs[0].lock();
-    xTensor->eval(inputs);
-
-    float* x = xTensor->getMemory().getValues();
+    float* x = inputs[0];
     float* w = mWorkingSpace.getValues();
-    float* y = mOutputs[0]->getMemory().getValues();
+    float* y = outputs[0];
 
-    if (xTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
         runSoftmaxHost(x, w, y, mOutSize, mReduceSize);
 #ifdef CUDA_AVAILABLE
     else
@@ -122,21 +121,16 @@ SoftmaxGradientLayer::SoftmaxGradientLayer(ID id, const Tensor::SPtr& x,
         mReduceSize *= shape[i];
 }
 
-void SoftmaxGradientLayer::execute(const InputDict& inputs)
+void SoftmaxGradientLayer::execute(const std::vector<float*>& inputs,
+                                   const std::vector<float*>& outputs,
+                                   const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr xTensor = mInputs[0].lock();
-    Tensor::SPtr yTensor = mInputs[1].lock();
-    Tensor::SPtr yGradTensor = mInputs[2].lock();
-    xTensor->eval(inputs);
-    yTensor->eval(inputs);
-    yGradTensor->eval(inputs);
+    float* x = inputs[0];
+    float* y = inputs[1];
+    float* yGrad = inputs[2];
+    float* xGrad = outputs[0];
 
-    float* x = xTensor->getMemory().getValues();
-    float* y = yTensor->getMemory().getValues();
-    float* yGrad = yGradTensor->getMemory().getValues();
-    float* xGrad = mOutputs[0]->getMemory().getValues();
-
-    if (xTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
         runSoftmaxGradientHost(x, y, yGrad, xGrad, mOutSize, mReduceSize);
 #ifdef CUDA_AVAILABLE
     else

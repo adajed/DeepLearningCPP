@@ -32,7 +32,11 @@ void ConstantLayer::initialize()
 
 //! This method does nothing, because tensor is already
 //!     filled during initialize.
-void ConstantLayer::execute(const InputDict& /*inputs*/) {}
+void ConstantLayer::execute(const std::vector<float*>& /*inputs*/,
+                            const std::vector<float*>& /*outputs*/,
+                            const InputDict& /*inputDict*/)
+{
+}
 
 }  // namespace layers
 

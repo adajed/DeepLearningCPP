@@ -35,7 +35,9 @@ class Pooling2DLayer : public DifferentiableLayer
     ~Pooling2DLayer() override;
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     PoolingType mPooling;
     std::vector<int> mKernelWindow;
@@ -57,7 +59,9 @@ class Pooling2DGradientLayer : public Layer
     ~Pooling2DGradientLayer() override;
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     PoolingType mPooling;
     std::vector<int> mKernelWindow;

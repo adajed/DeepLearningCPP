@@ -23,7 +23,9 @@ class Conv2DLayer : public DifferentiableLayer
     ~Conv2DLayer();
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     std::vector<int> mStrides;
     PaddingType mPadding;
@@ -42,7 +44,9 @@ class Conv2DGradientLayer : public Layer
     ~Conv2DGradientLayer();
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     std::vector<int> mStrides;
     PaddingType mPadding;

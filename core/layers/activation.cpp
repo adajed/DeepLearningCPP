@@ -215,16 +215,16 @@ ActivationLayer::ActivationLayer(ID id, const Tensor::SPtr& t, Activation op)
 {
 }
 
-void ActivationLayer::execute(const InputDict& inputs)
+void ActivationLayer::execute(const std::vector<float*>& inputs,
+                              const std::vector<float*>& outputs,
+                              const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr xTensor = mInputs[0].lock();
-    xTensor->eval(inputs);
+    Tensor::SPtr tX = getInputs()[0];
+    float* x = inputs[0];
+    float* y = outputs[0];
+    size_t size = tX->getCount();
 
-    float* x = xTensor->getMemory().getValues();
-    float* y = mOutputs[0]->getMemory().getValues();
-    size_t size = xTensor->getMemory().getCount();
-
-    if (xTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (tX->getType() == MemoryType::kHOST_MEMORY)
         runActivationHost(x, y, size, mOp);
 #ifdef CUDA_AVAILABLE
     else  // xTensor->getType() == MemoryType::kDEVICE_MEMORY
@@ -260,22 +260,18 @@ ActivationGradientLayer::ActivationGradientLayer(ID id, const Tensor::SPtr& in,
     assert(in->getType() == outGrad->getType());
 }
 
-void ActivationGradientLayer::execute(const InputDict& inputs)
+void ActivationGradientLayer::execute(const std::vector<float*>& inputs,
+                                      const std::vector<float*>& outputs,
+                                      const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr xTensor = mInputs[0].lock();
-    Tensor::SPtr yTensor = mInputs[1].lock();
-    Tensor::SPtr yGradTensor = mInputs[2].lock();
-    xTensor->eval(inputs);
-    yTensor->eval(inputs);
-    yGradTensor->eval(inputs);
+    Tensor::SPtr tX = getInputs()[0];
+    float* x = inputs[0];
+    float* y = inputs[1];
+    float* yGrad = inputs[2];
+    float* xGrad = outputs[0];
+    size_t size = tX->getCount();
 
-    float* x = xTensor->getMemory().getValues();
-    float* y = yTensor->getMemory().getValues();
-    float* yGrad = yGradTensor->getMemory().getValues();
-    float* xGrad = mOutputs[0]->getMemory().getValues();
-    size_t size = xTensor->getMemory().getCount();
-
-    if (xTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (tX->getType() == MemoryType::kHOST_MEMORY)
         runActivationGradientHost(x, y, yGrad, xGrad, size, mOp);
 #ifdef CUDA_AVAILABLE
     else  // xTensor->getType() == MemoryType::kDEVICE_MEMORY

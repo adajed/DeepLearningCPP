@@ -15,7 +15,9 @@ class GroupLayer : public Layer
     GroupLayer(ID id, const std::vector<Tensor::SPtr>& tensors);
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 };
 
 }  // namespace layers

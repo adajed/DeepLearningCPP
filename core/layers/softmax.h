@@ -21,7 +21,9 @@ class SoftmaxLayer : public DifferentiableLayer
     ~SoftmaxLayer();
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     int mNumAxes;
     Memory<float> mWorkingSpace;
@@ -36,7 +38,9 @@ class SoftmaxGradientLayer : public Layer
                          Tensor::SPtr y, Tensor::SPtr yGrad);
 
   private:
-    void execute(const InputDict& inputs) override;
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
 
     int mNumAxes;
     size_t mOutSize;

@@ -55,12 +55,25 @@ std::set<Tensor::SPtr> Layer::getNecessaryInputs() const
     return inputs;
 }
 
-void Layer::eval(const InputDict& inputs)
+void Layer::eval(const InputDict& inputDict)
 {
     if (!mIsEvaluated)
     {
+        // calculate inputs
+        std::vector<float*> inputs;
+        for (const auto& in : mInputs)
+        {
+            Tensor::SPtr tensor = in.lock();
+            tensor->eval(inputDict);
+            inputs.push_back(tensor->getMemory().getValues());
+        }
+
+        std::vector<float*> outputs;
+        for (const auto& out : mOutputs)
+            outputs.push_back(out->getMemory().getValues());
+
         // calculate actual operation
-        execute(inputs);
+        execute(inputs, outputs, inputDict);
         mIsEvaluated = true;
     }
 }

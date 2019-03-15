@@ -60,24 +60,19 @@ AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
 {
 }
 
-void AddNLayer::execute(const InputDict& inputs)
+void AddNLayer::execute(const std::vector<float*>& inputs,
+                        const std::vector<float*>& outputs,
+                        const InputDict& /*inputDict*/)
 {
-    std::vector<Tensor::SPtr> ins = getInputs();
-    std::vector<float*> xs;
-    xs.reserve(ins.size());
-    for (const Tensor::SPtr& in : ins)
-    {
-        in->eval(inputs);
-        xs.push_back(in->getMemory().getValues());
-    }
-    float* output = mOutputs[0]->getMemory().getValues();
-    std::size_t size = mOutputs[0]->getMemory().getCount();
+    auto** xs = const_cast<float**>(inputs.data());
+    float* y = outputs[0];
+    size_t size = mOutputs[0]->getCount();
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
-        runAddNHost(xs.size(), size, xs.data(), output);
+        runAddNHost(inputs.size(), size, xs, y);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runAddNDevice(xs.size(), size, xs.data(), output);
+        cuda::runAddNDevice(inputs.size(), size, xs, y);
 #endif
 }
 
@@ -108,23 +103,20 @@ AddNGradientLayer::AddNGradientLayer(ID id,
     assert(ins[0]->getType() == outGrad->getType());
 }
 
-void AddNGradientLayer::execute(const InputDict& inputs)
+void AddNGradientLayer::execute(const std::vector<float*>& inputs,
+                                const std::vector<float*>& outputs,
+                                const InputDict& /*inputDict*/)
 {
-    Tensor::SPtr outputGrad = mInputs.back().lock();
-    outputGrad->eval(inputs);
+    Tensor::SPtr t = getInputs().back();
+    size_t size = t->getCount();
+    float* yGrad = inputs.back();
+    auto** xGrads = const_cast<float**>(outputs.data());
 
-    std::size_t size = outputGrad->getMemory().getCount();
-    float* yGrad = outputGrad->getMemory().getValues();
-    std::vector<float*> xGrads;
-    xGrads.reserve(mOutputs.size());
-    for (const Tensor::SPtr& xG : mOutputs)
-        xGrads.push_back(xG->getMemory().getValues());
-
-    if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
-        runAddNGradientHost(xGrads.size(), size, yGrad, xGrads.data());
+    if (t->getType() == MemoryType::kHOST_MEMORY)
+        runAddNGradientHost(outputs.size(), size, yGrad, xGrads);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runAddNGradientDevice(xGrads.size(), size, yGrad, xGrads.data());
+        cuda::runAddNGradientDevice(outputs.size(), size, yGrad, xGrads);
 #endif
 }
 
