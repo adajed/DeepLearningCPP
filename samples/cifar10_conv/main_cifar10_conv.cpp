@@ -41,11 +41,7 @@ ITensorPtr conv2DAndMaxPool2D(const ITensorPtr& x, const ITensorPtr& k)
 
 ComputationalGraph buildNetwork()
 {
-#ifdef CUDA_AVAILABLE
-    MemoryLocation loc = MemoryLocation::kDEVICE;
-#else
-    MemoryLocation loc = MemoryLocation::kHOST;
-#endif
+    MemoryLocation loc = MemoryLocation::kDEVICE_IF_ENABLED;
 
     // initializers
     SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);

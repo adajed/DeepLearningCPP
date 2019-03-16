@@ -127,6 +127,12 @@ inline MemoryType memoryLocationToType(MemoryLocation location)
     {
     case MemoryLocation::kHOST: return MemoryType::kHOST_MEMORY;
     case MemoryLocation::kDEVICE: return MemoryType::kDEVICE_MEMORY;
+    case MemoryLocation::kDEVICE_IF_ENABLED:
+#ifdef CUDA_AVAILABLE
+        return MemoryType::kDEVICE_MEMORY;
+#else
+        return MemoryType::kHOST_MEMORY;
+#endif
     }
 
     // you shoudn't be here

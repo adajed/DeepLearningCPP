@@ -22,7 +22,8 @@ using Shape = std::vector<unsigned int>;
 enum class MemoryLocation
 {
     kHOST = 0,
-    kDEVICE = 1
+    kDEVICE = 1,
+    kDEVICE_IF_ENABLED = 2
 };
 
 template <typename T>

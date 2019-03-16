@@ -31,11 +31,7 @@ using namespace graphdl;
 
 ComputationalGraph buildNetwork()
 {
-#ifdef CUDA_AVAILABLE
-    MemoryLocation loc = MemoryLocation::kDEVICE;
-#else
-    MemoryLocation loc = MemoryLocation::kHOST;
-#endif
+    MemoryLocation loc = MemoryLocation::kDEVICE_IF_ENABLED;
 
     SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);
     SharedPtr<IInitializer> initW1 = normalInitializer(0., 1. / 5., 0);
