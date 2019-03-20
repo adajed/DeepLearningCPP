@@ -130,15 +130,17 @@ template <Elementwise elem>
 void elementwiseFront(const float* x1, size_t size1, const float* x2, size_t size2,
                       float* y)
 {
-    if (size1 < size2)
+    if (size1 > size2)
     {
-        for (size_t i = 0; i < size2; ++i)
-            y[i] = op<elem>(x1[i / size1], x2[i]);
+        size_t reduceSize = size1 / size2;
+        for (size_t i = 0; i < size1; ++i)
+            y[i] = op<elem>(x1[i], x2[i / reduceSize]);
     }
     else
     {
-        for (size_t i = 0; i < size1; ++i)
-            y[i] = op<elem>(x1[i], x2[i / size2]);
+        size_t reduceSize = size2 / size1;
+        for (size_t i = 0; i < size2; ++i)
+            y[i] = op<elem>(x1[i / reduceSize], x2[i]);
     }
 }
 
