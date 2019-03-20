@@ -12,7 +12,7 @@ namespace cuda
 
 enum class ReduceOpCuda
 {
-    // y = x_1 + x_2 + x_3 + ... + x_n 
+    // y = x_1 + x_2 + x_3 + ... + x_n
     kSUM = 0,
 
     // y = x_1 * x_1 + x_2 * x_2 + ... + x_n * x_n
@@ -101,37 +101,8 @@ __global__ void reduceKernel(size_t size, const float* x, float* y)
         if (tid < 64) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 64]);
         __syncthreads();
     }
-    if (BS >= 64)
-    {
-        if (tid < 32) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 32]);
-        __syncthreads();
-    }
-    if (BS >= 32)
-    {
-        if (tid < 16) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 16]);
-        __syncthreads();
-    }
-    if (BS >= 16)
-    {
-        if (tid < 8) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 8]);
-        __syncthreads();
-    }
-    if (BS >= 8)
-    {
-        if (tid < 4) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 4]);
-        __syncthreads();
-    }
-    if (BS >= 4)
-    {
-        if (tid < 2) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 2]);
-        __syncthreads();
-    }
-    if (BS >= 2)
-    {
-        if (tid < 1) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 1]);
-        __syncthreads();
-    }
 
+    if (tid < 32) warpReduce<op, BS>(sData, tid);
     if (tid == 0) y[blockIdx.x] = sData[0];
 }
 
