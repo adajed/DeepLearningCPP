@@ -40,7 +40,8 @@ std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& t1,
 }  // namespace
 
 ElementwiseBackLayer::ElementwiseBackLayer(ID id, const Tensor::SPtr& t1,
-                                   const Tensor::SPtr& t2, Elementwise op)
+                                           const Tensor::SPtr& t2,
+                                           Elementwise op)
     : DifferentiableLayer(id, {t1, t2}, createOutputs(t1, t2)), mOp(op)
 {
 }
@@ -67,7 +68,7 @@ void ElementwiseBackLayer::execute(const InputDict& inputs)
 }
 
 Layer::TensorMap ElementwiseBackLayer::gradients(Tensor::SPtr output,
-                                             Tensor::SPtr outputGrad)
+                                                 Tensor::SPtr outputGrad)
 {
     assert(output == mOutputs[0]);
 
@@ -105,16 +106,17 @@ void ElementwiseBackGradientLayer::execute(const InputDict& inputs)
 
     if (x1Tensor->getType() == MemoryType::kHOST_MEMORY)
         runElementwiseBackGradientHost(x1, size1, x2, size2, yGrad, x1Grad,
-                                   x2Grad, mOp);
+                                       x2Grad, mOp);
 #ifdef CUDA_AVAILABLE
     else
         cuda::runElementwiseBackGradientDevice(x1, size1, x2, size2, yGrad,
-                                           x1Grad, x2Grad, mOp);
+                                               x1Grad, x2Grad, mOp);
 #endif
 }
 
-ElementwiseFrontLayer::ElementwiseFrontLayer(
-        ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2, Elementwise op)
+ElementwiseFrontLayer::ElementwiseFrontLayer(ID id, const Tensor::SPtr& t1,
+                                             const Tensor::SPtr& t2,
+                                             Elementwise op)
     : DifferentiableLayer(id, {t1, t2}, createOutputs(t1, t2)), mOp(op)
 {
 }
@@ -141,7 +143,7 @@ void ElementwiseFrontLayer::execute(const InputDict& inputs)
 }
 
 Layer::TensorMap ElementwiseFrontLayer::gradients(Tensor::SPtr output,
-                                             Tensor::SPtr outputGrad)
+                                                  Tensor::SPtr outputGrad)
 {
     assert(output == mOutputs[0]);
 
@@ -179,11 +181,11 @@ void ElementwiseFrontGradientLayer::execute(const InputDict& inputs)
 
     if (x1Tensor->getType() == MemoryType::kHOST_MEMORY)
         runElementwiseFrontGradientHost(x1, size1, x2, size2, yGrad, x1Grad,
-                                   x2Grad, mOp);
+                                        x2Grad, mOp);
 #ifdef CUDA_AVAILABLE
     else
         cuda::runElementwiseFrontGradientDevice(x1, size1, x2, size2, yGrad,
-                                           x1Grad, x2Grad, mOp);
+                                                x1Grad, x2Grad, mOp);
 #endif
 }
 
@@ -222,8 +224,7 @@ bool checkShapesCompatibleFront(const TensorShape& s1, const TensorShape& s2)
     int sizeLong = longShape.size();
 
     for (int i = 0; i < sizeShort; ++i)
-        if (shortShape[i] != longShape[i])
-            return false;
+        if (shortShape[i] != longShape[i]) return false;
 
     return true;
 }
@@ -231,7 +232,7 @@ bool checkShapesCompatibleFront(const TensorShape& s1, const TensorShape& s2)
 }  // namespace
 
 Tensor::SPtr elementwiseBack(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
-                               layers::Elementwise op)
+                             layers::Elementwise op)
 {
     if (!checkShapesCompatibleBack(t1->getShape(), t2->getShape()))
         throw std::runtime_error("Shapes don\'t match");
@@ -251,7 +252,7 @@ Tensor::SPtr elementwiseFront(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
 }
 
 Tensor::SPtr elementwise(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
-                              layers::Elementwise op)
+                         layers::Elementwise op)
 {
     Layer::SPtr layer;
     if (checkShapesCompatibleBack(t1->getShape(), t2->getShape()))
@@ -264,21 +265,20 @@ Tensor::SPtr elementwise(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
     return layer->getOutputs()[0];
 }
 
-
 #define ELEMENTWISE_CORE(opName, op, elem)                              \
     Tensor::SPtr opName(const Tensor::SPtr& t1, const Tensor::SPtr& t2) \
     {                                                                   \
-        return elementwise(t1, t2, layers::Elementwise::elem);    \
+        return elementwise(t1, t2, layers::Elementwise::elem);          \
     }                                                                   \
     Tensor::SPtr opName(float val, const Tensor::SPtr& t2)              \
     {                                                                   \
         Tensor::SPtr t1 = constant(val, {}, t2->getType());             \
-        return elementwise(t1, t2, layers::Elementwise::elem);    \
+        return elementwise(t1, t2, layers::Elementwise::elem);          \
     }                                                                   \
     Tensor::SPtr opName(const Tensor::SPtr& t1, float val)              \
     {                                                                   \
         Tensor::SPtr t2 = constant(val, {}, t1->getType());             \
-        return elementwise(t1, t2, layers::Elementwise::elem);    \
+        return elementwise(t1, t2, layers::Elementwise::elem);          \
     }                                                                   \
     Tensor::SPtr op(const Tensor::SPtr& t1, const Tensor::SPtr& t2)     \
     {                                                                   \

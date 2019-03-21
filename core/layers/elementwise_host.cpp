@@ -95,7 +95,6 @@ void elementwise(const float* x1, size_t size1, const float* x2, size_t size2,
     }
 }
 
-
 template <Elementwise elem>
 void elementwiseGradient(const float* x1, size_t size1, const float* x2,
                          size_t size2, const float* yG, float* x1G, float* x2G)
@@ -127,8 +126,8 @@ void elementwiseGradient(const float* x1, size_t size1, const float* x2,
 }
 
 template <Elementwise elem>
-void elementwiseFront(const float* x1, size_t size1, const float* x2, size_t size2,
-                      float* y)
+void elementwiseFront(const float* x1, size_t size1, const float* x2,
+                      size_t size2, float* y)
 {
     if (size1 > size2)
     {
@@ -144,10 +143,10 @@ void elementwiseFront(const float* x1, size_t size1, const float* x2, size_t siz
     }
 }
 
-
 template <Elementwise elem>
 void elementwiseFrontGradient(const float* x1, size_t size1, const float* x2,
-                              size_t size2, const float* yG, float* x1G, float* x2G)
+                              size_t size2, const float* yG, float* x1G,
+                              float* x2G)
 {
     if (size1 < size2)
     {
@@ -183,11 +182,10 @@ void elementwiseFrontGradient(const float* x1, size_t size1, const float* x2,
     }
 }
 
-
 }  // namespace
 
 void runElementwiseBackHost(const float* x1, size_t size1, const float* x2,
-                        size_t size2, float* y, Elementwise op)
+                            size_t size2, float* y, Elementwise op)
 {
     switch (op)
     {
@@ -206,9 +204,10 @@ void runElementwiseBackHost(const float* x1, size_t size1, const float* x2,
     }
 }
 
-void runElementwiseBackGradientHost(const float* x1, size_t size1, const float* x2,
-                                size_t size2, const float* yG, float* x1G,
-                                float* x2G, Elementwise op)
+void runElementwiseBackGradientHost(const float* x1, size_t size1,
+                                    const float* x2, size_t size2,
+                                    const float* yG, float* x1G, float* x2G,
+                                    Elementwise op)
 {
     switch (op)
     {
@@ -232,7 +231,7 @@ void runElementwiseBackGradientHost(const float* x1, size_t size1, const float* 
 }
 
 void runElementwiseFrontHost(const float* x1, size_t size1, const float* x2,
-                        size_t size2, float* y, Elementwise op)
+                             size_t size2, float* y, Elementwise op)
 {
     switch (op)
     {
@@ -251,27 +250,28 @@ void runElementwiseFrontHost(const float* x1, size_t size1, const float* x2,
     }
 }
 
-void runElementwiseFrontGradientHost(const float* x1, size_t size1, const float* x2,
-                                size_t size2, const float* yG, float* x1G,
-                                float* x2G, Elementwise op)
+void runElementwiseFrontGradientHost(const float* x1, size_t size1,
+                                     const float* x2, size_t size2,
+                                     const float* yG, float* x1G, float* x2G,
+                                     Elementwise op)
 {
     switch (op)
     {
     case Elementwise::kADD:
-        elementwiseFrontGradient<Elementwise::kADD>(
-                x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseFrontGradient<Elementwise::kADD>(x1, size1, x2, size2, yG,
+                                                    x1G, x2G);
         return;
     case Elementwise::kSUB:
-        elementwiseFrontGradient<Elementwise::kSUB>(
-                x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseFrontGradient<Elementwise::kSUB>(x1, size1, x2, size2, yG,
+                                                    x1G, x2G);
         return;
     case Elementwise::kMUL:
-        elementwiseFrontGradient<Elementwise::kMUL>(
-                x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseFrontGradient<Elementwise::kMUL>(x1, size1, x2, size2, yG,
+                                                    x1G, x2G);
         return;
     case Elementwise::kDIV:
-        elementwiseFrontGradient<Elementwise::kDIV>(
-                x1, size1, x2, size2, yG, x1G, x2G);
+        elementwiseFrontGradient<Elementwise::kDIV>(x1, size1, x2, size2, yG,
+                                                    x1G, x2G);
         return;
     }
 }

@@ -5,7 +5,7 @@ OUTDIR=$(ROOT_DIR)/build
 GTEST_LIB_PATH=/usr/lib
 
 # check for nvcc and cuda
-NVCC_RESULT=$(shell which nvcc 2> /dev/null)
+NVCC_RESULT=$(shell which /usr/local/cuda/bin/nvcc 2> /dev/null)
 NVCC_TEST=$(notdir $(NVCC_RESULT))
 ifeq ($(NVCC_TEST),nvcc)
     CUDA_AVAILABLE=1
@@ -21,7 +21,7 @@ ifeq ($(CUDA_AVAILABLE),1)
 endif
 
 CC=g++
-NVCC=nvcc
+NVCC=/usr/local/cuda/bin/nvcc
 
 # clang-format
 CLANG_FORMAT=clang-format

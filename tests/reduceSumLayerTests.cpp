@@ -45,7 +45,11 @@ std::vector<Param> PARAMS = {
     {{10, 10, 10}, 2},
     {{10, 10, 10}, 3},
     {{2, 100}, 1},
-    {{2, 100}, 2}
+    {{2, 100}, 2},
+    {{100, 100}, 1},
+    {{100, 100}, 2},
+    {{100, 100, 10}, 1}, // big test for multiple reductions
+    {{100, 100, 10}, 2} // big test for multiple reductions
     // clang-format on
 };
 

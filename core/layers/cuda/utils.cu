@@ -67,15 +67,14 @@ void fill(float* memory, size_t size, float value)
 }
 
 void runElementwiseCastFrontDevice(const float* x1, size_t size1,
-                                   const float* x2, size_t size2,
-                                   float* y, Elementwise op)
+                                   const float* x2, size_t size2, float* y,
+                                   Elementwise op)
 {
     size_t size = size1 > size2 ? size1 : size2;
     size_t reduceSize = size / (size1 < size2 ? size1 : size2);
 
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
 
     if (size1 > size2)
     {

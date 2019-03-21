@@ -63,8 +63,7 @@ AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
 void AddNLayer::execute(const InputDict& inputs)
 {
     std::vector<Tensor::SPtr> xsTensor = getInputs();
-    for (const Tensor::SPtr& xTensor : xsTensor)
-        xTensor->eval(inputs);
+    for (const Tensor::SPtr& xTensor : xsTensor) xTensor->eval(inputs);
 
     float* y = mOutputs[0]->getMemory().getValues();
     size_t size = mOutputs[0]->getMemory().getCount();
@@ -98,8 +97,7 @@ void AddNLayer::initialize()
     std::vector<Tensor::SPtr> tensors = getInputs();
     std::vector<float*> arr;
     arr.reserve(tensors.size());
-    for (auto& t : tensors)
-        arr.push_back(t->getMemory().getValues());
+    for (auto& t : tensors) arr.push_back(t->getMemory().getValues());
 
     mArray.fillFrom(arr.data());
 }
@@ -135,7 +133,8 @@ void AddNGradientLayer::execute(const InputDict& inputs)
         runAddNGradientHost(yGrad, mArray.getValues(), mArray.getCount(), size);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runAddNGradientDevice(yGrad, mArray.getValues(), mArray.getCount(), size);
+        cuda::runAddNGradientDevice(yGrad, mArray.getValues(),
+                                    mArray.getCount(), size);
 #endif
 }
 
@@ -144,8 +143,7 @@ void AddNGradientLayer::initialize()
     mArray.allocate();
 
     std::vector<float*> arr;
-    for (auto& t : mOutputs)
-        arr.push_back(t->getMemory().getValues());
+    for (auto& t : mOutputs) arr.push_back(t->getMemory().getValues());
 
     mArray.fillFrom(arr.data());
 }
@@ -154,7 +152,6 @@ AddNGradientLayer::~AddNGradientLayer()
 {
     mArray.free();
 }
-
 
 }  // namespace layers
 

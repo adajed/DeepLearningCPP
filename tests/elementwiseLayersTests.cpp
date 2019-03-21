@@ -146,14 +146,14 @@ class ElementwiseTest : public LayerTest,
     {
         switch (op)
         {
-            case Elementwise::kADD:
-                return [](float f1, float f2) { return f1 + f2; };
-            case Elementwise::kSUB:
-                return [](float f1, float f2) { return f1 - f2; };
-            case Elementwise::kMUL:
-                return [](float f1, float f2) { return f1 * f2; };
-            case Elementwise::kDIV:
-                return [](float f1, float f2) { return f1 / f2; };
+        case Elementwise::kADD:
+            return [](float f1, float f2) { return f1 + f2; };
+        case Elementwise::kSUB:
+            return [](float f1, float f2) { return f1 - f2; };
+        case Elementwise::kMUL:
+            return [](float f1, float f2) { return f1 * f2; };
+        case Elementwise::kDIV:
+            return [](float f1, float f2) { return f1 / f2; };
         }
         throw std::runtime_error("Unknown Elementwise");
     }
@@ -162,14 +162,11 @@ class ElementwiseTest : public LayerTest,
     {
         switch (op)
         {
-            case Elementwise::kADD:
-                return [](float f1, float f2) { return 1.; };
-            case Elementwise::kSUB:
-                return [](float f1, float f2) { return 1.; };
-            case Elementwise::kMUL:
-                return [](float f1, float f2) { return f2; };
-            case Elementwise::kDIV:
-                return [](float f1, float f2) { return 1. / f2; };
+        case Elementwise::kADD: return [](float f1, float f2) { return 1.; };
+        case Elementwise::kSUB: return [](float f1, float f2) { return 1.; };
+        case Elementwise::kMUL: return [](float f1, float f2) { return f2; };
+        case Elementwise::kDIV:
+            return [](float f1, float f2) { return 1. / f2; };
         }
         throw std::runtime_error("Unknown Elementwise");
     }
@@ -178,14 +175,11 @@ class ElementwiseTest : public LayerTest,
     {
         switch (op)
         {
-            case Elementwise::kADD:
-                return [](float f1, float f2) { return 1.; };
-            case Elementwise::kSUB:
-                return [](float f1, float f2) { return -1.; };
-            case Elementwise::kMUL:
-                return [](float f1, float f2) { return f1; };
-            case Elementwise::kDIV:
-                return [](float f1, float f2) { return -f1 / (f2 * f2); };
+        case Elementwise::kADD: return [](float f1, float f2) { return 1.; };
+        case Elementwise::kSUB: return [](float f1, float f2) { return -1.; };
+        case Elementwise::kMUL: return [](float f1, float f2) { return f1; };
+        case Elementwise::kDIV:
+            return [](float f1, float f2) { return -f1 / (f2 * f2); };
         }
         throw std::runtime_error("Unknown Elementwise");
     }
@@ -215,13 +209,15 @@ class ElementwiseTest : public LayerTest,
             {
                 size_t reduceSize = s1 / s2;
                 for (size_t i = 0; i < s1; ++i)
-                    mOutput.at(i) = f(mInput1.at(i), mInput2.at(i / reduceSize));
+                    mOutput.at(i) =
+                        f(mInput1.at(i), mInput2.at(i / reduceSize));
             }
             else
             {
                 size_t reduceSize = s2 / s1;
                 for (size_t i = 0; i < s2; ++i)
-                    mOutput.at(i) = f(mInput1.at(i / reduceSize), mInput2.at(i));
+                    mOutput.at(i) =
+                        f(mInput1.at(i / reduceSize), mInput2.at(i));
             }
         }
     }
@@ -263,8 +259,12 @@ class ElementwiseTest : public LayerTest,
                 size_t reduceSize = s1 / s2;
                 for (size_t i = 0; i < s1; ++i)
                 {
-                    mGradient1.at(i) = mOutputGrad.at(i) * fun1(mInput1.at(i), mInput2.at(i / reduceSize));
-                    mGradient2.at(i / reduceSize) += mOutputGrad.at(i) * fun2(mInput1.at(i), mInput2.at(i / reduceSize));
+                    mGradient1.at(i) =
+                        mOutputGrad.at(i) *
+                        fun1(mInput1.at(i), mInput2.at(i / reduceSize));
+                    mGradient2.at(i / reduceSize) +=
+                        mOutputGrad.at(i) *
+                        fun2(mInput1.at(i), mInput2.at(i / reduceSize));
                 }
             }
             else
@@ -272,8 +272,12 @@ class ElementwiseTest : public LayerTest,
                 size_t reduceSize = s2 / s1;
                 for (size_t i = 0; i < s2; ++i)
                 {
-                    mGradient1.at(i / reduceSize) += mOutputGrad.at(i) * fun1(mInput1.at(i / reduceSize), mInput2.at(i));
-                    mGradient2.at(i) = mOutputGrad.at(i) * fun2(mInput1.at(i / reduceSize), mInput2.at(i));
+                    mGradient1.at(i / reduceSize) +=
+                        mOutputGrad.at(i) *
+                        fun1(mInput1.at(i / reduceSize), mInput2.at(i));
+                    mGradient2.at(i) =
+                        mOutputGrad.at(i) *
+                        fun2(mInput1.at(i / reduceSize), mInput2.at(i));
                 }
             }
         }
@@ -285,14 +289,18 @@ class ElementwiseTest : public LayerTest,
             MemoryType type = memoryLocationToType(loc(testCase));
             core::Graph::SPtr graph = core::getDefaultGraph();
 
-            Tensor::SPtr in1 = graph->addInput( "in1",
-                    createLayer<InputLayer>("in1", shape(testCase, 0), type));
-            Tensor::SPtr in2 = graph->addInput( "in2",
-                    createLayer<InputLayer>("in2", shape(testCase, 1), type));
+            Tensor::SPtr in1 = graph->addInput(
+                "in1",
+                createLayer<InputLayer>("in1", shape(testCase, 0), type));
+            Tensor::SPtr in2 = graph->addInput(
+                "in2",
+                createLayer<InputLayer>("in2", shape(testCase, 1), type));
 
             Tensor::SPtr output;
-            if (back) output = elementwiseBack(in1, in2, op(testCase));
-            else output = elementwiseFront(in1, in2, op(testCase));
+            if (back)
+                output = elementwiseBack(in1, in2, op(testCase));
+            else
+                output = elementwiseFront(in1, in2, op(testCase));
 
             ITensorPtr t = makeAbstractTensor(output);
 
@@ -323,13 +331,13 @@ class ElementwiseTest : public LayerTest,
             {
                 output = elementwiseBack(in1, in2, op(testCase));
                 layer = createLayer<ElementwiseBackGradientLayer>(
-                        in1, in2, output, outG, op(testCase));
+                    in1, in2, output, outG, op(testCase));
             }
             else
             {
                 output = elementwiseFront(in1, in2, op(testCase));
                 layer = createLayer<ElementwiseFrontGradientLayer>(
-                        in1, in2, output, outG, op(testCase));
+                    in1, in2, output, outG, op(testCase));
             }
             initializeGraph();
             std::vector<Tensor::SPtr> grads = layer->getOutputs();
@@ -412,6 +420,7 @@ TEST_P(ElementwiseFrontGradientTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseFrontGradientTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(OPS),
                                 ValuesIn(LOCATIONS)));
+
 TEST_P(ElementwiseErrorTest, test)
 {
     test(GetParam());

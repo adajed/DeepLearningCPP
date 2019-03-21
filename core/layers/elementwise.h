@@ -25,7 +25,7 @@ class ElementwiseBackLayer : public DifferentiableLayer
 {
   public:
     ElementwiseBackLayer(ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2,
-                     Elementwise op);
+                         Elementwise op);
 
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
@@ -40,8 +40,8 @@ class ElementwiseBackGradientLayer : public Layer
 {
   public:
     ElementwiseBackGradientLayer(ID id, const Tensor::SPtr& t1,
-                             const Tensor::SPtr& t2, Tensor::SPtr out,
-                             Tensor::SPtr outGrad, Elementwise op);
+                                 const Tensor::SPtr& t2, Tensor::SPtr out,
+                                 Tensor::SPtr outGrad, Elementwise op);
 
   private:
     void execute(const InputDict&) override;
@@ -54,7 +54,7 @@ class ElementwiseFrontLayer : public DifferentiableLayer
 {
   public:
     ElementwiseFrontLayer(ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2,
-                     Elementwise op);
+                          Elementwise op);
 
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
@@ -69,8 +69,8 @@ class ElementwiseFrontGradientLayer : public Layer
 {
   public:
     ElementwiseFrontGradientLayer(ID id, const Tensor::SPtr& t1,
-                             const Tensor::SPtr& t2, Tensor::SPtr out,
-                             Tensor::SPtr outGrad, Elementwise op);
+                                  const Tensor::SPtr& t2, Tensor::SPtr out,
+                                  Tensor::SPtr outGrad, Elementwise op);
 
   private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr, Tensor::SPtr);
@@ -84,18 +84,16 @@ class ElementwiseFrontGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-void runElementwiseBackDevice(const float* x1, size_t size1,
-                          const float* x2, size_t size2,
-                          float* y, Elementwise op);
+void runElementwiseBackDevice(const float* x1, size_t size1, const float* x2,
+                              size_t size2, float* y, Elementwise op);
 
 void runElementwiseBackGradientDevice(const float* x1, size_t size1,
-                                  const float* x2, size_t size2,
-                                  const float* yGrad, float* x1Grad,
-                                  float* x2Grad, Elementwise op);
+                                      const float* x2, size_t size2,
+                                      const float* yGrad, float* x1Grad,
+                                      float* x2Grad, Elementwise op);
 
-void runElementwiseFrontDevice(const float* x1, size_t size1,
-                               const float* x2, size_t size2,
-                               float* y, Elementwise op);
+void runElementwiseFrontDevice(const float* x1, size_t size1, const float* x2,
+                               size_t size2, float* y, Elementwise op);
 
 void runElementwiseFrontGradientDevice(const float* x1, size_t size1,
                                        const float* x2, size_t size2,
@@ -105,23 +103,21 @@ void runElementwiseFrontGradientDevice(const float* x1, size_t size1,
 }  // namespace cuda
 #endif
 
-void runElementwiseBackHost(const float* x1, size_t size1,
-                        const float* x2, size_t size2,
-                        float* y, Elementwise op);
+void runElementwiseBackHost(const float* x1, size_t size1, const float* x2,
+                            size_t size2, float* y, Elementwise op);
 
 void runElementwiseBackGradientHost(const float* x1, size_t size1,
-                                const float* x2, size_t size2,
-                                const float* yG, float* x1G,
-                                float* x2G, Elementwise op);
+                                    const float* x2, size_t size2,
+                                    const float* yG, float* x1G, float* x2G,
+                                    Elementwise op);
 
-void runElementwiseFrontHost(const float* x1, size_t size1,
-                             const float* x2, size_t size2,
-                             float* y, Elementwise op);
+void runElementwiseFrontHost(const float* x1, size_t size1, const float* x2,
+                             size_t size2, float* y, Elementwise op);
 
 void runElementwiseFrontGradientHost(const float* x1, size_t size1,
                                      const float* x2, size_t size2,
-                                     const float* yG, float* x1G,
-                                     float* x2G, Elementwise op);
+                                     const float* yG, float* x1G, float* x2G,
+                                     Elementwise op);
 
 }  // namespace layers
 

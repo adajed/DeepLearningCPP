@@ -33,22 +33,21 @@ class MatmulGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-void runMatmulDevice(const float* x1, const float* x2,
-                     float* y, int n, int m, int k);
+void runMatmulDevice(const float* x1, const float* x2, float* y, int n, int m,
+                     int k);
 
 void runMatmulGradientDevice(const float* x1, const float* x2,
-                             const float* yGrad, float* x1Grad,
-                             float* x2Grad, int n, int m, int k);
+                             const float* yGrad, float* x1Grad, float* x2Grad,
+                             int n, int m, int k);
 
 }  // namespace cuda
 #endif
 
-void runMatmulHost(const float* x1, const float* x2,
-                   float* y, int n, int m, int k);
+void runMatmulHost(const float* x1, const float* x2, float* y, int n, int m,
+                   int k);
 
-void runMatmulGradientHost(const float* x1, const float* x2,
-                           const float* yGrad, float* x1Grad,
-                           float* x2Grad, int n, int m, int k);
+void runMatmulGradientHost(const float* x1, const float* x2, const float* yGrad,
+                           float* x1Grad, float* x2Grad, int n, int m, int k);
 
 }  // namespace layers
 

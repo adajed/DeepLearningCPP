@@ -31,8 +31,8 @@ std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& m1,
 
 }  // namespace
 
-void runMatmulHost(const float* x1, const float* x2,
-                   float* y, int n, int m, int k)
+void runMatmulHost(const float* x1, const float* x2, float* y, int n, int m,
+                   int k)
 {
     for (int xPos = 0; xPos < n; ++xPos)
         for (int yPos = 0; yPos < k; ++yPos)
@@ -43,9 +43,8 @@ void runMatmulHost(const float* x1, const float* x2,
         }
 }
 
-void runMatmulGradientHost(const float* x1, const float* x2,
-                           const float* yGrad, float* x1Grad,
-                           float* x2Grad, int n, int m, int k)
+void runMatmulGradientHost(const float* x1, const float* x2, const float* yGrad,
+                           float* x1Grad, float* x2Grad, int n, int m, int k)
 {
     // calculate x1Grad
     for (int xPos = 0; xPos < n; ++xPos)
@@ -54,7 +53,8 @@ void runMatmulGradientHost(const float* x1, const float* x2,
         {
             x1Grad[m * xPos + yPos] = 0.;
             for (int i = 0; i < k; ++i)
-                x1Grad[m * xPos + yPos] += x2[k * yPos + i] * yGrad[k * xPos + i];
+                x1Grad[m * xPos + yPos] +=
+                    x2[k * yPos + i] * yGrad[k * xPos + i];
         }
     }
 
@@ -65,7 +65,8 @@ void runMatmulGradientHost(const float* x1, const float* x2,
         {
             x2Grad[k * xPos + yPos] = 0.;
             for (int i = 0; i < n; ++i)
-                x2Grad[k * xPos + yPos] += x1[m * i + xPos] * yGrad[k * i + yPos];
+                x2Grad[k * xPos + yPos] +=
+                    x1[m * i + xPos] * yGrad[k * i + yPos];
         }
     }
 }

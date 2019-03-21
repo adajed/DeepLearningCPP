@@ -48,14 +48,16 @@ namespace cuda
 {
 void runAddNDevice(float** xs, int n, float* y, size_t size);
 
-void runAddNGradientDevice(const float* yGrad, float** xGrads, int n, size_t size);
+void runAddNGradientDevice(const float* yGrad, float** xGrads, int n,
+                           size_t size);
 
 }  // namespace cuda
 #endif
 
 void runAddNHost(float** xs, int n, float* y, size_t size);
 
-void runAddNGradientHost(const float* yGrad, float** xGrads, int n, size_t size);
+void runAddNGradientHost(const float* yGrad, float** xGrads, int n,
+                         size_t size);
 
 }  // namespace layers
 

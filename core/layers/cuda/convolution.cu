@@ -195,8 +195,8 @@ __global__ void convGradientKernel_K(const float* xArr, const float* yGArr,
 
 }  // namespace
 
-void runConv2DDevice(const float* x, const float* k, float* y,
-                                size_t size, int* info, PaddingType padding)
+void runConv2DDevice(const float* x, const float* k, float* y, size_t size,
+                     int* info, PaddingType padding)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -209,10 +209,9 @@ void runConv2DDevice(const float* x, const float* k, float* y,
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, k, y, info);
 }
 
-void runConv2DGradientDevice(const float* x, const float* k,
-                                        const float* yG, float* xG, float* kG,
-                                        size_t xSize, size_t kSize, int* info,
-                                        PaddingType padding)
+void runConv2DGradientDevice(const float* x, const float* k, const float* yG,
+                             float* xG, float* kG, size_t xSize, size_t kSize,
+                             int* info, PaddingType padding)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS_X = (xSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -235,7 +234,7 @@ void runConv2DGradientDevice(const float* x, const float* k,
 }
 
 void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
-                                        int* outShape, int* strides)
+                             int* outShape, int* strides)
 {
     int* ptr = (int*)dest;
     cudaMemcpy(ptr, inShape, 4 * sizeof(int), cudaMemcpyHostToDevice);

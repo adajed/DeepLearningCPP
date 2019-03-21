@@ -69,20 +69,21 @@ __device__ void warpReduce(volatile float *sdata, unsigned tid)
 }
 
 template <ReduceOpCuda op, unsigned BS>
-__global__ void reduceKernel(size_t size, const float* x, float* y)
+__global__ void reduceKernel(const float* x, float* y, size_t reduceSize, int blockPerReduce)
 {
     __shared__ float sData[BS];
+    x += (blockIdx.x / blockPerReduce) * reduceSize;
 
     int tid = threadIdx.x;
-    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    int id = (blockIdx.x % blockPerReduce) * BS + threadIdx.x;
     float v;
 
     sData[tid] = 0.;
-    while (id < size)
+    while (id < reduceSize)
     {
         v = initialReduceOp<op>(x[id]);
         sData[tid] = reduceOp<op>(sData[tid], v);
-        id += BS * gridDim.x;
+        id += BS * blockPerReduce;
     }
     __syncthreads();
 
@@ -106,39 +107,28 @@ __global__ void reduceKernel(size_t size, const float* x, float* y)
     if (tid == 0) y[blockIdx.x] = sData[0];
 }
 
-template <ReduceOpCuda op>
-void singleReduce(const float* vals, float* out, size_t size)
+}  // namespace
+
+template<ReduceOpCuda op>
+void reduce(const float* x, float* y, size_t outSize, size_t reduceSize)
 {
     const int BLOCK_SIZE = 256;
-    const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    const int NUM_BLOCKS_PER_REDUCTION = (reduceSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    const int NUM_BLOCKS = NUM_BLOCKS_PER_REDUCTION * outSize;
 
-    if (NUM_BLOCKS > 1)
+    if (NUM_BLOCKS_PER_REDUCTION > 1)
     {
         float* temp;
-        cudaMalloc((void**)&temp, NUM_BLOCKS * sizeof(float));
-        reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(size, vals, temp);
-        reduceKernel<op, BLOCK_SIZE><<<1, BLOCK_SIZE>>>(NUM_BLOCKS, temp, out);
-        cudaDeviceSynchronize();
+        cudaMalloc(&temp, NUM_BLOCKS * sizeof(float));
+        reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(x, temp, reduceSize, NUM_BLOCKS_PER_REDUCTION);
+        reduceKernel<op, BLOCK_SIZE><<<outSize, BLOCK_SIZE>>>(temp, y, NUM_BLOCKS_PER_REDUCTION, 1);
         cudaFree(temp);
     }
     else
-        reduceKernel<op, BLOCK_SIZE><<<1, BLOCK_SIZE>>>(size, vals, out);
+        reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, reduceSize, NUM_BLOCKS_PER_REDUCTION);
 }
 
 
-
-}  // namespace
-
-template <ReduceOpCuda op>
-void reduce(const float* x, float* y, size_t outSize, size_t reduceSize)
-{
-    for (size_t i = 0; i < outSize; ++i)
-    {
-        singleReduce<op>(x, y, reduceSize);
-        x += reduceSize;
-        y += 1;
-    }
-}
 
 }  // namespace cuda
 }  // namespace layers

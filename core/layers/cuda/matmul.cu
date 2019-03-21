@@ -10,8 +10,8 @@ namespace cuda
 {
 namespace
 {
-__global__ void matmulKernel(const float* x1, const float* x2, float* y,
-                             int n, int m, int k)
+__global__ void matmulKernel(const float* x1, const float* x2, float* y, int n,
+                             int m, int k)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n * k)
@@ -24,8 +24,9 @@ __global__ void matmulKernel(const float* x1, const float* x2, float* y,
     }
 }
 
-__global__ void matmulGradientKernel(const float* x1, const float* x2, const float* yGrad,
-                                     float* x1Grad, float* x2Grad, int n, int m, int k)
+__global__ void matmulGradientKernel(const float* x1, const float* x2,
+                                     const float* yGrad, float* x1Grad,
+                                     float* x2Grad, int n, int m, int k)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n * m)
@@ -52,8 +53,8 @@ __global__ void matmulGradientKernel(const float* x1, const float* x2, const flo
 
 }  // namespace
 
-void runMatmulDevice(const float* x1, const float* x2,
-                     float* y, int n, int m, int k)
+void runMatmulDevice(const float* x1, const float* x2, float* y, int n, int m,
+                     int k)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (n * k + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -62,13 +63,14 @@ void runMatmulDevice(const float* x1, const float* x2,
 }
 
 void runMatmulGradientDevice(const float* x1, const float* x2,
-                             const float* yGrad, float* x1Grad,
-                             float* x2Grad, int n, int m, int k)
+                             const float* yGrad, float* x1Grad, float* x2Grad,
+                             int n, int m, int k)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (n * m + m * k + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    matmulGradientKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, yGrad, x1Grad, x2Grad, n, m, k);
+    matmulGradientKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, yGrad, x1Grad,
+                                                     x2Grad, n, m, k);
 }
 
 }  // namespace cuda
