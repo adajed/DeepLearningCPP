@@ -61,13 +61,17 @@ ITensorPtr queue(const std::vector<ITensorPtr>& tensors);
 
 ITensorPtr reshape(const ITensorPtr& t, const Shape& shape);
 
-ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
-                     const std::vector<int>& strides,
-                     const std::string& padding);
+ITensorPtr maxPool2D(const ITensorPtr& tensor,
+                     const std::vector<int>& kernel = {2, 2},
+                     const std::vector<int>& strides = {2, 2},
+                     const std::string& padding = "VALID",
+                     const std::string& format = "NHWC");
 
-ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
-                     const std::vector<int>& strides,
-                     const std::string& padding);
+ITensorPtr avgPool2D(const ITensorPtr& tensor,
+                     const std::vector<int>& kernel = {2, 2},
+                     const std::vector<int>& strides = {2, 2},
+                     const std::string& padding = "VALID",
+                     const std::string& format = "NHWC");
 
 ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
                   const std::vector<int>& strides, const std::string& padding);
