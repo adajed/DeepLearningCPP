@@ -32,20 +32,19 @@ void conv2d_nhwc(const float* in, const float* ker, float* out,
                     if (padding == PaddingType::kSAME)
                     {
                         x2 -= (kernel[0] - 1) / 2;
-                        y2 -= (kernel[1] - 2) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
                     }
 
                     float val = 0.;
 
-                    for (int cIn = 0; cIn < kernel[2]; ++cIn)
+                    for (int iX = x2 < 0 ? -x2 : 0; iX < kernel[0]; ++iX)
                     {
-                        for (int iX = x2 < 0 ? -x2 : 0; iX < kernel[0]; ++iX)
+                        if (x2 + iX >= inShape[1]) break;
+                        for (int iY = y2 < 0 ? -y2 : 0; iY < kernel[1]; ++iY)
                         {
-                            if (x2 + iX >= inShape[1]) break;
-                            for (int iY = y2 < 0 ? -y2 : 0; iY < kernel[1];
-                                 ++iY)
+                            if (y2 + iY >= inShape[2]) break;
+                            for (int cIn = 0; cIn < kernel[2]; ++cIn)
                             {
-                                if (y2 + iY >= inShape[2]) break;
                                 val += in[POS_IN(n, x2 + iX, y2 + iY, cIn)] *
                                        ker[POS_KER(iX, iY, cIn, c)];
                             }
@@ -80,12 +79,12 @@ void conv2d_nchw(const float* in, const float* ker, float* out,
                     if (padding == PaddingType::kSAME)
                     {
                         x2 -= (kernel[0] - 1) / 2;
-                        y2 -= (kernel[1] - 2) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
                     }
 
                     float val = 0.;
 
-                    for (int cIn = 0; cIn < kernel[3]; ++cIn)
+                    for (int cIn = 0; cIn < kernel[2]; ++cIn)
                     {
                         for (int iX = x2 < 0 ? -x2 : 0; iX < kernel[0]; ++iX)
                         {

@@ -27,24 +27,20 @@ Tensor::SPtr createOutput(const Tensor::SPtr& t, const Tensor::SPtr& k,
     TensorShape shape = t->getShape();
     TensorShape kernel = k->getShape();
 
-    int x = 1, y = 2, c = 3;
-    if (dataFormat == DataFormat::kNCHW)
-    {
-        x++;
-        y++;
-        c = 1;
-    }
+    int x = dataFormat == DataFormat::kNHWC ? 1 : 2;
+    int y = dataFormat == DataFormat::kNHWC ? 2 : 3;
+    int c = dataFormat == DataFormat::kNHWC ? 3 : 1;
 
     shape[c] = kernel[3];
     if (padding == PaddingType::kVALID)
     {
-        shape[x] = ceil(shape[2] - kernel[0] + 1, s[0]);
-        shape[y] = ceil(shape[3] - kernel[1] + 1, s[1]);
+        shape[x] = ceil(shape[x] - kernel[0] + 1, s[0]);
+        shape[y] = ceil(shape[y] - kernel[1] + 1, s[1]);
     }
     else  // padding == PaddingType::kSAME
     {
-        shape[x] = ceil(shape[2], s[0]);
-        shape[y] = ceil(shape[3], s[1]);
+        shape[x] = ceil(shape[x], s[0]);
+        shape[y] = ceil(shape[y], s[1]);
     }
 
     return createTensor("", shape, t->getType());
@@ -281,12 +277,12 @@ Tensor::SPtr convolution2D(const Tensor::SPtr& t, const Tensor::SPtr& kernel,
 
     if (dataFormat == layers::DataFormat::kNHWC)
     {
-        if (xShape[3] != kShape[1])
+        if (xShape[3] != kShape[2])
             throw std::runtime_error("conv2D: kernel doesn\'t match tensor");
     }
     else
     {
-        if (xShape[1] != kShape[1])
+        if (xShape[1] != kShape[2])
             throw std::runtime_error("conv2D: kernel doesn\'t match tensor");
     }
 

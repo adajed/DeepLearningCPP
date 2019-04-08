@@ -42,7 +42,8 @@ std::ostream& operator<<(std::ostream& os, layers::DataFormat format)
 bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
                    float eps)
 {
-    EXPECT_EQ(refOutput.getCount(), output.size());
+    EXPECT_EQ(refOutput.getCount(), output.size())
+        << refOutput.getCount() << " and " << output.size();
 
     for (std::size_t i = 0; i < output.size(); ++i)
         EXPECT_NEAR(refOutput.at(i), output[i], eps) << "pos=" << i;
