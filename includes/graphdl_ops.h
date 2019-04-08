@@ -74,7 +74,9 @@ ITensorPtr avgPool2D(const ITensorPtr& tensor,
                      const std::string& format = "NHWC");
 
 ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
-                  const std::vector<int>& strides, const std::string& padding);
+                  const std::vector<int>& strides = {1, 1},
+                  const std::string& padding = "SAME",
+                  const std::string& format = "NHWC");
 
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
 
