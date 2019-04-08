@@ -7,10 +7,10 @@ namespace
 {
 using namespace graphdl::core::layers;
 using Shapes = std::tuple<UVec, Vec, Vec>;
-using TestCase =
-    std::tuple<int, int, Shapes, PoolingType, PaddingType, MemoryLocation>;
+using TestCase = std::tuple<int, int, Shapes, PoolingType, PaddingType,
+                            DataFormat, MemoryLocation>;
 using ErrorTestCase =
-    std::tuple<Shapes, PoolingType, PaddingType, MemoryLocation>;
+    std::tuple<Shapes, PoolingType, PaddingType, DataFormat, MemoryLocation>;
 
 std::vector<Shapes> SHAPES = {
     // clang-format off
@@ -64,15 +64,12 @@ std::vector<PaddingType> PADDINGS = {
     // clang-format on
 };
 
-UVec inputShape(const TestCase& testCase)
-{
-    UVec shape(4, 0);
-    shape[0] = std::get<0>(testCase);
-    shape[1] = std::get<1>(testCase);
-    shape[2] = std::get<0>(std::get<2>(testCase))[0];
-    shape[3] = std::get<0>(std::get<2>(testCase))[1];
-    return shape;
-}
+std::vector<DataFormat> DATA_FORMATS = {
+    // clang-format off
+    DataFormat::kNHWC,
+    DataFormat::kNCHW
+    // clang-format on
+};
 
 Vec kernel(const TestCase& testCase)
 {
@@ -94,9 +91,34 @@ PaddingType padding(const TestCase& testCase)
     return std::get<4>(testCase);
 }
 
-MemoryLocation location(const TestCase& testCase)
+DataFormat format(const TestCase& testCase)
 {
     return std::get<5>(testCase);
+}
+
+MemoryLocation location(const TestCase& testCase)
+{
+    return std::get<6>(testCase);
+}
+
+UVec inputShape(const TestCase& testCase)
+{
+    UVec shape(4, 0);
+    shape[0] = std::get<0>(testCase);
+
+    if (format(testCase) == DataFormat::kNHWC)
+    {
+        shape[1] = std::get<0>(std::get<2>(testCase))[0];
+        shape[2] = std::get<0>(std::get<2>(testCase))[1];
+        shape[3] = std::get<1>(testCase);
+    }
+    else
+    {
+        shape[1] = std::get<1>(testCase);
+        shape[2] = std::get<0>(std::get<2>(testCase))[0];
+        shape[3] = std::get<0>(std::get<2>(testCase))[1];
+    }
+    return shape;
 }
 
 int ceil(int x, int y)
@@ -110,15 +132,19 @@ UVec outputShape(const TestCase& testCase)
     Vec k = kernel(testCase);
     Vec s = strides(testCase);
 
+    int x = 1;
+    if (format(testCase) == DataFormat::kNCHW) x = 2;
+    int y = x + 1;
+
     if (padding(testCase) == PaddingType::kVALID)
     {
-        output[2] = ceil(output[2] - k[0] + 1, s[0]);
-        output[3] = ceil(output[3] - k[1] + 1, s[1]);
+        output[x] = ceil(output[x] - k[0] + 1, s[0]);
+        output[y] = ceil(output[y] - k[1] + 1, s[1]);
     }
     else  // padding == PaddingType::kSAME
     {
-        output[2] = ceil(output[2], s[0]);
-        output[3] = ceil(output[3], s[1]);
+        output[x] = ceil(output[x], s[0]);
+        output[y] = ceil(output[y], s[1]);
     }
 
     return output;
@@ -168,7 +194,10 @@ class Pooling2DTest : public LayerTest,
     void poolGradient(Coord cIn, Coord cOut, const TestCase& testCase)
     {
         Vec k = kernel(testCase);
-        TensorShape w({1, 1, k[0], k[1]});
+        TensorShape w({1, k[0], k[1], 1});
+        if (format(testCase) == DataFormat::kNCHW)
+            w = TensorShape({1, 1, k[0], k[1]});
+
         Coord_iterator end = shapeEnd(w);
 
         if (pooling(testCase) == PoolingType::kMAX)
@@ -197,16 +226,25 @@ class Pooling2DTest : public LayerTest,
 
         Vec k = kernel(testCase);
         Vec s = strides(testCase);
-        TensorShape subShape({1, 1, k[0], k[1]});
+        TensorShape subShape({1, k[0], k[1], 1});
+        int x = 1, y = 2;
+        if (format(testCase) == DataFormat::kNCHW)
+        {
+            x++;
+            y++;
+            subShape = TensorShape({1, 1, k[0], k[1]});
+        }
 
         for (Coord_iterator it = mOutput.begin(); it != mOutput.end(); ++it)
         {
-            Coord c(
-                {it()[0], it()[1], it()[2] * int(s[0]), it()[3] * int(s[1])});
+            Coord c({it()[0], it()[1] * s[0], it()[2] * s[1], it()[3]});
+            if (format(testCase) == DataFormat::kNCHW)
+                c = Coord({it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
+
             if (padding(testCase) == PaddingType::kSAME)
             {
-                c[2] -= (int(k[0]) - 1) / 2;
-                c[3] -= (int(k[1]) - 1) / 2;
+                c[x] -= (int(k[0]) - 1) / 2;
+                c[y] -= (int(k[1]) - 1) / 2;
             }
             RefTensor subTensor = mInput.slice(c, subShape);
             mOutput[it()] = pool(subTensor, pooling(testCase));
@@ -222,17 +260,27 @@ class Pooling2DTest : public LayerTest,
 
         Vec k = kernel(testCase);
         Vec s = strides(testCase);
+        int x = 1, y = 2;
+        if (format(testCase) == DataFormat::kNCHW)
+        {
+            x++;
+            y++;
+        }
 
         for (size_t pos = 0; pos < mInputGrad.getCount(); ++pos)
             mInputGrad.at(pos) = 0.;
         for (Coord_iterator it = mOutputGrad.begin(); it != mOutputGrad.end();
              ++it)
         {
-            Coord c({it()[0], it()[1], it()[2] * s[0], it()[3] * s[1]});
+            Coord c(
+                {it()[0], it()[1] * int(s[0]), it()[2] * int(s[1]), it()[3]});
+            if (format(testCase) == DataFormat::kNCHW)
+                c = Coord({it()[0], it()[1], it()[2] * int(s[0]),
+                           it()[3] * int(s[1])});
             if (padding(testCase) == PaddingType::kSAME)
             {
-                c[2] -= (k[0] - 1) / 2;
-                c[3] -= (k[1] - 1) / 2;
+                c[x] -= (k[0] - 1) / 2;
+                c[y] -= (k[1] - 1) / 2;
             }
             poolGradient(c, it(), testCase);
         }
@@ -248,6 +296,9 @@ class Pooling2DTest : public LayerTest,
             std::string p = "SAME";
             if (padding(testCase) == PaddingType::kVALID) p = "VALID";
 
+            std::string f = "NHWC";
+            if (format(testCase) == DataFormat::kNCHW) f = "NCHW";
+
             std::vector<int> k(
                 {int(kernel(testCase)[0]), int(kernel(testCase)[1])});
             std::vector<int> s(
@@ -255,8 +306,8 @@ class Pooling2DTest : public LayerTest,
 
             switch (pooling(testCase))
             {
-            case PoolingType::kMAX: out = maxPool2D(in, k, s, p); break;
-            case PoolingType::kAVERAGE: out = avgPool2D(in, k, s, p); break;
+            case PoolingType::kMAX: out = maxPool2D(in, k, s, p, f); break;
+            case PoolingType::kAVERAGE: out = avgPool2D(in, k, s, p, f); break;
             }
             initializeGraph();
 
@@ -280,11 +331,12 @@ class Pooling2DTest : public LayerTest,
             std::vector<int> s(
                 {int(strides(testCase)[0]), int(strides(testCase)[1])});
 
-            Tensor::SPtr out =
-                pooling2D(in, pooling(testCase), k, s, padding(testCase));
+            Tensor::SPtr out = pooling2D(in, pooling(testCase), k, s,
+                                         padding(testCase), format(testCase));
 
             Layer::SPtr layer = createLayer<Pooling2DGradientLayer>(
-                in, out, outG, pooling(testCase), k, s, padding(testCase));
+                in, out, outG, pooling(testCase), k, s, padding(testCase),
+                format(testCase));
             ITensorPtr grad = makeAbstractTensor(layer->getOutputs()[0]);
             initializeGraph();
             return HostVec({grad->eval({{"in", ins[0]}, {"outG", ins[1]}})});
@@ -304,16 +356,20 @@ class Pooling2DErrorsTest : public LayerTest,
         Vec k = std::get<1>(std::get<0>(testCase));
         Vec s = std::get<2>(std::get<0>(testCase));
 
-        ITensorPtr in = createInput("in", inShape, std::get<3>(testCase));
+        ITensorPtr in = createInput("in", inShape, std::get<4>(testCase));
         ITensorPtr out;
 
         std::string p = "SAME";
         if (std::get<2>(testCase) == PaddingType::kVALID) p = "VALID";
+        std::string f = "NHWC";
+        if (std::get<3>(testCase) == DataFormat::kNCHW) f = "NCHW";
 
         if (std::get<1>(testCase) == PoolingType::kMAX)
-            EXPECT_THROW({ out = maxPool2D(in, k, s, p); }, std::runtime_error);
+            EXPECT_THROW({ out = maxPool2D(in, k, s, p, f); },
+                         std::runtime_error);
         else  // pooling(testCase) == PoolingType::kAVERAGE
-            EXPECT_THROW({ out = avgPool2D(in, k, s, p); }, std::runtime_error);
+            EXPECT_THROW({ out = avgPool2D(in, k, s, p, f); },
+                         std::runtime_error);
     }
 };
 
@@ -324,7 +380,7 @@ TEST_P(Pooling2DTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
                                 ValuesIn(POOLINGS), ValuesIn(PADDINGS),
-                                ValuesIn(LOCATIONS)));
+                                ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS)));
 
 class Pooling2DGradientTest : public Pooling2DTest
 {
@@ -336,7 +392,7 @@ TEST_P(Pooling2DGradientTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DGradientTest,
                         Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
                                 ValuesIn(POOLINGS), ValuesIn(PADDINGS),
-                                ValuesIn(LOCATIONS)));
+                                ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS)));
 
 TEST_P(Pooling2DErrorsTest, testWrongShapes)
 {
@@ -344,5 +400,6 @@ TEST_P(Pooling2DErrorsTest, testWrongShapes)
 };
 INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DErrorsTest,
                         Combine(ValuesIn(ERROR_SHAPES), ValuesIn(POOLINGS),
-                                ValuesIn(PADDINGS), ValuesIn(LOCATIONS)));
+                                ValuesIn(PADDINGS), ValuesIn(DATA_FORMATS),
+                                ValuesIn(LOCATIONS)));
 }  // namespace

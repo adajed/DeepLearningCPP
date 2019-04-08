@@ -21,9 +21,9 @@ void pool_max_nhwc(const float* in, float* out, const std::vector<int>& inShape,
                    const std::vector<int>& strides)
 {
 #define POS_IN(n, x, y, c) \
-    ((((n)*inShape[0] + (x)) * inShape[1] + (y)) * inShape[2] + (c))
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
 #define POS_OUT(n, x, y, c) \
-    ((((n)*outShape[0] + (x)) * outShape[1] + (y)) * outShape[2] + (c))
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
 
     for (int n = 0; n < outShape[0]; ++n)
         for (int x = 0; x < outShape[1]; ++x)
@@ -41,14 +41,14 @@ void pool_max_nhwc(const float* in, float* out, const std::vector<int>& inShape,
                     float val = 0;
                     if (x2 >= 0 && y2 >= 0) val = in[POS_IN(n, x2, y2, c)];
 
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
                     {
                         if (iX >= inShape[1])
                         {
                             val = val > 0 ? val : 0;
                             break;
                         }
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
                              ++iY)
                         {
                             if (iY >= inShape[2])
@@ -76,9 +76,9 @@ void pool_avg_nhwc(const float* in, float* out, const std::vector<int>& inShape,
                    const std::vector<int>& strides)
 {
 #define POS_IN(n, x, y, c) \
-    ((((n)*inShape[0] + (x)) * inShape[1] + (y)) * inShape[2] + (c))
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
 #define POS_OUT(n, x, y, c) \
-    ((((n)*outShape[0] + (x)) * outShape[1] + (y)) * outShape[2] + (c))
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
 
     for (int n = 0; n < outShape[0]; ++n)
         for (int x = 0; x < outShape[1]; ++x)
@@ -94,10 +94,10 @@ void pool_avg_nhwc(const float* in, float* out, const std::vector<int>& inShape,
                     }
 
                     float val = 0;
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
                     {
                         if (iX >= inShape[1]) break;
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
                              ++iY)
                         {
                             if (iY >= inShape[2]) break;
@@ -119,9 +119,9 @@ void pool_max_nchw(const float* in, float* out, const std::vector<int>& inShape,
                    const std::vector<int>& strides)
 {
 #define POS_IN(n, c, x, y) \
-    ((((n)*inShape[0] + (c)) * inShape[1] + (x)) * inShape[2] + (y))
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
 #define POS_OUT(n, c, x, y) \
-    ((((n)*outShape[0] + (c)) * outShape[1] + (x)) * outShape[2] + (y))
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
 
     for (int n = 0; n < outShape[0]; ++n)
         for (int c = 0; c < outShape[1]; ++c)
@@ -139,14 +139,14 @@ void pool_max_nchw(const float* in, float* out, const std::vector<int>& inShape,
                     float val = 0;
                     if (x2 >= 0 && y2 >= 0) val = in[POS_IN(n, c, x2, y2)];
 
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
                     {
                         if (iX >= inShape[2])
                         {
                             val = val > 0 ? val : 0;
                             break;
                         }
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
                              ++iY)
                         {
                             if (iY >= inShape[3])
@@ -160,7 +160,7 @@ void pool_max_nchw(const float* in, float* out, const std::vector<int>& inShape,
                         }
                     }
 
-                    out[POS_OUT(n, x, y, c)] = val;
+                    out[POS_OUT(n, c, x, y)] = val;
                 }
 
 #undef POS_IN
@@ -174,9 +174,9 @@ void pool_avg_nchw(const float* in, float* out, const std::vector<int>& inShape,
                    const std::vector<int>& strides)
 {
 #define POS_IN(n, c, x, y) \
-    ((((n)*inShape[0] + (c)) * inShape[1] + (x)) * inShape[2] + (y))
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
 #define POS_OUT(n, c, x, y) \
-    ((((n)*outShape[0] + (c)) * outShape[1] + (x)) * outShape[2] + (y))
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
 
     for (int n = 0; n < outShape[0]; ++n)
         for (int c = 0; c < outShape[1]; ++c)
@@ -192,10 +192,10 @@ void pool_avg_nchw(const float* in, float* out, const std::vector<int>& inShape,
                     }
 
                     float val = 0;
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
                     {
                         if (iX >= inShape[2]) break;
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
                              ++iY)
                         {
                             if (iY >= inShape[3]) break;
@@ -218,9 +218,9 @@ void pool_grad_max_nhwc(const float* in, const float* out, const float* outG,
                         const std::vector<int>& strides)
 {
 #define POS_IN(n, x, y, c) \
-    ((((n)*inShape[0] + (x)) * inShape[1] + (y)) * inShape[2] + (c))
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
 #define POS_OUT(n, x, y, c) \
-    ((((n)*outShape[0] + (x)) * outShape[1] + (y)) * outShape[2] + (c))
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
 
     for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
         inG[i] = 0.;
@@ -240,11 +240,11 @@ void pool_grad_max_nhwc(const float* in, const float* out, const float* outG,
                     float out_val = out[POS_OUT(n, x, y, c)];
                     float outG_val = outG[POS_OUT(n, x, y, c)];
 
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
                     {
                         if (iX >= inShape[1]) break;
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
-                             ++iX)
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
                         {
                             if (iY >= inShape[2]) break;
                             if (in[POS_IN(n, iX, iY, c)] == out_val)
@@ -265,9 +265,9 @@ void pool_grad_avg_nhwc(const float* in, const float* out, const float* outG,
                         const std::vector<int>& strides)
 {
 #define POS_IN(n, x, y, c) \
-    ((((n)*inShape[0] + (x)) * inShape[1] + (y)) * inShape[2] + (c))
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
 #define POS_OUT(n, x, y, c) \
-    ((((n)*outShape[0] + (x)) * outShape[1] + (y)) * outShape[2] + (c))
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
 
     for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
         inG[i] = 0.;
@@ -287,13 +287,12 @@ void pool_grad_avg_nhwc(const float* in, const float* out, const float* outG,
                     float outG_val =
                         outG[POS_OUT(n, x, y, c)] / (kernel[0] * kernel[1]);
 
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0);
+                         iX < std::min(x2 + kernel[0], inShape[1]); ++iX)
                     {
-                        if (iX >= inShape[1]) break;
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
-                             ++iX)
+                        for (int iY = std::max(y2, 0);
+                             iY < std::min(y2 + kernel[1], inShape[2]); ++iY)
                         {
-                            if (iY >= inShape[2]) break;
                             inG[POS_IN(n, iX, iY, c)] += outG_val;
                         }
                     }
@@ -311,9 +310,9 @@ void pool_grad_max_nchw(const float* in, const float* out, const float* outG,
                         const std::vector<int>& strides)
 {
 #define POS_IN(n, c, x, y) \
-    ((((n)*inShape[0] + (c)) * inShape[1] + (x)) * inShape[2] + (y))
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
 #define POS_OUT(n, c, x, y) \
-    ((((n)*outShape[0] + (c)) * outShape[1] + (x)) * outShape[2] + (y))
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
 
     for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
         inG[i] = 0.;
@@ -333,11 +332,11 @@ void pool_grad_max_nchw(const float* in, const float* out, const float* outG,
                     float out_val = out[POS_OUT(n, c, x, y)];
                     float outG_val = outG[POS_OUT(n, c, x, y)];
 
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
                     {
                         if (iX >= inShape[2]) break;
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
-                             ++iX)
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
                         {
                             if (iY >= inShape[3]) break;
                             if (in[POS_IN(n, c, iX, iY)] == out_val)
@@ -358,9 +357,9 @@ void pool_grad_avg_nchw(const float* in, const float* out, const float* outG,
                         const std::vector<int>& strides)
 {
 #define POS_IN(n, c, x, y) \
-    ((((n)*inShape[0] + (c)) * inShape[1] + (x)) * inShape[2] + (y))
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
 #define POS_OUT(n, c, x, y) \
-    ((((n)*outShape[0] + (c)) * outShape[1] + (x)) * outShape[2] + (y))
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
 
     for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
         inG[i] = 0.;
@@ -380,11 +379,11 @@ void pool_grad_avg_nchw(const float* in, const float* out, const float* outG,
                     float outG_val =
                         outG[POS_OUT(n, c, x, y)] / (kernel[0] * kernel[1]);
 
-                    for (int iX = x2 > 0 ? x2 : 0; iX < x2 + kernel[0]; ++iX)
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
                     {
                         if (iX >= inShape[2]) break;
-                        for (int iY = y2 > 0 ? y2 : 0; iY < y2 + kernel[1];
-                             ++iX)
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
                         {
                             if (iY >= inShape[3]) break;
                             inG[POS_IN(n, c, iX, iY)] += outG_val;

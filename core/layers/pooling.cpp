@@ -60,48 +60,32 @@ void runPooling2DHost(const float* x, float* y, const std::vector<int>& inShape,
                       const std::vector<int>& strides, PoolingType pooling,
                       PaddingType padding, DataFormat dataFormat)
 {
+#define LAUNCH(format, pad)                                                    \
+    {                                                                          \
+        if (padding == PaddingType::kVALID)                                    \
+            pool_##pad##_##format<PaddingType::kVALID>(                        \
+                x, y, inShape, outShape, kernel, strides);                     \
+        else                                                                   \
+            pool_##pad##_##format<PaddingType::kSAME>(x, y, inShape, outShape, \
+                                                      kernel, strides);        \
+    }
+
     if (dataFormat == DataFormat::kNHWC)
     {
         if (pooling == PoolingType::kMAX)
-        {
-            if (padding == PaddingType::kVALID)
-                pool_max_nhwc<PaddingType::kVALID>(x, y, inShape, outShape,
-                                                   kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_max_nhwc<PaddingType::kSAME>(x, y, inShape, outShape,
-                                                  kernel, strides);
-        }
+            LAUNCH(nhwc, max)
         else  // pooling == PoolingType::kAVERAGE
-        {
-            if (padding == PaddingType::kVALID)
-                pool_avg_nhwc<PaddingType::kVALID>(x, y, inShape, outShape,
-                                                   kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_avg_nhwc<PaddingType::kSAME>(x, y, inShape, outShape,
-                                                  kernel, strides);
-        }
+            LAUNCH(nhwc, avg)
     }
     else  // dataFormat == DataFormat::kNCHW
     {
         if (pooling == PoolingType::kMAX)
-        {
-            if (padding == PaddingType::kVALID)
-                pool_max_nchw<PaddingType::kVALID>(x, y, inShape, outShape,
-                                                   kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_max_nchw<PaddingType::kSAME>(x, y, inShape, outShape,
-                                                  kernel, strides);
-        }
+            LAUNCH(nchw, max)
         else  // pooling == PoolingType::kAVERAGE
-        {
-            if (padding == PaddingType::kVALID)
-                pool_avg_nchw<PaddingType::kVALID>(x, y, inShape, outShape,
-                                                   kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_avg_nchw<PaddingType::kSAME>(x, y, inShape, outShape,
-                                                  kernel, strides);
-        }
+            LAUNCH(nchw, avg)
     }
+
+#undef LAUNCH
 }
 
 void runPooling2DGradientHost(const float* x, const float* y, const float* yG,
@@ -112,48 +96,32 @@ void runPooling2DGradientHost(const float* x, const float* y, const float* yG,
                               PoolingType pooling, PaddingType padding,
                               DataFormat dataFormat)
 {
+#define LAUNCH(format, pad)                                        \
+    {                                                              \
+        if (padding == PaddingType::kVALID)                        \
+            pool_grad_##pad##_##format<PaddingType::kVALID>(       \
+                x, y, yG, xG, inShape, outShape, kernel, strides); \
+        else                                                       \
+            pool_grad_##pad##_##format<PaddingType::kSAME>(        \
+                x, y, yG, xG, inShape, outShape, kernel, strides); \
+    }
+
     if (dataFormat == DataFormat::kNHWC)
     {
         if (pooling == PoolingType::kMAX)
-        {
-            if (padding == PaddingType::kVALID)
-                pool_grad_max_nhwc<PaddingType::kVALID>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_grad_max_nhwc<PaddingType::kSAME>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-        }
+            LAUNCH(nhwc, max)
         else  // pooling == PoolingType::kAVERAGE
-        {
-            if (padding == PaddingType::kVALID)
-                pool_grad_avg_nhwc<PaddingType::kVALID>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_grad_avg_nhwc<PaddingType::kSAME>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-        }
+            LAUNCH(nhwc, avg)
     }
     else  // dataFormat == DataFormat::kNCHW
     {
         if (pooling == PoolingType::kMAX)
-        {
-            if (padding == PaddingType::kVALID)
-                pool_grad_max_nchw<PaddingType::kVALID>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_grad_max_nchw<PaddingType::kSAME>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-        }
+            LAUNCH(nchw, max)
         else  // pooling == PoolingType::kAVERAGE
-        {
-            if (padding == PaddingType::kVALID)
-                pool_grad_avg_nchw<PaddingType::kVALID>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-            else  // padding == PaddingType::kSAME
-                pool_grad_avg_nchw<PaddingType::kSAME>(
-                    x, y, yG, xG, inShape, outShape, kernel, strides);
-        }
+            LAUNCH(nchw, avg)
     }
+
+#undef LAUNCH
 }
 
 }  // namespace
