@@ -40,6 +40,9 @@ build
 # ctags
 tags
 
+#compile_commands
+compile_commands.json
+
 # mnist sample dataset
 samples/mnist/train-images-idx3-ubyte
 samples/mnist/train-labels-idx1-ubyte
