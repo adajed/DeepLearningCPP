@@ -42,6 +42,25 @@ std::vector<Activation> OPS = {
     // clang-format on
 };
 
+std::ostream& operator<<(std::ostream& os, Activation a)
+{
+    switch (a)
+    {
+    case Activation::kRELU: return os << "RELU";
+    case Activation::kSIGMOID: return os << "SIGMOID";
+    case Activation::kTANH: return os << "TANH";
+    case Activation::kSQUARE: return os << "SQUARE";
+    case Activation::kABS: return os << "ABS";
+    case Activation::kNEG: return os << "NEG";
+    case Activation::kRECIPROCAL: return os << "RECIPROCAL";
+    case Activation::kLOG: return os << "LOG";
+    case Activation::kSQRT: return os << "SQRT";
+    case Activation::kEXP: return os << "EXP";
+    }
+
+    return os;
+}
+
 class ActivationTest : public LayerTest,
                        public testing::WithParamInterface<TestCase>
 {
