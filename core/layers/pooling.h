@@ -87,18 +87,14 @@ class Pooling2DGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runPool2DDevice(const float* x, float* y, int* info,
-                                size_t size, PoolingType pooling,
-                                PaddingType padding, DataFormat dataFormat);
+void runPool2DDevice(const float* x, float* y, const int* params, size_t size,
+                     PoolingType pooling, PaddingType padding,
+                     DataFormat dataFormat);
 
-extern "C" void runPool2DGradientDevice(const float* x, const float* y,
-                                        const float* yG, float* xG, int* info,
-                                        size_t size, PoolingType pooling,
-                                        PaddingType padding,
-                                        DataFormat dataFormat);
-
-extern "C" void initializePoolGpuParams(void* dest, int* inShape, int* kernel,
-                                        int* strides, int* outShape);
+void runPool2DGradientDevice(const float* x, const float* y, const float* yG,
+                             float* xG, const int* params, size_t size,
+                             PoolingType pooling, PaddingType padding,
+                             DataFormat dataFormat);
 
 }  // namespace cuda
 #endif

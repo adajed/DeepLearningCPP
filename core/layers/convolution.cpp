@@ -149,10 +149,10 @@ void Conv2DLayer::execute(const std::vector<float*>& inputs,
 #ifdef CUDA_AVAILABLE
     else
     {
-        std::vector<int> outShape = mOutputs[0]->getShape();
-        size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3];
-        cuda::runConv2DDevice(x, ker, y, size, mGpuParams.getValues(),
-                              mPadding);
+        /* std::vector<int> outShape = mOutputs[0]->getShape(); */
+        /* size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3]; */
+        /* cuda::runConv2DDevice(x, ker, y, size, mGpuParams.getValues(), */
+        /*                       mPadding); */
     }
 #endif
 }
@@ -172,18 +172,11 @@ void Conv2DLayer::initialize()
 #ifdef CUDA_AVAILABLE
     else
     {
-        mGpuParams.allocate();
-        cuda::initializeConvGpuParams(mGpuParams.getValues(), inShape.data(),
-                                      kShape.data(), outShape.data(),
-                                      mStrides.data());
     }
 #endif
 }
 
-Conv2DLayer::~Conv2DLayer()
-{
-    mGpuParams.free();
-}
+Conv2DLayer::~Conv2DLayer() = default;
 
 Conv2DGradientLayer::Conv2DGradientLayer(
     ID id, const Tensor::SPtr& t, const Tensor::SPtr& k,
@@ -219,12 +212,12 @@ void Conv2DGradientLayer::execute(const std::vector<float*>& inputs,
 #ifdef CUDA_AVAILABLE
     else
     {
-        std::vector<int> inShape = mInputs[0].lock()->getShape();
-        std::vector<int> kerShape = mInputs[1].lock()->getShape();
-        size_t inSize = inShape[0] * inShape[1] * inShape[2] * inShape[3];
-        size_t kerSize = kerShape[0] * kerShape[1] * kerShape[2] * kerShape[3];
-        cuda::runConv2DGradientDevice(x, ker, yG, xG, kerG, inSize, kerSize,
-                                      mGpuParams.getValues(), mPadding);
+        /* std::vector<int> inShape = mInputs[0].lock()->getShape(); */
+        /* std::vector<int> kerShape = mInputs[1].lock()->getShape(); */
+        /* size_t inSize = inShape[0] * inShape[1] * inShape[2] * inShape[3]; */
+        /* size_t kerSize = kerShape[0] * kerShape[1] * kerShape[2] * kerShape[3]; */
+        /* cuda::runConv2DGradientDevice(x, ker, yG, xG, kerG, inSize, kerSize, */
+        /*                               mGpuParams.getValues(), mPadding); */
     }
 #endif
 }
@@ -246,17 +239,11 @@ void Conv2DGradientLayer::initialize()
     else
     {
         mGpuParams.allocate();
-        cuda::initializeConvGpuParams(mGpuParams.getValues(), inShape.data(),
-                                      kShape.data(), outShape.data(),
-                                      mStrides.data());
     }
 #endif
 }
 
-Conv2DGradientLayer::~Conv2DGradientLayer()
-{
-    mGpuParams.free();
-}
+Conv2DGradientLayer::~Conv2DGradientLayer() = default;
 
 }  // namespace layers
 

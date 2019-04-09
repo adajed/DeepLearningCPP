@@ -60,16 +60,12 @@ class Conv2DGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
-                                size_t size, int* info, PaddingType padding);
+void runConv2DDevice(const float* x, const float* k, float* y, size_t size,
+                     int* info, PaddingType padding);
 
-extern "C" void runConv2DGradientDevice(const float* x, const float* k,
-                                        const float* yG, float* xG, float* kG,
-                                        size_t xSize, size_t kSize, int* info,
-                                        PaddingType padding);
-
-extern "C" void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
-                                        int* outShape, int* strides);
+void runConv2DGradientDevice(const float* x, const float* k, const float* yG,
+                             float* xG, float* kG, size_t xSize, size_t kSize,
+                             int* info, PaddingType padding);
 
 }  // namespace cuda
 #endif

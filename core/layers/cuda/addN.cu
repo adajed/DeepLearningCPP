@@ -27,7 +27,7 @@ __global__ void addNGradientKernel(int n, size_t size, float* yG, float** xGs)
     }
 }
 
-extern "C" void runAddNDevice(int n, std::size_t size, float** xs, float* y)
+void runAddNDevice(int n, std::size_t size, float** xs, float* y)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -40,8 +40,8 @@ extern "C" void runAddNDevice(int n, std::size_t size, float** xs, float* y)
     cudaFree(xsDevice);
 }
 
-extern "C" void runAddNGradientDevice(int n, std::size_t size, float* yGrad,
-                                      float** xGrads)
+void runAddNGradientDevice(int n, std::size_t size, float* yGrad,
+                           float** xGrads)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;

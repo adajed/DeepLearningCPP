@@ -157,7 +157,7 @@ Pooling2DLayer::Pooling2DLayer(ID id, const Tensor::SPtr& t,
       mStrides(strides),
       mPadding(padding),
       mDataFormat(dataFormat),
-      mGpuParams(t->getType(), 11)
+      mGpuParams(MemoryType::kHOST_MEMORY, 13)
 {
 }
 
@@ -193,27 +193,28 @@ void Pooling2DLayer::execute(const std::vector<float*>& inputs,
         std::vector<int> shapeY = mOutputs[0]->getShape();
         size_t size = shapeY[0] * shapeY[1] * shapeY[2] * shapeY[3];
         cuda::runPool2DDevice(x, y, mGpuParams.getValues(), size, mPooling,
-                              mPadding);
+                              mPadding, mDataFormat);
     }
 #endif
 }
 
 void Pooling2DLayer::initialize()
 {
-    Tensor::SPtr tX = getInputs()[0];
-    std::vector<int> shapeX = tX->getShape();
-    std::vector<int> shapeY = mOutputs[0]->getShape();
+    std::vector<int> inShape = getInputs()[0]->getShape();
+    std::vector<int> outShape = getOutputs()[0]->getShape();
 
-    if (tX->getType() == MemoryType::kHOST_MEMORY)
+    if (getInputs()[0]->getType() == MemoryType::kHOST_MEMORY)
     {
     }
 #ifdef CUDA_AVAILABLE
     else
     {
         mGpuParams.allocate();
-        cuda::initializePoolGpuParams(mGpuParams.getValues(), shapeX.data(),
-                                      mKernelWindow.data(), mStrides.data(),
-                                      shapeY.data());
+        int* values = mGpuParams.getValues();
+        std::memcpy(values, inShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 4, outShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 8, mKernelWindow.data(), 2 * sizeof(int));
+        std::memcpy(values + 10, mStrides.data(), 2 * sizeof(int));
     }
 #endif
 }
@@ -258,10 +259,10 @@ void Pooling2DGradientLayer::execute(const std::vector<float*>& inputs,
 #ifdef CUDA_AVAILABLE
     else  // outGradTensor->getType() == MemoryType::kDEVICE_MEMORY
     {
-        size_t size = shapeX[0] * shapeX[1] * shapeX[2] * shapeX[3];
+        size_t size = inShape[0] * inShape[1] * inShape[2] * inShape[3];
         cuda::runPool2DGradientDevice(x, y, yGrad, xGrad,
                                       mGpuParams.getValues(), size, mPooling,
-                                      mPadding);
+                                      mPadding, mDataFormat);
     }
 #endif
 }
@@ -280,9 +281,6 @@ void Pooling2DGradientLayer::initialize()
     else
     {
         mGpuParams.allocate();
-        cuda::initializePoolGpuParams(mGpuParams.getValues(), inShape.data(),
-                                      mKernelWindow.data(), mStrides.data(),
-                                      outShape.data());
     }
 #endif
 }
