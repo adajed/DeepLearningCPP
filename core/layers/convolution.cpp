@@ -113,7 +113,7 @@ Conv2DLayer::Conv2DLayer(ID id, const Tensor::SPtr& t,
       mStrides(strides),
       mPadding(padding),
       mDataFormat(dataFormat),
-      mGpuParams(t->getType(), 11)
+      mGpuParams(MemoryType::kHOST_MEMORY, 14)
 {
     assert(t->getType() == kernel->getType());
 }
@@ -149,34 +149,38 @@ void Conv2DLayer::execute(const std::vector<float*>& inputs,
 #ifdef CUDA_AVAILABLE
     else
     {
-        /* std::vector<int> outShape = mOutputs[0]->getShape(); */
-        /* size_t size = outShape[0] * outShape[1] * outShape[2] * outShape[3]; */
-        /* cuda::runConv2DDevice(x, ker, y, size, mGpuParams.getValues(), */
-        /*                       mPadding); */
+        cuda::runConv2DDevice(x, ker, y, mGpuParams.getValues(), mPadding,
+                              mDataFormat);
     }
 #endif
 }
 
 void Conv2DLayer::initialize()
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    Tensor::SPtr kerTensor = mInputs[1].lock();
+    std::vector<int> inShape = getInputs()[0]->getShape();
+    std::vector<int> kerShape = getInputs()[1]->getShape();
+    std::vector<int> outShape = getOutputs()[0]->getShape();
 
-    std::vector<int> inShape = inTensor->getShape();
-    std::vector<int> kShape = kerTensor->getShape();
-    std::vector<int> outShape = mOutputs[0]->getShape();
-
-    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (getInputs()[0]->getType() == MemoryType::kHOST_MEMORY)
     {
     }
 #ifdef CUDA_AVAILABLE
     else
     {
+        mGpuParams.allocate();
+        int* values = mGpuParams.getValues();
+        std::memcpy(values, inShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 4, outShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 8, kerShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 12, mStrides.data(), 2 * sizeof(int));
     }
 #endif
 }
 
-Conv2DLayer::~Conv2DLayer() = default;
+Conv2DLayer::~Conv2DLayer()
+{
+    mGpuParams.free();
+}
 
 Conv2DGradientLayer::Conv2DGradientLayer(
     ID id, const Tensor::SPtr& t, const Tensor::SPtr& k,
