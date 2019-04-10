@@ -192,7 +192,7 @@ Conv2DGradientLayer::Conv2DGradientLayer(
       mStrides(std::move(strides)),
       mPadding(padding),
       mDataFormat(dataFormat),
-      mGpuParams(t->getType(), 11)
+      mGpuParams(MemoryType::kHOST_MEMORY, 14)
 {
 }
 
@@ -216,38 +216,39 @@ void Conv2DGradientLayer::execute(const std::vector<float*>& inputs,
 #ifdef CUDA_AVAILABLE
     else
     {
-        /* std::vector<int> inShape = mInputs[0].lock()->getShape(); */
-        /* std::vector<int> kerShape = mInputs[1].lock()->getShape(); */
-        /* size_t inSize = inShape[0] * inShape[1] * inShape[2] * inShape[3]; */
-        /* size_t kerSize = kerShape[0] * kerShape[1] * kerShape[2] * kerShape[3]; */
-        /* cuda::runConv2DGradientDevice(x, ker, yG, xG, kerG, inSize, kerSize, */
-        /*                               mGpuParams.getValues(), mPadding); */
+        cuda::runConv2DGradientDevice(x, ker, yG, xG, kerG,
+                                      mGpuParams.getValues(), mPadding,
+                                      mDataFormat);
     }
 #endif
 }
 
 void Conv2DGradientLayer::initialize()
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    Tensor::SPtr kerTensor = mInputs[1].lock();
-    Tensor::SPtr outTensor = mInputs[2].lock();
+    std::vector<int> inShape = getInputs()[0]->getShape();
+    std::vector<int> kerShape = getInputs()[1]->getShape();
+    std::vector<int> outShape = getInputs()[2]->getShape();
 
-    std::vector<int> inShape = inTensor->getShape();
-    std::vector<int> kShape = kerTensor->getShape();
-    std::vector<int> outShape = outTensor->getShape();
-
-    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (getInputs()[0]->getType() == MemoryType::kHOST_MEMORY)
     {
     }
 #ifdef CUDA_AVAILABLE
     else
     {
         mGpuParams.allocate();
+        int* values = mGpuParams.getValues();
+        std::memcpy(values, inShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 4, outShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 8, kerShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 12, mStrides.data(), 2 * sizeof(int));
     }
 #endif
 }
 
-Conv2DGradientLayer::~Conv2DGradientLayer() = default;
+Conv2DGradientLayer::~Conv2DGradientLayer()
+{
+    mGpuParams.free();
+}
 
 }  // namespace layers
 
