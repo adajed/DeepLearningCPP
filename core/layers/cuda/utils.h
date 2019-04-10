@@ -8,6 +8,8 @@ namespace graphdl
 {
 namespace core
 {
+namespace layers
+{
 namespace cuda
 {
 namespace utils
@@ -23,6 +25,7 @@ void fill(float* memory, size_t size, float value);
 
 }  // namespace utils
 }  // namespace cuda
+}  // namespace layers
 }  // namespace core
 }  // namespace graphdl
 

@@ -28,7 +28,7 @@ void ConstantInitializer::initHost(float* memory, const TensorShape& shape)
 void ConstantInitializer::initDevice(float* memory, const TensorShape& shape)
 {
 #ifdef CUDA_AVAILABLE
-    cuda::utils::fill(memory, shape.getCount(), mValue);
+    layers::cuda::utils::fill(memory, shape.getCount(), mValue);
 #else
     throw std::runtime_error("Cuda not available, please use CPU");
 #endif

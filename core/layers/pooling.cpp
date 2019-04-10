@@ -189,12 +189,8 @@ void Pooling2DLayer::execute(const std::vector<float*>& inputs,
                          mPooling, mPadding, mDataFormat);
 #ifdef CUDA_AVAILABLE
     else  // inTensor->getType() == MemoryType::kDEVICE_MEMORY
-    {
-        std::vector<int> shapeY = mOutputs[0]->getShape();
-        size_t size = shapeY[0] * shapeY[1] * shapeY[2] * shapeY[3];
-        cuda::runPool2DDevice(x, y, mGpuParams.getValues(), size, mPooling,
-                              mPadding, mDataFormat);
-    }
+        cuda::runPool2DDevice(x, y, mGpuParams.getValues(), mPooling, mPadding,
+                              mDataFormat);
 #endif
 }
 
@@ -235,7 +231,7 @@ Pooling2DGradientLayer::Pooling2DGradientLayer(
       mStrides(std::move(strides)),
       mPadding(padding),
       mDataFormat(dataFormat),
-      mGpuParams(t->getType(), 11)
+      mGpuParams(MemoryType::kHOST_MEMORY, 13)
 {
 }
 
@@ -258,29 +254,29 @@ void Pooling2DGradientLayer::execute(const std::vector<float*>& inputs,
                                  mDataFormat);
 #ifdef CUDA_AVAILABLE
     else  // outGradTensor->getType() == MemoryType::kDEVICE_MEMORY
-    {
-        size_t size = inShape[0] * inShape[1] * inShape[2] * inShape[3];
         cuda::runPool2DGradientDevice(x, y, yGrad, xGrad,
-                                      mGpuParams.getValues(), size, mPooling,
+                                      mGpuParams.getValues(), mPooling,
                                       mPadding, mDataFormat);
-    }
 #endif
 }
 
 void Pooling2DGradientLayer::initialize()
 {
-    Tensor::SPtr inTensor = mInputs[0].lock();
-    Tensor::SPtr outTensor = mInputs[1].lock();
-    std::vector<int> inShape = inTensor->getShape();
-    std::vector<int> outShape = outTensor->getShape();
+    std::vector<int> inShape = getInputs()[0]->getShape();
+    std::vector<int> outShape = getInputs()[1]->getShape();
 
-    if (inTensor->getType() == MemoryType::kHOST_MEMORY)
+    if (getInputs()[0]->getType() == MemoryType::kHOST_MEMORY)
     {
     }
 #ifdef CUDA_AVAILABLE
     else
     {
         mGpuParams.allocate();
+        int* values = mGpuParams.getValues();
+        std::memcpy(values, inShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 4, outShape.data(), 4 * sizeof(int));
+        std::memcpy(values + 8, mKernelWindow.data(), 2 * sizeof(int));
+        std::memcpy(values + 10, mStrides.data(), 2 * sizeof(int));
     }
 #endif
 }
