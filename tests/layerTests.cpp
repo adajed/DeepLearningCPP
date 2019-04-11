@@ -20,8 +20,15 @@ bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
 {
     EXPECT_EQ(refOutput.getCount(), output.size());
 
-    for (std::size_t i = 0; i < output.size(); ++i)
-        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "pos=" << i;
+    for (size_t i = 0; i < output.size(); ++i)
+    {
+        Coord c = refOutput.coordAt(i);
+        std::string s = "[";
+        for (int i = 0; i < int(c.size()) - 1; ++i)
+            s += std::to_string(c[i]) + ", ";
+        if (c.size() > 0) s += std::to_string(c[c.size() - 1]) + "]";
+        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "coord = " << s;
+    }
 
     return true;
 }

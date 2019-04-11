@@ -152,6 +152,19 @@ const float& RefTensor::operator[](const Coord& c) const
     return at(pos);
 }
 
+Coord RefTensor::coordAt(size_t pos) const
+{
+    Coord c(std::vector<int>(mShape.size()));
+
+    for (int i = mShape.size() - 1; i >= 0; --i)
+    {
+        c[i] = pos % mShape[i];
+        pos /= mShape[i];
+    }
+
+    return c;
+}
+
 Coord_iterator RefTensor::begin()
 {
     return shapeBegin(mShape);
