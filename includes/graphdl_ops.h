@@ -78,6 +78,10 @@ ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
                   const std::string& padding = "SAME",
                   const std::string& format = "NHWC");
 
+ITensorPtr nhwc2nchw(const ITensorPtr& tensor);
+
+ITensorPtr nchw2nhwc(const ITensorPtr& tensor);
+
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
 
 }  // namespace graphdl
