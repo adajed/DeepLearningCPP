@@ -41,25 +41,25 @@ ComputationalGraph buildNetwork()
     SharedPtr<IInitializer> initW1 = normalInitializer(0., 1. / 5., 0);
     SharedPtr<IInitializer> initW2 = normalInitializer(0., 1. / 20., 0);
     SharedPtr<IInitializer> initW3 = normalInitializer(0., 1. / 48., 0);
-    ITensorPtr X = createInput("X", {BATCH_SIZE, 1, 28, 28}, loc);
+    ITensorPtr X = createInput("X", {BATCH_SIZE, 28, 28, 1}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 
-    ITensorPtr W1 = createWeights("W1", {4, 1, 3, 3}, initW1, loc);
-    ITensorPtr W2 = createWeights("W2", {16, 4, 3, 3}, initW2, loc);
-    ITensorPtr W3 = createWeights("W3", {32, 16, 3, 3}, initW3, loc);
+    ITensorPtr W1 = createWeights("W1", {3, 3, 1, 4}, initW1, loc);
+    ITensorPtr W2 = createWeights("W2", {3, 3, 4, 16}, initW2, loc);
+    ITensorPtr W3 = createWeights("W3", {3, 3, 16, 32}, initW3, loc);
     ITensorPtr W4 = createWeights("W4", {32 * 7 * 7, 128}, init, loc);
     ITensorPtr W5 = createWeights("W5", {128, 10}, init, loc);
     ITensorPtr b1 = createWeights("b1", {128}, init, loc);
     ITensorPtr b2 = createWeights("b2", {10}, init, loc);
 
     ITensorPtr a;
-    a = conv2D(X, W1, {1, 1}, "SAME");
-    a = maxPool2D(a, {2, 2}, {2, 2}, "SAME");
+    a = conv2D(X, W1, {1, 1}, "SAME", "NHWC");
+    a = maxPool2D(a, {2, 2}, {2, 2}, "SAME", "NHWC");
     a = relu(a);
-    a = conv2D(a, W2, {1, 1}, "SAME");
-    a = maxPool2D(a, {2, 2}, {2, 2}, "SAME");
+    a = conv2D(a, W2, {1, 1}, "SAME", "NHWC");
+    a = maxPool2D(a, {2, 2}, {2, 2}, "SAME", "NHWC");
     a = relu(a);
-    a = conv2D(a, W3, {1, 1}, "SAME");
+    a = conv2D(a, W3, {1, 1}, "SAME", "NHWC");
     a = reshape(a, {BATCH_SIZE, 32 * 7 * 7});
     a = relu(matmul(a, W4) + b1);
     a = matmul(a, W5) + b2;
