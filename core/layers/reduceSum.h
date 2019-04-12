@@ -56,6 +56,8 @@ void runReduceSumGradientHost(const float* yGrad, float* xGrad, size_t outSize,
 
 Tensor::SPtr reduceSum(Tensor::SPtr t, int numAxes);
 
+Tensor::SPtr reduceMean(const Tensor::SPtr& t, int numAxes);
+
 }  // namespace core
 
 }  // namespace graphdl

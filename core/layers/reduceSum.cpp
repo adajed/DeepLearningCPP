@@ -1,6 +1,7 @@
 #include "reduceSum.h"
 
 #include "abstractTensor.h"
+#include "elementwise.h"
 #include "graph.h"
 #include "graphdl_ops.h"
 
@@ -124,12 +125,30 @@ Tensor::SPtr reduceSum(Tensor::SPtr t, int numAxes)
     return layer->getOutputs()[0];
 }
 
+Tensor::SPtr reduceMean(const Tensor::SPtr& t, int numAxes)
+{
+    if (numAxes <= 0) numAxes = t->getShape().size();
+
+    int N = t->getShape().size();
+    int size = 1;
+    for (int i = N - numAxes; i < N; ++i) size *= t->getShape()[i];
+
+    return reduceSum(t, numAxes) / float(size);
+}
+
+
 }  // namespace core
 
 ITensorPtr reduceSum(const ITensorPtr& t, int numAxes)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::reduceSum(tensor->get(), numAxes));
+}
+
+ITensorPtr reduceMean(const ITensorPtr& t, int numAxes)
+{
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::reduceMean(tensor->get(), numAxes));
 }
 
 }  // namespace graphdl

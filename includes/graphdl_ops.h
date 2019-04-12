@@ -53,6 +53,8 @@ ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src);
 
 ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1);
 
+ITensorPtr reduceMean(const ITensorPtr& t, int numAxes = -1);
+
 ITensorPtr addN(std::vector<ITensorPtr> tensors);
 
 ITensorPtr group(const std::vector<ITensorPtr>& tensors);
@@ -73,6 +75,9 @@ ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
                   const std::vector<int>& strides, const std::string& padding);
 
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
+
+ITensorPtr batchNorm(const ITensorPtr& tensor, const ITensorPtr& alpha,
+                     const ITensorPtr& beta, int numAxes = -1);
 
 }  // namespace graphdl
 

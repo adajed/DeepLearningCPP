@@ -32,6 +32,7 @@ global:
         graphdl::exp*;
         graphdl::assign*;
         graphdl::reduceSum*;
+        graphdl::reduceMean*;
         graphdl::addN*;
         graphdl::group*;
         graphdl::reshape*;
@@ -39,6 +40,7 @@ global:
         graphdl::avgPool2D*;
         graphdl::conv2D*;
         graphdl::softmax*;
+        graphdl::batchNorm*;
         graphdl::train::gradientDescent*;
         graphdl::train::momentum*;
         graphdl::train::adam*;
