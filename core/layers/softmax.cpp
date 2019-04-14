@@ -3,7 +3,7 @@
 #include "abstractTensor.h"
 #include "activation.h"
 #include "graph.h"
-#include "reduceSum.h"
+#include "reduce.h"
 
 #include <utility>
 
@@ -29,7 +29,7 @@ void runSoftmaxHost(const float* x, float* w, float* y, size_t outSize,
                     size_t reduceSize)
 {
     runActivationHost(x, y, outSize * reduceSize, Activation::kEXP);
-    runReduceSumHost(y, w, outSize, reduceSize);
+    runReduceBackHost(y, w, outSize, reduceSize, ReduceType::kSUM);
 
     for (size_t i = 0; i < outSize * reduceSize; ++i) y[i] /= w[i / reduceSize];
 }

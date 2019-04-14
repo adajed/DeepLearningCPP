@@ -53,8 +53,6 @@ ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src);
 
 ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1);
 
-ITensorPtr reduceMean(const ITensorPtr& t, int numAxes = -1);
-
 ITensorPtr addN(std::vector<ITensorPtr> tensors);
 
 ITensorPtr group(const std::vector<ITensorPtr>& tensors);

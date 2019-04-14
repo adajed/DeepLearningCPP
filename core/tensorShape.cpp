@@ -80,5 +80,15 @@ TensorShape::iterator TensorShape::end()
     return mDims.end();
 }
 
+TensorShape TensorShape::subshape(int start, int size)
+{
+    assert(start >= 0);
+    assert(start + size <= mDims.size());
+
+    std::vector<int> s(size);
+    for (int i = 0; i < size; ++i) s[i] = mDims[start + i];
+    return TensorShape(s);
+}
+
 }  // namespace core
 }  // namespace graphdl

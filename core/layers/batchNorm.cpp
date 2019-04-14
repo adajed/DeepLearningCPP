@@ -1,28 +1,30 @@
-#include "graphdl_ops.h"
-
-#include  "abstractTensor.h"
-#include "graph.h"
-
+#include "abstractTensor.h"
 #include "activation.h"
 #include "elementwise.h"
-#include "reduceSum.h"
+#include "graph.h"
+#include "graphdl_ops.h"
+#include "reduce.h"
 
 namespace graphdl
 {
 namespace core
 {
-
 Tensor::SPtr batchNorm(const Tensor::SPtr& tensor, const Tensor::SPtr& alpha,
                        const Tensor::SPtr& beta, int numAxes)
 {
     if (numAxes <= 0) numAxes = tensor->getShape().size();
 
-    Tensor::SPtr mean = reduceMean(tensor, numAxes);
-    Tensor::SPtr t1 = elementwiseFront(tensor, mean, layers::Elementwise::kSUB);
-    Tensor::SPtr stddev = reduceMean(square(t1), numAxes);
-    Tensor::SPtr t2 = elementwiseFront(t1, sqrt(stddev) + 10e-6, layers::Elementwise::kDIV);
-    Tensor::SPtr t3 = elementwiseFront(alpha, t2, layers::Elementwise::kMUL);
-    return elementwiseFront(t3, beta, layers::Elementwise::kADD);
+    int reduceSize = tensor->getShape().subshape(0, numAxes).getCount();
+    Tensor::SPtr mean = reduceFront(tensor, numAxes, layers::ReduceType::kSUM);
+    mean = mean / float(reduceSize);
+    Tensor::SPtr t1 = elementwiseBack(tensor, mean, layers::Elementwise::kSUB);
+    Tensor::SPtr stddev =
+        reduceFront(square(t1), numAxes, layers::ReduceType::kSUM);
+    stddev = stddev / float(reduceSize);
+    Tensor::SPtr t2 =
+        elementwiseBack(t1, sqrt(stddev) + 10e-6, layers::Elementwise::kDIV);
+    Tensor::SPtr t3 = elementwiseBack(alpha, t2, layers::Elementwise::kMUL);
+    return elementwiseBack(t3, beta, layers::Elementwise::kADD);
 }
 
 }  // namespace core

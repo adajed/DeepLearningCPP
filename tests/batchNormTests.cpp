@@ -1,6 +1,6 @@
 #include "abstractTensor.h"
-#include "layerTests.h"
 #include "graphdl_ops.h"
+#include "layerTests.h"
 
 namespace
 {
@@ -18,13 +18,11 @@ int numAxes(const TestCase& testCase)
 
 UVec paramShape(const TestCase& testCase)
 {
-
     UVec s = shape(testCase);
     int n = numAxes(testCase);
 
     UVec newShape;
-    for (int i = n; i < s.size(); ++i)
-        newShape.push_back(s[i]);
+    for (int i = n; i < s.size(); ++i) newShape.push_back(s[i]);
 
     return newShape;
 }
@@ -61,7 +59,6 @@ class BatchNormTest : public LayerTest,
     }
 
   private:
-
     void setup(const TestCase& testCase)
     {
         UniformGen gen(seed);
@@ -99,8 +96,7 @@ class BatchNormTest : public LayerTest,
             RefTensor slice = mInput.slice(Coord(v), reduceShape);
 
             float mean = 0;
-            for (size_t i = 0; i < slice.getCount(); ++i)
-                mean += slice.at(i);
+            for (size_t i = 0; i < slice.getCount(); ++i) mean += slice.at(i);
             mean /= float(slice.getCount());
 
             float stddev = 0;
@@ -109,22 +105,27 @@ class BatchNormTest : public LayerTest,
             stddev /= float(slice.getCount());
 
             v = std::vector<int>();
-            for (int i = 0; i  < s.size() - axes; ++i)
+            for (int i = 0; i < s.size() - axes; ++i)
                 v.push_back(it()[i + axes]);
             Coord c(v);
-            mOutput[it()] = mAlpha[c] * (mInput[it()] - mean) / sqrt(stddev) + mBeta[c];
+            mOutput[it()] =
+                mAlpha[c] * (mInput[it()] - mean) / (sqrt(stddev) + 10e-6) +
+                mBeta[c];
         }
     }
 
     LayerBuilder getBuilder(const TestCase& testCase)
     {
-        return [&testCase](const HostVec& ins)
-        {
+        return [&testCase](const HostVec& ins) {
             ITensorPtr in = createInput("in", shape(testCase), loc(testCase));
-            ITensorPtr alpha = createInput("alpha", paramShape(testCase), loc(testCase));
-            ITensorPtr beta = createInput("beta", paramShape(testCase), loc(testCase));
+            ITensorPtr alpha =
+                createInput("alpha", paramShape(testCase), loc(testCase));
+            ITensorPtr beta =
+                createInput("beta", paramShape(testCase), loc(testCase));
             ITensorPtr out = batchNorm(in, alpha, beta, numAxes(testCase));
-            return HostVec({out->eval({{"in", ins[0]}, {"alpha", ins[1]}, {"beta", ins[2]}})});
+            initializeGraph();
+            return HostVec({out->eval(
+                {{"in", ins[0]}, {"alpha", ins[1]}, {"beta", ins[2]}})});
         };
     }
 
@@ -138,4 +139,4 @@ TEST_P(BatchNormTest, testAPI)
 INSTANTIATE_TEST_CASE_P(LayerTest, BatchNormTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
-}
+}  // namespace
