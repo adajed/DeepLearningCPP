@@ -1,6 +1,8 @@
 #ifndef GRAPHDL_CORE_LAYERS_CUDA_REDUCE_UTILS_H_
 #define GRAPHDL_CORE_LAYERS_CUDA_REDUCE_UTILS_H_
 
+#include <cuda.h>
+
 namespace graphdl
 {
 namespace core
@@ -120,8 +122,10 @@ void reduce(const float* x, float* y, size_t outSize, size_t reduceSize)
     {
         float* temp;
         cudaMalloc(&temp, NUM_BLOCKS * sizeof(float));
-        reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(x, temp, reduceSize, NUM_BLOCKS_PER_REDUCTION);
-        reduceKernel<op, BLOCK_SIZE><<<outSize, BLOCK_SIZE>>>(temp, y, NUM_BLOCKS_PER_REDUCTION, 1);
+        reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(
+                x, temp, reduceSize, NUM_BLOCKS_PER_REDUCTION);
+        reduceKernel<op, BLOCK_SIZE><<<outSize, BLOCK_SIZE>>>(
+                temp, y, NUM_BLOCKS_PER_REDUCTION, 1);
         cudaFree(temp);
     }
     else
