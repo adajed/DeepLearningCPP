@@ -21,11 +21,11 @@ enum class Elementwise : int
 
 using ElementwiseFun = std::function<float(float, float)>;
 
-class ElementwiseLayer : public DifferentiableLayer
+class ElementwiseBackLayer : public DifferentiableLayer
 {
   public:
-    ElementwiseLayer(ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2,
-                     Elementwise op);
+    ElementwiseBackLayer(ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                         Elementwise op);
 
     TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
 
@@ -38,12 +38,45 @@ class ElementwiseLayer : public DifferentiableLayer
     ElementwiseFun mFun;
 };
 
-class ElementwiseGradientLayer : public Layer
+class ElementwiseBackGradientLayer : public Layer
 {
   public:
-    ElementwiseGradientLayer(ID id, const Tensor::SPtr& t1,
-                             const Tensor::SPtr& t2, Tensor::SPtr out,
-                             Tensor::SPtr outGrad, Elementwise op);
+    ElementwiseBackGradientLayer(ID id, const Tensor::SPtr& t1,
+                                 const Tensor::SPtr& t2, Tensor::SPtr out,
+                                 Tensor::SPtr outGrad, Elementwise op);
+
+  private:
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
+
+    Elementwise mOp;
+    ElementwiseFun mFun1, mFun2;
+};
+
+class ElementwiseFrontLayer : public DifferentiableLayer
+{
+  public:
+    ElementwiseFrontLayer(ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                          Elementwise op);
+
+    TensorMap gradients(Tensor::SPtr output, Tensor::SPtr outputGrad) override;
+
+  private:
+    void execute(const std::vector<float*>& inputs,
+                 const std::vector<float*>& outputs,
+                 const InputDict& inputDict) override;
+
+    Elementwise mOp;
+    ElementwiseFun mFun;
+};
+
+class ElementwiseFrontGradientLayer : public Layer
+{
+  public:
+    ElementwiseFrontGradientLayer(ID id, const Tensor::SPtr& t1,
+                                  const Tensor::SPtr& t2, Tensor::SPtr out,
+                                  Tensor::SPtr outGrad, Elementwise op);
 
   private:
     static std::vector<Tensor::SPtr> createOutputs(Tensor::SPtr, Tensor::SPtr);
@@ -59,19 +92,51 @@ class ElementwiseGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-void runElementwiseDevice(float* x1, size_t size1, float* x2, size_t size2,
-                          float* y, Elementwise op);
+void runElementwiseBackDevice(const float* x1, size_t size1, const float* x2,
+                              size_t size2, float* y, Elementwise op);
 
-void runElementwiseGradientDevice(float* x1, size_t size1, float* x2,
-                                  size_t size2, float* yG, float* x1G,
-                                  float* x2G, Elementwise op);
+void runElementwiseBackGradientDevice(const float* x1, size_t size1,
+                                      const float* x2, size_t size2,
+                                      const float* yGrad, float* x1Grad,
+                                      float* x2Grad, Elementwise op);
+
+void runElementwiseFrontDevice(const float* x1, size_t size1, const float* x2,
+                               size_t size2, float* y, Elementwise op);
+
+void runElementwiseFrontGradientDevice(const float* x1, size_t size1,
+                                       const float* x2, size_t size2,
+                                       const float* yGrad, float* x1Grad,
+                                       float* x2Grad, Elementwise op);
 
 }  // namespace cuda
 #endif
+
+void runElementwiseBackHost(const float* x1, size_t size1, const float* x2,
+                            size_t size2, float* y, Elementwise op);
+
+void runElementwiseBackGradientHost(const float* x1, size_t size1,
+                                    const float* x2, size_t size2,
+                                    const float* yG, float* x1G, float* x2G,
+                                    Elementwise op);
+
+void runElementwiseFrontHost(const float* x1, size_t size1, const float* x2,
+                             size_t size2, float* y, Elementwise op);
+
+void runElementwiseFrontGradientHost(const float* x1, size_t size1,
+                                     const float* x2, size_t size2,
+                                     const float* yG, float* x1G, float* x2G,
+                                     Elementwise op);
+
 }  // namespace layers
 
-Tensor::SPtr createElementwise(const Tensor::SPtr&, const Tensor::SPtr&,
-                               layers::Elementwise);
+Tensor::SPtr elementwiseBack(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                             layers::Elementwise op);
+
+Tensor::SPtr elementwiseFront(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                              layers::Elementwise op);
+
+Tensor::SPtr elementwise(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                         layers::Elementwise op);
 
 Tensor::SPtr add(const Tensor::SPtr&, const Tensor::SPtr&);
 Tensor::SPtr add(float, const Tensor::SPtr&);

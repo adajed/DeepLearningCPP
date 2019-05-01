@@ -16,168 +16,6 @@ namespace layers
 {
 namespace
 {
-template <Elementwise elem>
-float op(float f1, float f2);
-template <>
-float op<Elementwise::kADD>(float f1, float f2)
-{
-    return f1 + f2;
-}
-template <>
-float op<Elementwise::kSUB>(float f1, float f2)
-{
-    return f1 - f2;
-}
-template <>
-float op<Elementwise::kMUL>(float f1, float f2)
-{
-    return f1 * f2;
-}
-template <>
-float op<Elementwise::kDIV>(float f1, float f2)
-{
-    return f1 / f2;
-}
-
-template <Elementwise elem>
-void elementwise(const float* x1, size_t size1, const float* x2, size_t size2,
-                 float* y)
-{
-    if (size1 < size2)
-    {
-        for (size_t i = 0; i < size1; ++i)
-            for (size_t b = i; b < size2; b += size1)
-                y[b] = op<elem>(x1[i], x2[b]);
-    }
-    else
-    {
-        for (size_t i = 0; i < size2; ++i)
-            for (size_t b = i; b < size1; b += size2)
-                y[b] = op<elem>(x1[b], x2[i]);
-    }
-}
-
-void runElementwiseHost(const float* x1, size_t size1, const float* x2,
-                        size_t size2, float* y, Elementwise op)
-{
-    switch (op)
-    {
-    case Elementwise::kADD:
-        elementwise<Elementwise::kADD>(x1, size1, x2, size2, y);
-        return;
-    case Elementwise::kSUB:
-        elementwise<Elementwise::kSUB>(x1, size1, x2, size2, y);
-        return;
-    case Elementwise::kMUL:
-        elementwise<Elementwise::kMUL>(x1, size1, x2, size2, y);
-        return;
-    case Elementwise::kDIV:
-        elementwise<Elementwise::kDIV>(x1, size1, x2, size2, y);
-        return;
-    }
-}
-
-template <Elementwise elem>
-float opGrad1(float f1, float f2);
-template <>
-float opGrad1<Elementwise::kADD>(float /* f1 */, float /* f2 */)
-{
-    return 1.;
-}
-template <>
-float opGrad1<Elementwise::kSUB>(float /* f1 */, float /* f2 */)
-{
-    return 1.;
-}
-template <>
-float opGrad1<Elementwise::kMUL>(float /* f1 */, float f2)
-{
-    return f2;
-}
-template <>
-float opGrad1<Elementwise::kDIV>(float /* f1 */, float f2)
-{
-    return 1. / f2;
-}
-
-template <Elementwise elem>
-float opGrad2(float f1, float f2);
-template <>
-float opGrad2<Elementwise::kADD>(float /* f1 */, float /* f2 */)
-{
-    return 1.;
-}
-template <>
-float opGrad2<Elementwise::kSUB>(float /* f1 */, float /* f2 */)
-{
-    return -1.;
-}
-template <>
-float opGrad2<Elementwise::kMUL>(float f1, float /* f2 */)
-{
-    return f1;
-}
-template <>
-float opGrad2<Elementwise::kDIV>(float f1, float f2)
-{
-    return -f1 / (f2 * f2);
-}
-
-template <Elementwise elem>
-void elementwiseGradient(const float* x1, size_t size1, const float* x2,
-                         size_t size2, const float* yG, float* x1G, float* x2G)
-{
-    if (size1 < size2)
-    {
-        for (size_t i = 0; i < size1; ++i)
-        {
-            x1G[i] = 0.;
-            for (size_t pos = i; pos < size2; pos += size1)
-            {
-                x1G[i] += yG[pos] * opGrad1<elem>(x1[i], x2[pos]);
-                x2G[pos] = yG[pos] * opGrad2<elem>(x1[i], x2[pos]);
-            }
-        }
-    }
-    else
-    {
-        for (size_t i = 0; i < size2; ++i)
-        {
-            x2G[i] = 0.;
-            for (size_t pos = i; pos < size1; pos += size2)
-            {
-                x1G[pos] = yG[pos] * opGrad1<elem>(x1[pos], x2[i]);
-                x2G[i] += yG[pos] * opGrad2<elem>(x1[pos], x2[i]);
-            }
-        }
-    }
-}
-
-void runElementwiseGradientHost(const float* x1, size_t size1, const float* x2,
-                                size_t size2, const float* yG, float* x1G,
-                                float* x2G, Elementwise op)
-{
-    switch (op)
-    {
-    case Elementwise::kADD:
-        elementwiseGradient<Elementwise::kADD>(x1, size1, x2, size2, yG, x1G,
-                                               x2G);
-        return;
-    case Elementwise::kSUB:
-        elementwiseGradient<Elementwise::kSUB>(x1, size1, x2, size2, yG, x1G,
-                                               x2G);
-        return;
-    case Elementwise::kMUL:
-        elementwiseGradient<Elementwise::kMUL>(x1, size1, x2, size2, yG, x1G,
-                                               x2G);
-        return;
-    case Elementwise::kDIV:
-        elementwiseGradient<Elementwise::kDIV>(x1, size1, x2, size2, yG, x1G,
-                                               x2G);
-        return;
-    }
-}
-
 TensorShape getBigger(const TensorShape& s1, const TensorShape& s2)
 {
     return s1.size() > s2.size() ? s1 : s2;
@@ -201,15 +39,19 @@ std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& t1,
 
 }  // namespace
 
-ElementwiseLayer::ElementwiseLayer(ID id, const Tensor::SPtr& t1,
-                                   const Tensor::SPtr& t2, Elementwise op)
+
+// ElementwiseBackLayer
+
+ElementwiseBackLayer::ElementwiseBackLayer(ID id, const Tensor::SPtr& t1,
+                                           const Tensor::SPtr& t2,
+                                           Elementwise op)
     : DifferentiableLayer(id, {t1, t2}, createOutputs(t1, t2)), mOp(op)
 {
 }
 
-void ElementwiseLayer::execute(const std::vector<float*>& inputs,
-                               const std::vector<float*>& outputs,
-                               const InputDict& /*inputDict*/)
+void ElementwiseBackLayer::execute(const std::vector<float*>& inputs,
+                                   const std::vector<float*>& outputs,
+                                   const InputDict& /*inputDict*/)
 {
     float* x1 = inputs[0];
     float* x2 = inputs[1];
@@ -219,34 +61,111 @@ void ElementwiseLayer::execute(const std::vector<float*>& inputs,
     size_t size2 = mInputs[1].lock()->getCount();
 
     if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
-        runElementwiseHost(x1, size1, x2, size2, y, mOp);
+        runElementwiseBackHost(x1, size1, x2, size2, y, mOp);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runElementwiseDevice(x1, size1, x2, size2, y, mOp);
+        cuda::runElementwiseBackDevice(x1, size1, x2, size2, y, mOp);
 #endif
 }
 
-Layer::TensorMap ElementwiseLayer::gradients(Tensor::SPtr output,
-                                             Tensor::SPtr outputGrad)
+Layer::TensorMap ElementwiseBackLayer::gradients(Tensor::SPtr output,
+                                                 Tensor::SPtr outputGrad)
 {
     assert(output == mOutputs[0]);
 
     std::vector<Tensor::SPtr> inputs = getInputs();
-    Layer::SPtr layer = createLayer<ElementwiseGradientLayer>(
+    Layer::SPtr layer = createLayer<ElementwiseBackGradientLayer>(
         inputs[0], inputs[1], output, outputGrad, mOp);
 
     std::vector<Tensor::SPtr> grads = layer->getOutputs();
     return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
 }
 
-ElementwiseGradientLayer::ElementwiseGradientLayer(
+
+// ElementwiseBackGradientLayer
+
+ElementwiseBackGradientLayer::ElementwiseBackGradientLayer(
     ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2, Tensor::SPtr out,
     Tensor::SPtr outGrad, Elementwise op)
     : Layer(id, {t1, t2, std::move(out), std::move(outGrad)},
             createGradientOutputs(t1, t2)),
       mOp(op){};
 
-void ElementwiseGradientLayer::execute(const std::vector<float*>& inputs,
+void ElementwiseBackGradientLayer::execute(const std::vector<float*>& inputs,
+                                           const std::vector<float*>& outputs,
+                                           const InputDict& /*inputs*/)
+{
+    Tensor::SPtr x1Tensor = getInputs()[0];
+    Tensor::SPtr x2Tensor = getInputs()[1];
+    Tensor::SPtr yGradTensor = getInputs()[3];
+
+    float* x1 = inputs[0];
+    float* x2 = inputs[1];
+    float* yGrad = inputs[3];
+    float* x1Grad = outputs[0];
+    float* x2Grad = outputs[1];
+    size_t size1 = x1Tensor->getMemory().getCount();
+    size_t size2 = x2Tensor->getMemory().getCount();
+
+    if (x1Tensor->getType() == MemoryType::kHOST_MEMORY)
+        runElementwiseBackGradientHost(x1, size1, x2, size2, yGrad, x1Grad,
+                                       x2Grad, mOp);
+#ifdef CUDA_AVAILABLE
+    else
+        cuda::runElementwiseBackGradientDevice(x1, size1, x2, size2, yGrad,
+                                               x1Grad, x2Grad, mOp);
+#endif
+}
+
+ElementwiseFrontLayer::ElementwiseFrontLayer(ID id, const Tensor::SPtr& t1,
+                                             const Tensor::SPtr& t2,
+                                             Elementwise op)
+    : DifferentiableLayer(id, {t1, t2}, createOutputs(t1, t2)), mOp(op)
+{
+}
+
+void ElementwiseFrontLayer::execute(const std::vector<float*>& inputs,
+                                    const std::vector<float*>& outputs,
+                                    const InputDict& /*inputs*/)
+{
+    Tensor::SPtr x1Tensor = mInputs[0].lock();
+    Tensor::SPtr x2Tensor = mInputs[1].lock();
+
+    float* x1 = inputs[0];
+    float* x2 = inputs[1];
+    float* y = outputs[0];
+    size_t size1 = x1Tensor->getMemory().getCount();
+    size_t size2 = x2Tensor->getMemory().getCount();
+
+    if (x1Tensor->getType() == MemoryType::kHOST_MEMORY)
+        runElementwiseFrontHost(x1, size1, x2, size2, y, mOp);
+#ifdef CUDA_AVAILABLE
+    else
+        cuda::runElementwiseFrontDevice(x1, size1, x2, size2, y, mOp);
+#endif
+}
+
+Layer::TensorMap ElementwiseFrontLayer::gradients(Tensor::SPtr output,
+                                                  Tensor::SPtr outputGrad)
+{
+    assert(output == mOutputs[0]);
+
+    std::vector<Tensor::SPtr> inputs = getInputs();
+    Layer::SPtr layer = createLayer<ElementwiseFrontGradientLayer>(
+        inputs[0], inputs[1], output, outputGrad, mOp);
+
+    std::vector<Tensor::SPtr> grads = layer->getOutputs();
+    return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
+}
+
+ElementwiseFrontGradientLayer::ElementwiseFrontGradientLayer(
+    ID id, const Tensor::SPtr& t1, const Tensor::SPtr& t2, Tensor::SPtr out,
+    Tensor::SPtr outGrad, Elementwise op)
+    : Layer(id, {t1, t2, std::move(out), std::move(outGrad)},
+            createGradientOutputs(t1, t2)),
+      mOp(op){};
+
+void ElementwiseFrontGradientLayer::execute(const std::vector<float*>& inputs,
                                        const std::vector<float*>& outputs,
                                        const InputDict& /*inputDict*/)
 {
@@ -259,11 +178,11 @@ void ElementwiseGradientLayer::execute(const std::vector<float*>& inputs,
     size_t size2 = getInputs()[1]->getCount();
 
     if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
-        runElementwiseGradientHost(x1, size1, x2, size2, yGrad, x1Grad, x2Grad,
+        runElementwiseFrontGradientHost(x1, size1, x2, size2, yGrad, x1Grad, x2Grad,
                                    mOp);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runElementwiseGradientDevice(x1, size1, x2, size2, yGrad, x1Grad,
+        cuda::runElementwiseFrontGradientDevice(x1, size1, x2, size2, yGrad, x1Grad,
                                            x2Grad, mOp);
 #endif
 }
@@ -271,56 +190,93 @@ void ElementwiseGradientLayer::execute(const std::vector<float*>& inputs,
 }  // namespace layers
 namespace
 {
-bool shapesCompatibleForElementwise(const TensorShape& shape1,
-                                    const TensorShape& shape2)
+TensorShape shorterShape(const TensorShape& s1, const TensorShape& s2)
 {
-    TensorShape shapeShort;
-    TensorShape shapeLong;
-    if (shape1.size() > shape2.size())
-    {
-        shapeShort = shape2;
-        shapeLong = shape1;
-    }
-    else
-    {
-        shapeShort = shape1;
-        shapeLong = shape2;
-    }
+    return s1.size() < s2.size() ? s1 : s2;
+}
 
-    int sizeShort = shapeShort.size();
-    int sizeLong = shapeLong.size();
+TensorShape longerShape(const TensorShape& s1, const TensorShape& s2)
+{
+    return s1.size() >= s2.size() ? s1 : s2;
+}
+
+bool checkShapesCompatibleBack(const TensorShape& s1, const TensorShape& s2)
+{
+    TensorShape shortShape = shorterShape(s1, s2);
+    TensorShape longShape = longerShape(s1, s2);
+    int sizeShort = shortShape.size();
+    int sizeLong = longShape.size();
+
     for (int i = 0; i < sizeShort; ++i)
-        if (shapeShort[sizeShort - i - 1] != shapeLong[sizeLong - i - 1])
+        if (shortShape[sizeShort - i - 1] != longShape[sizeLong - i - 1])
             return false;
 
     return true;
 }
+
+bool checkShapesCompatibleFront(const TensorShape& s1, const TensorShape& s2)
+{
+    TensorShape shortShape = shorterShape(s1, s2);
+    TensorShape longShape = longerShape(s1, s2);
+    int sizeShort = shortShape.size();
+    int sizeLong = longShape.size();
+
+    for (int i = 0; i < sizeShort; ++i)
+        if (shortShape[i] != longShape[i]) return false;
+
+    return true;
+}
+
 }  // namespace
 
-Tensor::SPtr createElementwise(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
-                               layers::Elementwise op)
+Tensor::SPtr elementwiseBack(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                             layers::Elementwise op)
 {
-    if (!shapesCompatibleForElementwise(t1->getShape(), t2->getShape()))
+    if (!checkShapesCompatibleBack(t1->getShape(), t2->getShape()))
         throw std::runtime_error("Shapes don\'t match");
 
-    Layer::SPtr layer = createLayer<layers::ElementwiseLayer>(t1, t2, op);
+    Layer::SPtr layer = createLayer<layers::ElementwiseBackLayer>(t1, t2, op);
+    return layer->getOutputs()[0];
+}
+
+Tensor::SPtr elementwiseFront(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                              layers::Elementwise op)
+{
+    if (!checkShapesCompatibleFront(t1->getShape(), t2->getShape()))
+        throw std::runtime_error("Shapes don\'t match");
+
+    Layer::SPtr layer = createLayer<layers::ElementwiseFrontLayer>(t1, t2, op);
+    return layer->getOutputs()[0];
+}
+
+Tensor::SPtr elementwise(const Tensor::SPtr& t1, const Tensor::SPtr& t2,
+                         layers::Elementwise op)
+{
+    Layer::SPtr layer;
+    if (checkShapesCompatibleBack(t1->getShape(), t2->getShape()))
+        layer = createLayer<layers::ElementwiseBackLayer>(t1, t2, op);
+    else if (checkShapesCompatibleFront(t1->getShape(), t2->getShape()))
+        layer = createLayer<layers::ElementwiseFrontLayer>(t1, t2, op);
+    else
+        throw std::runtime_error("Shapes don\'t match");
+
     return layer->getOutputs()[0];
 }
 
 #define ELEMENTWISE_CORE(opName, op, elem)                              \
     Tensor::SPtr opName(const Tensor::SPtr& t1, const Tensor::SPtr& t2) \
     {                                                                   \
-        return createElementwise(t1, t2, layers::Elementwise::elem);    \
+        return elementwise(t1, t2, layers::Elementwise::elem);          \
     }                                                                   \
     Tensor::SPtr opName(float val, const Tensor::SPtr& t2)              \
     {                                                                   \
         Tensor::SPtr t1 = constant(val, {}, t2->getType());             \
-        return createElementwise(t1, t2, layers::Elementwise::elem);    \
+        return elementwise(t1, t2, layers::Elementwise::elem);          \
     }                                                                   \
     Tensor::SPtr opName(const Tensor::SPtr& t1, float val)              \
     {                                                                   \
         Tensor::SPtr t2 = constant(val, {}, t1->getType());             \
-        return createElementwise(t1, t2, layers::Elementwise::elem);    \
+        return elementwise(t1, t2, layers::Elementwise::elem);          \
     }                                                                   \
     Tensor::SPtr op(const Tensor::SPtr& t1, const Tensor::SPtr& t2)     \
     {                                                                   \

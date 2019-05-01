@@ -1,5 +1,5 @@
 #include "layers/activation.h"
-#include "layers/reduceSum.h"
+#include "layers/reduce.h"
 #include "layers/softmax.h"
 
 namespace graphdl
@@ -45,7 +45,7 @@ void runSoftmaxDevice(const float* x, float* w, float* y, size_t outSize,
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (outSize * reduceSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
     runActivationDevice(x, y, outSize * reduceSize, Activation::kEXP);
-    runReduceSumDevice(y, w, outSize, reduceSize);
+    runReduceBackDevice(y, w, outSize, reduceSize, ReduceType::kSUM);
     softmaxKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(y, w, outSize * reduceSize,
                                               reduceSize);
 }

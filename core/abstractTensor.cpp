@@ -42,7 +42,7 @@ HostTensor AbstractTensor::eval(const InputDict& inputs)
     mTensor->eval(inputs);
 
     HostTensor output(mTensor->getShape().getCount());
-    mTensor->getMemory().fill(output.data());
+    mTensor->getMemory().copyTo(output.data());
     return output;
 }
 

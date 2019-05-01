@@ -84,6 +84,9 @@ ITensorPtr nchw2nhwc(const ITensorPtr& tensor);
 
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
 
+ITensorPtr batchNorm(const ITensorPtr& tensor, const ITensorPtr& alpha,
+                     const ITensorPtr& beta, int numAxes = -1);
+
 }  // namespace graphdl
 
 #endif  // GRAPHDL_OPS_H_

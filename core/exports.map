@@ -41,6 +41,7 @@ global:
         graphdl::nhwc2nchw*;
         graphdl::nchw2nhwc*;
         graphdl::softmax*;
+        graphdl::batchNorm*;
         graphdl::train::gradientDescent*;
         graphdl::train::momentum*;
         graphdl::train::adam*;
