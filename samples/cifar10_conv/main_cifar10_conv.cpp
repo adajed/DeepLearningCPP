@@ -35,8 +35,8 @@ using namespace graphdl;
 //!
 ITensorPtr conv2DAndMaxPool2D(const ITensorPtr& x, const ITensorPtr& k)
 {
-    ITensorPtr a = conv2D(x, k, {1, 1}, "SAME");
-    return relu(maxPool2D(a, {2, 2}, {2, 2}, "SAME"));
+    ITensorPtr a = conv2D(x, k, {1, 1}, "SAME", "NHWC");
+    return relu(maxPool2D(a, {2, 2}, {2, 2}, "VALID", "NHWC"));
 }
 
 ComputationalGraph buildNetwork()
@@ -55,14 +55,14 @@ ComputationalGraph buildNetwork()
     SharedPtr<IInitializer> initK4 = normalInitializer(0., 1. / 96., 0);
 
     // inputs
-    ITensorPtr X = createInput("X", {BATCH_SIZE, 3, 32, 32}, loc);
+    ITensorPtr X = createInput("X", {BATCH_SIZE, 32, 32, 3}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 
     // convolution kernels
-    ITensorPtr K1 = createWeights("K1", {8, 3, 3, 3}, initK1, loc);
-    ITensorPtr K2 = createWeights("K2", {16, 8, 3, 3}, initK2, loc);
-    ITensorPtr K3 = createWeights("K3", {32, 16, 3, 3}, initK3, loc);
-    ITensorPtr K4 = createWeights("K4", {64, 32, 3, 3}, initK4, loc);
+    ITensorPtr K1 = createWeights("K1", {3, 3, 3, 8}, initK1, loc);
+    ITensorPtr K2 = createWeights("K2", {3, 3, 8, 16}, initK2, loc);
+    ITensorPtr K3 = createWeights("K3", {3, 3, 16, 32}, initK3, loc);
+    ITensorPtr K4 = createWeights("K4", {3, 3, 32, 64}, initK4, loc);
 
     // weights
     ITensorPtr W1 = createWeights("W1", {64 * 4 * 4, 128}, init, loc);
@@ -73,7 +73,7 @@ ComputationalGraph buildNetwork()
     ITensorPtr a = conv2DAndMaxPool2D(X, K1);
     a = conv2DAndMaxPool2D(a, K2);
     a = conv2DAndMaxPool2D(a, K3);
-    a = conv2D(a, K4, {1, 1}, "SAME");
+    a = conv2D(a, K4, {1, 1}, "SAME", "NHWC");
     a = reshape(a, {BATCH_SIZE, 64 * 4 * 4});
     a = relu(matmul(a, W1) + b1);
     a = matmul(a, W2) + b2;

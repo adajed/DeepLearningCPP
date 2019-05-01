@@ -33,10 +33,13 @@ void parse(const std::string& path, std::vector<std::vector<float>>& xs,
         file.read(&byte, sizeof(char));
         y[int(byte)] = 1.;
 
-        for (int i = 0; i < 3072; ++i)
+        for (int c = 0; c < 3; ++c)
         {
-            file.read(&byte, sizeof(char));
-            x[i] = float(byte) / 127. - 1.;
+            for (int i = 0; i < 1024; ++i)
+            {
+                file.read(&byte, sizeof(char));
+                x[3 * i + c] = float(byte) / 127. - 1.;
+            }
         }
 
         ys.push_back(y);

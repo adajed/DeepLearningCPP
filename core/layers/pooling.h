@@ -21,12 +21,23 @@ enum class PaddingType
     kSAME = 1
 };
 
+enum class DataFormat
+{
+    kNHWC = 0,
+    kNCHW = 1
+};
+
+PaddingType str2padding(const std::string& s);
+
+DataFormat str2format(const std::string& s);
+
 class Pooling2DLayer : public DifferentiableLayer
 {
   public:
     Pooling2DLayer(ID id, const Tensor::SPtr& t, PoolingType pooling,
                    const std::vector<int>& kernel,
-                   const std::vector<int>& strides, PaddingType padding);
+                   const std::vector<int>& strides, PaddingType padding,
+                   DataFormat dataFormat);
 
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
@@ -43,6 +54,7 @@ class Pooling2DLayer : public DifferentiableLayer
     std::vector<int> mKernelWindow;
     std::vector<int> mStrides;
     PaddingType mPadding;
+    DataFormat mDataFormat;
     Memory<int> mGpuParams;
 };
 
@@ -52,7 +64,8 @@ class Pooling2DGradientLayer : public Layer
     Pooling2DGradientLayer(ID id, const Tensor::SPtr& t,
                            const Tensor::SPtr& out, const Tensor::SPtr& outGrad,
                            PoolingType pooling, std::vector<int> kernel,
-                           std::vector<int> strides, PaddingType padding);
+                           std::vector<int> strides, PaddingType padding,
+                           DataFormat dataFormat);
 
     void initialize() override;
 
@@ -67,23 +80,20 @@ class Pooling2DGradientLayer : public Layer
     std::vector<int> mKernelWindow;
     std::vector<int> mStrides;
     PaddingType mPadding;
+    DataFormat mDataFormat;
     Memory<int> mGpuParams;
 };
 
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runPool2DDevice(const float* x, float* y, int* info,
-                                size_t size, PoolingType pooling,
-                                PaddingType padding);
+void runPool2DDevice(const float* x, float* y, const int* params,
+                     PoolingType pooling, PaddingType padding,
+                     DataFormat dataFormat);
 
-extern "C" void runPool2DGradientDevice(const float* x, const float* y,
-                                        const float* yG, float* xG, int* info,
-                                        size_t size, PoolingType pooling,
-                                        PaddingType padding);
-
-extern "C" void initializePoolGpuParams(void* dest, int* inShape, int* kernel,
-                                        int* strides, int* outShape);
+void runPool2DGradientDevice(const float* x, const float* y, const float* yG,
+                             float* xG, const int* params, PoolingType pooling,
+                             PaddingType padding, DataFormat dataFormat);
 
 }  // namespace cuda
 #endif
@@ -93,7 +103,8 @@ extern "C" void initializePoolGpuParams(void* dest, int* inShape, int* kernel,
 Tensor::SPtr pooling2D(const Tensor::SPtr& t, layers::PoolingType pooling,
                        const std::vector<int>& kernel,
                        const std::vector<int>& strides,
-                       layers::PaddingType padding);
+                       layers::PaddingType padding,
+                       layers::DataFormat dataFormat);
 
 }  // namespace core
 }  // namespace graphdl

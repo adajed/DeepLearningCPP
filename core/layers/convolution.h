@@ -14,7 +14,8 @@ class Conv2DLayer : public DifferentiableLayer
 {
   public:
     Conv2DLayer(ID id, const Tensor::SPtr& t, const Tensor::SPtr& kernel,
-                const std::vector<int>& strides, PaddingType padding);
+                const std::vector<int>& strides, PaddingType padding,
+                DataFormat dataFormat);
 
     TensorMap gradients(Tensor::SPtr out, Tensor::SPtr outGrad) override;
 
@@ -29,6 +30,7 @@ class Conv2DLayer : public DifferentiableLayer
 
     std::vector<int> mStrides;
     PaddingType mPadding;
+    DataFormat mDataFormat;
     Memory<int> mGpuParams;
 };
 
@@ -37,7 +39,8 @@ class Conv2DGradientLayer : public Layer
   public:
     Conv2DGradientLayer(ID id, const Tensor::SPtr& t, const Tensor::SPtr& k,
                         const Tensor::SPtr& out, const Tensor::SPtr& outG,
-                        std::vector<int> strides, PaddingType padding);
+                        std::vector<int> strides, PaddingType padding,
+                        DataFormat dataFormat);
 
     void initialize() override;
 
@@ -50,22 +53,20 @@ class Conv2DGradientLayer : public Layer
 
     std::vector<int> mStrides;
     PaddingType mPadding;
+    DataFormat mDataFormat;
     Memory<int> mGpuParams;
 };
 
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
-                                size_t size, int* info, PaddingType padding);
+void runConv2DDevice(const float* x, const float* k, float* y,
+                     const int* params, PaddingType padding,
+                     DataFormat dataFormat);
 
-extern "C" void runConv2DGradientDevice(const float* x, const float* k,
-                                        const float* yG, float* xG, float* kG,
-                                        size_t xSize, size_t kSize, int* info,
-                                        PaddingType padding);
-
-extern "C" void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
-                                        int* outShape, int* strides);
+void runConv2DGradientDevice(const float* x, const float* k, const float* yG,
+                             float* xG, float* kG, const int* info,
+                             PaddingType padding, DataFormat dataFormat);
 
 }  // namespace cuda
 #endif
@@ -73,7 +74,8 @@ extern "C" void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
 
 Tensor::SPtr convolution2D(const Tensor::SPtr& t, const Tensor::SPtr& kernel,
                            const std::vector<int>& strides,
-                           layers::PaddingType padding);
+                           layers::PaddingType padding,
+                           layers::DataFormat dataFormat);
 
 }  // namespace core
 }  // namespace graphdl
