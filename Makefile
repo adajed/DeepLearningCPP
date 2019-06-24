@@ -19,10 +19,13 @@ debug:
 # utils
 
 clean:
-	rm -r $(OUTDIR)
+	rm -r $(OUTDIR) docs
 
 ctags:
 	ctags -R --tag-relative=yes --exclude=.git $(ROOT_DIR)
+
+doxygen:
+	doxygen Doxyfile
 
 format:
 	$(CLANG_FORMAT) $(CLANG_FORMAT_ARGS) $(ROOT_DIR)/includes/*.h
@@ -48,3 +51,4 @@ help:
 	@echo "\tclean   - cleans all files"
 	@echo "\tctags   - creates tags for all files"
 	@echo "\tformat  - runs clang-format for all source files"
+	@echo "\tdoxygen - creates documentation using doxygen"
