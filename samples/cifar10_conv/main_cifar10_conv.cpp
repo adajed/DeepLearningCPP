@@ -41,21 +41,7 @@ ITensorPtr conv2DAndMaxPool2D(const ITensorPtr& x, const ITensorPtr& k)
 
 ComputationalGraph buildNetwork()
 {
-#ifdef CUDA_AVAILABLE
-    MemoryLocation loc = MemoryLocation::kDEVICE;
-#else
-    MemoryLocation loc = MemoryLocation::kHOST;
-#endif
-
-    // initializers
-    SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);
-    SharedPtr<IInitializer> initK1 = normalInitializer(0., 1. / 11., 0);
-    SharedPtr<IInitializer> initK2 = normalInitializer(0., 1. / 24., 0);
-    SharedPtr<IInitializer> initK3 = normalInitializer(0., 1. / 48., 0);
-    SharedPtr<IInitializer> initK4 = normalInitializer(0., 1. / 96., 0);
-
-    SharedPtr<IInitializer> init_0 = constantInitializer(0.);
-    SharedPtr<IInitializer> init_1 = constantInitializer(1.);
+    MemoryLocation loc = MemoryLocation::kDEVICE_IF_ENABLED;
 
     // inputs
     ITensorPtr X = createInput("X", {BATCH_SIZE, 32, 32, 3}, loc);

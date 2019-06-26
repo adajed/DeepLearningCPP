@@ -38,8 +38,9 @@ using Shape = std::vector<unsigned int>;
 //! \brief Represents type of memory.
 enum class MemoryLocation
 {
-    kHOST = 0,  //!< memory on host (CPU)
-    kDEVICE = 1  //!< memory on device (GPU)
+    kHOST = 0,                  //!< memory on host (CPU)
+    kDEVICE = 1,                //!< memory on device (GPU)
+    kDEVICE_IF_ENABLED = 2,     //!< use memory on device if availble, host otherwise
 };
 
 //! \brief Metatype for shared pointers.
@@ -196,7 +197,7 @@ ITensorPtr createInput(const std::string& name, const Shape& shape,
                        MemoryLocation location);
 
 //! \fn ITensorPtr createWeights(const std::string& name, const Shape& shape,
-//!                              const SharedPtr<IInitializer>& initializer,
+//!                              const IInitializerPtr& initializer,
 //!                              MemoryLocation location)
 //! \brief This function creates new weights in current graph.
 //! \param name Name og the weights.
