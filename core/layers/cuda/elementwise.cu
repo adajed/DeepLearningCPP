@@ -9,6 +9,8 @@ namespace layers
 {
 namespace cuda
 {
+namespace
+{
 template <Elementwise elem>
 __device__ float op(float f1, float f2);
 template <>
@@ -78,8 +80,8 @@ __device__ float opGrad<Elementwise::kDIV, 1>(float f1, float f2)
 }
 
 template <Elementwise elem>
-__global__ void elementwiseKernel(float* x1, size_t size1, float* x2,
-                                  size_t size2, float* y)
+__global__ void elementwiseBackKernel(const float* x1, size_t size1,
+                                      const float* x2, size_t size2, float* y)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < size1 || id < size2)
@@ -87,8 +89,9 @@ __global__ void elementwiseKernel(float* x1, size_t size1, float* x2,
 }
 
 template <Elementwise elem, int n>
-__global__ void elementwiseGradientKernelBig(float* x1, size_t size1, float* x2,
-                                             size_t size2, float* yG, float* xG)
+__global__ void elementwiseGradientKernelBig(const float* x1, size_t size1,
+                                             const float* x2, size_t size2,
+                                             const float* yG, float* xG)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < size1 || id < size2)
@@ -96,9 +99,9 @@ __global__ void elementwiseGradientKernelBig(float* x1, size_t size1, float* x2,
 }
 
 template <Elementwise elem, int n>
-__global__ void elementwiseGradientKernelSmall(float* x1, size_t size1,
-                                               float* x2, size_t size2,
-                                               float* yG, float* out)
+__global__ void elementwiseGradientKernelSmall(const float* x1, size_t size1,
+                                               const float* x2, size_t size2,
+                                               const float* yG, float* out)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     size_t minSize = (size1 > size2) ? size2 : size1;
@@ -109,39 +112,10 @@ __global__ void elementwiseGradientKernelSmall(float* x1, size_t size1,
             yG[id] * opGrad<elem, n>(x1[id % size1], x2[id % size2]);
 }
 
-void runElementwiseDevice(float* x1, size_t size1, float* x2, size_t size2,
-                          float* y, Elementwise op)
-{
-    const int BLOCK_SIZE = 256;
-    const int NUM_BLOCKS =
-        ((size1 > size2 ? size1 : size2) + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-    switch (op)
-    {
-    case Elementwise::kADD:
-        elementwiseKernel<Elementwise::kADD>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
-        break;
-    case Elementwise::kSUB:
-        elementwiseKernel<Elementwise::kSUB>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
-        break;
-    case Elementwise::kMUL:
-        elementwiseKernel<Elementwise::kMUL>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
-        break;
-    case Elementwise::kDIV:
-        elementwiseKernel<Elementwise::kDIV>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
-        break;
-    }
-    cudaDeviceSynchronize();
-}
-
 template <Elementwise elem>
-void runElementwiseGradientKernels(float* x1, size_t size1, float* x2,
-                                   size_t size2, float* yG, float* x1G,
-                                   float* x2G)
+void runBackGradientKernels(const float* x1, size_t size1, const float* x2,
+                            size_t size2, const float* yG, float* x1Grad,
+                            float* x2Grad)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS =
@@ -150,9 +124,9 @@ void runElementwiseGradientKernels(float* x1, size_t size1, float* x2,
     if (size1 == size2)
     {
         elementwiseGradientKernelBig<elem, 0>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x1G);
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x1Grad);
         elementwiseGradientKernelBig<elem, 1>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x2G);
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x2Grad);
         return;
     }
 
@@ -162,52 +136,231 @@ void runElementwiseGradientKernels(float* x1, size_t size1, float* x2,
     if (size1 > size2)
     {
         elementwiseGradientKernelBig<elem, 0>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x1G);
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x1Grad);
         elementwiseGradientKernelSmall<elem, 1>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, temp);
 
-        for (int i = 0; i < size2; ++i)
-            reduce<ReduceOpCuda::kSUM>(temp + i * (size1 / size2), x2G + i,
-                                       size1 / size2);
+        reduce<ReduceOpCuda::kSUM>(temp, x2Grad, size2, size1 / size2);
     }
     else
     {
         elementwiseGradientKernelSmall<elem, 0>
             <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, temp);
         elementwiseGradientKernelBig<elem, 1>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x2G);
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, yG, x2Grad);
 
-        for (int i = 0; i < size1; ++i)
-            reduce<ReduceOpCuda::kSUM>(temp + i * (size2 / size1), x1G + i,
-                                       size2 / size1);
+        reduce<ReduceOpCuda::kSUM>(temp, x1Grad, size1, size2 / size1);
     }
 
     cudaFree(temp);
 }
 
-void runElementwiseGradientDevice(float* x1, size_t size1, float* x2,
-                                  size_t size2, float* yG, float* x1G,
-                                  float* x2G, Elementwise op)
+template <Elementwise elem, int b>
+__global__ void elementwiseFrontKernel(const float* x1, size_t size,
+                                       const float* x2, size_t reduceSize,
+                                       float* y)
+{
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < size)
+    {
+        if (b == 1)
+            y[id] = op<elem>(x1[id], x2[id / reduceSize]);
+        else
+            y[id] = op<elem>(x1[id / reduceSize], x2[id]);
+    }
+}
+
+template <Elementwise elem, int n>
+__global__ void elementwiseFrontGradientKernel(const float* x1, const float* x2,
+                                               size_t size, size_t reduceSize,
+                                               const float* yGrad, float* xGrad,
+                                               float* temp)
+{
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < size)
+    {
+        if (n == 0)
+        {
+            xGrad[id] =
+                yGrad[id] * opGrad<elem, 0>(x1[id], x2[id / reduceSize]);
+            temp[id] = yGrad[id] * opGrad<elem, 1>(x1[id], x2[id / reduceSize]);
+        }
+        else
+        {
+            temp[id] = yGrad[id] * opGrad<elem, 0>(x1[id / reduceSize], x2[id]);
+            xGrad[id] =
+                yGrad[id] * opGrad<elem, 1>(x1[id / reduceSize], x2[id]);
+        }
+    }
+}
+
+}  // namespace
+
+void runElementwiseBackDevice(const float* x1, size_t size1, const float* x2,
+                              size_t size2, float* y, Elementwise op)
+{
+    const int BLOCK_SIZE = 256;
+    const int NUM_BLOCKS =
+        ((size1 > size2 ? size1 : size2) + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    switch (op)
+    {
+    case Elementwise::kADD:
+        elementwiseBackKernel<Elementwise::kADD>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
+        break;
+    case Elementwise::kSUB:
+        elementwiseBackKernel<Elementwise::kSUB>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
+        break;
+    case Elementwise::kMUL:
+        elementwiseBackKernel<Elementwise::kMUL>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
+        break;
+    case Elementwise::kDIV:
+        elementwiseBackKernel<Elementwise::kDIV>
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size1, x2, size2, y);
+        break;
+    }
+}
+
+void runElementwiseBackGradientDevice(const float* x1, size_t size1,
+                                      const float* x2, size_t size2,
+                                      const float* yGrad, float* x1Grad,
+                                      float* x2Grad, Elementwise op)
 {
     switch (op)
     {
     case Elementwise::kADD:
-        runElementwiseGradientKernels<Elementwise::kADD>(x1, size1, x2, size2,
-                                                         yG, x1G, x2G);
+        runBackGradientKernels<Elementwise::kADD>(x1, size1, x2, size2, yGrad,
+                                                  x1Grad, x2Grad);
         break;
     case Elementwise::kSUB:
-        runElementwiseGradientKernels<Elementwise::kSUB>(x1, size1, x2, size2,
-                                                         yG, x1G, x2G);
+        runBackGradientKernels<Elementwise::kSUB>(x1, size1, x2, size2, yGrad,
+                                                  x1Grad, x2Grad);
         break;
     case Elementwise::kMUL:
-        runElementwiseGradientKernels<Elementwise::kMUL>(x1, size1, x2, size2,
-                                                         yG, x1G, x2G);
+        runBackGradientKernels<Elementwise::kMUL>(x1, size1, x2, size2, yGrad,
+                                                  x1Grad, x2Grad);
         break;
     case Elementwise::kDIV:
-        runElementwiseGradientKernels<Elementwise::kDIV>(x1, size1, x2, size2,
-                                                         yG, x1G, x2G);
+        runBackGradientKernels<Elementwise::kDIV>(x1, size1, x2, size2, yGrad,
+                                                  x1Grad, x2Grad);
         break;
     }
+}
+
+void runElementwiseFrontDevice(const float* x1, size_t size1, const float* x2,
+                               size_t size2, float* y, Elementwise op)
+{
+    size_t size = size1 > size2 ? size1 : size2;
+    size_t reduceSize = size / (size1 < size2 ? size1 : size2);
+
+    const int BLOCK_SIZE = 256;
+    const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+#define CASE_RUN_KERNEL(OP, NUM)                                       \
+    case Elementwise::OP:                                              \
+        elementwiseFrontKernel<Elementwise::OP, NUM>                   \
+            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, size, x2, reduceSize, y); \
+        break;
+
+    if (size1 > size2)
+    {
+        switch (op)
+        {
+            CASE_RUN_KERNEL(kADD, 1)
+            CASE_RUN_KERNEL(kSUB, 1)
+            CASE_RUN_KERNEL(kMUL, 1)
+            CASE_RUN_KERNEL(kDIV, 1)
+        }
+    }
+    else
+    {
+        switch (op)
+        {
+            CASE_RUN_KERNEL(kADD, 2)
+            CASE_RUN_KERNEL(kSUB, 2)
+            CASE_RUN_KERNEL(kMUL, 2)
+            CASE_RUN_KERNEL(kDIV, 2)
+        }
+    }
+
+#undef CASE_RUN_KERNEL
+}
+
+void runElementwiseFrontGradientDevice(const float* x1, size_t size1,
+                                       const float* x2, size_t size2,
+                                       const float* yGrad, float* x1Grad,
+                                       float* x2Grad, Elementwise op)
+{
+    size_t size = size1 > size2 ? size1 : size2;
+    size_t reduceSize = size / (size1 < size2 ? size1 : size2);
+
+    const int BLOCK_SIZE = 256;
+    const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    float* temp;
+    cudaMalloc(&temp, size * sizeof(float));
+
+    if (size1 > size2)
+    {
+        switch (op)
+        {
+        case Elementwise::kADD:
+            elementwiseFrontGradientKernel<Elementwise::kADD, 0>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x1Grad, temp);
+            break;
+        case Elementwise::kSUB:
+            elementwiseFrontGradientKernel<Elementwise::kSUB, 0>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x1Grad, temp);
+            break;
+        case Elementwise::kMUL:
+            elementwiseFrontGradientKernel<Elementwise::kMUL, 0>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x1Grad, temp);
+            break;
+        case Elementwise::kDIV:
+            elementwiseFrontGradientKernel<Elementwise::kDIV, 0>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x1Grad, temp);
+            break;
+        }
+
+        reduce<ReduceOpCuda::kSUM>(temp, x2Grad, size2, reduceSize);
+    }
+    else
+    {
+        switch (op)
+        {
+        case Elementwise::kADD:
+            elementwiseFrontGradientKernel<Elementwise::kADD, 1>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x2Grad, temp);
+            break;
+        case Elementwise::kSUB:
+            elementwiseFrontGradientKernel<Elementwise::kSUB, 1>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x2Grad, temp);
+            break;
+        case Elementwise::kMUL:
+            elementwiseFrontGradientKernel<Elementwise::kMUL, 1>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x2Grad, temp);
+            break;
+        case Elementwise::kDIV:
+            elementwiseFrontGradientKernel<Elementwise::kDIV, 1>
+                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x1, x2, size, reduceSize, yGrad,
+                                             x2Grad, temp);
+            break;
+        }
+
+        reduce<ReduceOpCuda::kSUM>(temp, x1Grad, size1, reduceSize);
+    }
+
+    cudaFree(temp);
 }
 
 }  // namespace cuda

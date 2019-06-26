@@ -44,6 +44,9 @@ class Coord_iterator
 
     Coord& operator()();
 
+    int& operator[](size_t pos);
+    const int& operator[](size_t pos) const;
+
   private:
     Coord mCoord;
     Coord mShape;
@@ -62,14 +65,16 @@ class RefTensor
     //! \fn at
     //! \brief Returns value given its linear coordinate.
     //!
-    float& at(std::size_t pos);
-    const float& at(std::size_t pos) const;
+    float& at(size_t pos);
+    const float& at(size_t pos) const;
 
     //! \fn operator []
     //! \brief Return value given its multidimensional coordinate.
     //!
     float& operator[](const Coord& c);
     const float& operator[](const Coord& c) const;
+
+    Coord coordAt(size_t pos) const;
 
     Coord_iterator begin();
     Coord_iterator end();
@@ -98,6 +103,8 @@ Coord_iterator shapeBegin(const TensorShape& shape);
 
 Coord_iterator shapeEnd(const TensorShape& shape);
 
-std::ostream& operator<<(std::ostream&, const RefTensor&);
+std::ostream& operator<<(std::ostream&, const RefTensor& t);
+
+std::ostream& operator<<(std::ostream&, const Coord& c);
 
 #endif  // TESTS_REF_TENSOR_H_

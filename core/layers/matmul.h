@@ -37,15 +37,22 @@ class MatmulGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runMatmulDevice(int n, int m, int k, float* X1, float* X2,
-                                float* Y);
+void runMatmulDevice(const float* x1, const float* x2, float* y, int n, int m,
+                     int k);
 
-extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1,
-                                        float* X2, float* Ygrad, float* X1grad,
-                                        float* X2grad);
+void runMatmulGradientDevice(const float* x1, const float* x2,
+                             const float* yGrad, float* x1Grad, float* x2Grad,
+                             int n, int m, int k);
 
 }  // namespace cuda
 #endif
+
+void runMatmulHost(const float* x1, const float* x2, float* y, int n, int m,
+                   int k);
+
+void runMatmulGradientHost(const float* x1, const float* x2, const float* yGrad,
+                           float* x1Grad, float* x2Grad, int n, int m, int k);
+
 }  // namespace layers
 
 Tensor::SPtr matmul(const Tensor::SPtr&, const Tensor::SPtr&);

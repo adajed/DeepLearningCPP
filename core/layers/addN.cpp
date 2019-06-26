@@ -15,24 +15,6 @@ namespace layers
 {
 namespace
 {
-void runAddNHost(int n, std::size_t size, float** xs, float* y)
-{
-    for (std::size_t pos = 0; pos < size; ++pos)
-    {
-        y[pos] = 0.;
-        for (int i = 0; i < n; ++i) y[pos] += xs[i][pos];
-    }
-}
-
-void runAddNGradientHost(int n, std::size_t size, const float* yGrad,
-                         float** xGrads)
-{
-    for (std::size_t pos = 0; pos < size; ++pos)
-    {
-        for (int i = 0; i < n; ++i) xGrads[i][pos] = yGrad[pos];
-    }
-}
-
 std::vector<Tensor::SPtr> createGradientInputs(std::vector<Tensor::SPtr> ins,
                                                const Tensor::SPtr& out,
                                                const Tensor::SPtr& outGrad)
@@ -53,6 +35,23 @@ std::vector<Tensor::SPtr> createGradientOutputs(std::vector<Tensor::SPtr> ins)
 
 }  // namespace
 
+void runAddNHost(float** xs, int n, float* y, size_t size)
+{
+    for (size_t pos = 0; pos < size; ++pos)
+    {
+        y[pos] = 0.;
+        for (int i = 0; i < n; ++i) y[pos] += xs[i][pos];
+    }
+}
+
+void runAddNGradientHost(const float* yGrad, float** xGrads, int n, size_t size)
+{
+    for (size_t pos = 0; pos < size; ++pos)
+    {
+        for (int i = 0; i < n; ++i) xGrads[i][pos] = yGrad[pos];
+    }
+}
+
 AddNLayer::AddNLayer(ID id, std::vector<Tensor::SPtr> tensors)
     : DifferentiableLayer(
           id, tensors,
@@ -69,7 +68,7 @@ void AddNLayer::execute(const std::vector<float*>& inputs,
     size_t size = mOutputs[0]->getCount();
 
     if (mOutputs[0]->getType() == MemoryType::kHOST_MEMORY)
-        runAddNHost(inputs.size(), size, xs, y);
+        runAddNHost(xs, inputs.size(), y, size);
 #ifdef CUDA_AVAILABLE
     else
         cuda::runAddNDevice(inputs.size(), size, xs, y);
@@ -113,7 +112,7 @@ void AddNGradientLayer::execute(const std::vector<float*>& inputs,
     auto** xGrads = const_cast<float**>(outputs.data());
 
     if (t->getType() == MemoryType::kHOST_MEMORY)
-        runAddNGradientHost(outputs.size(), size, yGrad, xGrads);
+        runAddNGradientHost(yGrad, xGrads, outputs.size(), size);
 #ifdef CUDA_AVAILABLE
     else
         cuda::runAddNGradientDevice(outputs.size(), size, yGrad, xGrads);

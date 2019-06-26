@@ -1,6 +1,8 @@
 #ifndef GRAPHDL_CORE_LAYERS_POOLING_HOST_H_
 #define GRAPHDL_CORE_LAYERS_POOLING_HOST_H_
 
+#include "pooling.h"
+
 namespace graphdl
 {
 namespace core
@@ -12,182 +14,385 @@ int ceil(int x, int y)
     return (x / y) + int(x % y > 0);
 }
 
-template <PoolingType pooling>
-float pool_reduce(const float* in, const std::vector<int>& shape,
-                  const std::vector<int>& kernel, int x, int y);
-
-template <>
-float pool_reduce<PoolingType::kMAX>(const float* in,
-                                     const std::vector<int>& shape,
-                                     const std::vector<int>& kernel, int x,
-                                     int y)
+template <PaddingType padding>
+void pool_max_nhwc(const float* in, float* out, const std::vector<int>& inShape,
+                   const std::vector<int>& outShape,
+                   const std::vector<int>& kernel,
+                   const std::vector<int>& strides)
 {
-    float val = 0.;
-    if (x >= 0 && y >= 0) val = in[x * shape[3] + y];
+#define POS_IN(n, x, y, c) \
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
+#define POS_OUT(n, x, y, c) \
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
 
-    for (int iX = x > 0 ? x : 0; iX < x + kernel[0]; ++iX)
-    {
-        if (iX >= shape[2])
-        {
-            val = val > 0. ? val : 0.;
-            break;
-        }
-        for (int iY = y > 0 ? y : 0; iY < y + kernel[1]; ++iY)
-        {
-            if (iY >= shape[3])
-            {
-                val = val > 0. ? val : 0.;
-                break;
-            }
-            float f = in[iX * shape[3] + iY];
-            val = val > f ? val : f;
-        }
-    }
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int x = 0; x < outShape[1]; ++x)
+            for (int y = 0; y < outShape[2]; ++y)
+                for (int c = 0; c < outShape[3]; ++c)
+                {
+                    int x2 = x * strides[0];
+                    int y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
+                    }
 
-    return val;
+                    float val = 0;
+                    if (x2 >= 0 && y2 >= 0) val = in[POS_IN(n, x2, y2, c)];
+
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
+                    {
+                        if (iX >= inShape[1])
+                        {
+                            val = val > 0 ? val : 0;
+                            break;
+                        }
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
+                        {
+                            if (iY >= inShape[2])
+                            {
+                                val = val > 0 ? val : 0;
+                                break;
+                            }
+
+                            float f = in[POS_IN(n, iX, iY, c)];
+                            val = val > f ? val : f;
+                        }
+                    }
+
+                    out[POS_OUT(n, x, y, c)] = val;
+                }
+
+#undef POS_IN
+#undef POS_OUT
 }
 
-template <>
-float pool_reduce<PoolingType::kAVERAGE>(const float* in,
-                                         const std::vector<int>& shape,
-                                         const std::vector<int>& kernel, int x,
-                                         int y)
+template <PaddingType padding>
+void pool_avg_nhwc(const float* in, float* out, const std::vector<int>& inShape,
+                   const std::vector<int>& outShape,
+                   const std::vector<int>& kernel,
+                   const std::vector<int>& strides)
 {
-    float val = 0.;
+#define POS_IN(n, x, y, c) \
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
+#define POS_OUT(n, x, y, c) \
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
 
-    for (int iX = x > 0 ? x : 0; iX < x + kernel[0]; ++iX)
-    {
-        if (iX >= shape[2]) break;
-        for (int iY = y > 0 ? y : 0; iY < y + kernel[1]; ++iY)
-        {
-            if (iY >= shape[3]) break;
-            val += in[iX * shape[3] + iY];
-        }
-    }
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int x = 0; x < outShape[1]; ++x)
+            for (int y = 0; y < outShape[2]; ++y)
+                for (int c = 0; c < outShape[3]; ++c)
+                {
+                    int x2 = x * strides[0];
+                    int y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
+                    }
 
-    return val / (kernel[0] * kernel[1]);
+                    float val = 0;
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
+                    {
+                        if (iX >= inShape[1]) break;
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
+                        {
+                            if (iY >= inShape[2]) break;
+                            val += in[POS_IN(n, iX, iY, c)];
+                        }
+                    }
+
+                    out[POS_OUT(n, x, y, c)] = val / (kernel[0] * kernel[1]);
+                }
+
+#undef POS_IN
+#undef POS_OUT
 }
 
-template <PoolingType pooling, PaddingType padding>
-void pool(const float* in, float* out, const std::vector<int>& shape,
-          const std::vector<int>& k, const std::vector<int>& s)
+template <PaddingType padding>
+void pool_max_nchw(const float* in, float* out, const std::vector<int>& inShape,
+                   const std::vector<int>& outShape,
+                   const std::vector<int>& kernel,
+                   const std::vector<int>& strides)
 {
-    int outShape[] = {shape[0], shape[1], 0, 0};
-    if (padding == PaddingType::kVALID)
-    {
-        outShape[2] = ceil(shape[2] - k[0] + 1, s[0]);
-        outShape[3] = ceil(shape[3] - k[1] + 1, s[1]);
-    }
-    else  // padding == PaddingType::kSAME
-    {
-        outShape[2] = ceil(shape[2], s[0]);
-        outShape[3] = ceil(shape[3], s[1]);
-    }
+#define POS_IN(n, c, x, y) \
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
+#define POS_OUT(n, c, x, y) \
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
 
     for (int n = 0; n < outShape[0]; ++n)
         for (int c = 0; c < outShape[1]; ++c)
             for (int x = 0; x < outShape[2]; ++x)
                 for (int y = 0; y < outShape[3]; ++y)
                 {
-                    int x2 = x * s[0], y2 = y * s[1];
+                    int x2 = x * strides[0];
+                    int y2 = y * strides[1];
                     if (padding == PaddingType::kSAME)
                     {
-                        x2 -= (k[0] - 1) / 2;
-                        y2 -= (k[1] - 1) / 2;
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
                     }
 
-                    size_t outPos = n * outShape[1] + c;
-                    outPos = outPos * outShape[2] + x;
-                    outPos = outPos * outShape[3] + y;
-                    size_t inPos = (n * shape[1] + c) * shape[2] * shape[3];
+                    float val = 0;
+                    if (x2 >= 0 && y2 >= 0) val = in[POS_IN(n, c, x2, y2)];
 
-                    out[outPos] =
-                        pool_reduce<pooling>(in + inPos, shape, k, x2, y2);
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
+                    {
+                        if (iX >= inShape[2])
+                        {
+                            val = val > 0 ? val : 0;
+                            break;
+                        }
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
+                        {
+                            if (iY >= inShape[3])
+                            {
+                                val = val > 0 ? val : 0;
+                                break;
+                            }
+
+                            float f = in[POS_IN(n, c, iX, iY)];
+                            val = val > f ? val : f;
+                        }
+                    }
+
+                    out[POS_OUT(n, c, x, y)] = val;
                 }
+
+#undef POS_IN
+#undef POS_OUT
 }
 
-template <PoolingType pooling>
-void pool_gradient_reduce(const float* in, float out, float outG, float* inG,
-                          const std::vector<int>& shape,
-                          const std::vector<int>& kernel, int x, int y);
-
-template <>
-void pool_gradient_reduce<PoolingType::kMAX>(const float* in, float out,
-                                             float outG, float* inG,
-                                             const std::vector<int>& shape,
-                                             const std::vector<int>& kernel,
-                                             int x, int y)
+template <PaddingType padding>
+void pool_avg_nchw(const float* in, float* out, const std::vector<int>& inShape,
+                   const std::vector<int>& outShape,
+                   const std::vector<int>& kernel,
+                   const std::vector<int>& strides)
 {
-    for (int iX = x > 0 ? x : 0; iX < x + kernel[0]; ++iX)
-    {
-        if (iX >= shape[2]) break;
-        for (int iY = y > 0 ? y : 0; iY < y + kernel[1]; ++iY)
-        {
-            if (iY >= shape[3]) break;
-            float val = in[iX * shape[3] + iY];
-            if (val == out) inG[iX * shape[3] + iY] += outG;
-        }
-    }
-}
-
-template <>
-void pool_gradient_reduce<PoolingType::kAVERAGE>(
-    const float* /* in */, float /* out */, float outG, float* inG,
-    const std::vector<int>& shape, const std::vector<int>& kernel, int x, int y)
-{
-    float grad = outG / float(kernel[0] * kernel[1]);
-    for (int iX = x > 0 ? x : 0; iX < x + kernel[0]; ++iX)
-    {
-        if (iX >= shape[2]) break;
-        for (int iY = y > 0 ? y : 0; iY < y + kernel[1]; ++iY)
-        {
-            if (iY >= shape[3]) break;
-            inG[iX * shape[3] + iY] += grad;
-        }
-    }
-}
-
-template <PoolingType pooling, PaddingType padding>
-void poolGradient(const float* in, const float* out, const float* outG,
-                  float* inG, const std::vector<int>& shape,
-                  const std::vector<int>& k, const std::vector<int>& s)
-{
-    int outShape[] = {shape[0], shape[1], 0, 0};
-    if (padding == PaddingType::kVALID)
-    {
-        outShape[2] = ceil(shape[2] - k[0] + 1, s[0]);
-        outShape[3] = ceil(shape[3] - k[1] + 1, s[1]);
-    }
-    else  // padding == PaddingType::kSAME
-    {
-        outShape[2] = ceil(shape[2], s[0]);
-        outShape[3] = ceil(shape[3], s[1]);
-    }
-
-    size_t inSize = shape[0] * shape[1] * shape[2] * shape[3];
-    for (size_t pos = 0; pos < inSize; ++pos) inG[pos] = 0.;
+#define POS_IN(n, c, x, y) \
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
+#define POS_OUT(n, c, x, y) \
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
 
     for (int n = 0; n < outShape[0]; ++n)
         for (int c = 0; c < outShape[1]; ++c)
             for (int x = 0; x < outShape[2]; ++x)
                 for (int y = 0; y < outShape[3]; ++y)
                 {
-                    int x2 = x * s[0], y2 = y * s[1];
+                    int x2 = x * strides[0];
+                    int y2 = y * strides[1];
                     if (padding == PaddingType::kSAME)
                     {
-                        x2 -= (k[0] - 1) / 2;
-                        y2 -= (k[1] - 1) / 2;
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
                     }
 
-                    size_t outPos = n * outShape[1] + c;
-                    outPos = outPos * outShape[2] + x;
-                    outPos = outPos * outShape[3] + y;
-                    size_t inPos = (n * shape[1] + c) * shape[2] * shape[3];
+                    float val = 0;
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
+                    {
+                        if (iX >= inShape[2]) break;
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
+                        {
+                            if (iY >= inShape[3]) break;
+                            val += in[POS_IN(n, c, iX, iY)];
+                        }
+                    }
 
-                    pool_gradient_reduce<pooling>(in + inPos, out[outPos],
-                                                  outG[outPos], inG + inPos,
-                                                  shape, k, x2, y2);
+                    out[POS_OUT(n, c, x, y)] = val / (kernel[0] * kernel[1]);
                 }
+
+#undef POS_IN
+#undef POS_OUT
+}
+
+template <PaddingType padding>
+void pool_grad_max_nhwc(const float* in, const float* out, const float* outG,
+                        float* inG, const std::vector<int>& inShape,
+                        const std::vector<int>& outShape,
+                        const std::vector<int>& kernel,
+                        const std::vector<int>& strides)
+{
+#define POS_IN(n, x, y, c) \
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
+#define POS_OUT(n, x, y, c) \
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
+
+    for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
+        inG[i] = 0.;
+
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int x = 0; x < outShape[1]; ++x)
+            for (int y = 0; y < outShape[2]; ++y)
+                for (int c = 0; c < outShape[3]; ++c)
+                {
+                    int x2 = x * strides[0], y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
+                    }
+
+                    float out_val = out[POS_OUT(n, x, y, c)];
+                    float outG_val = outG[POS_OUT(n, x, y, c)];
+
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
+                    {
+                        if (iX >= inShape[1]) break;
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
+                        {
+                            if (iY >= inShape[2]) break;
+                            if (in[POS_IN(n, iX, iY, c)] == out_val)
+                                inG[POS_IN(n, iX, iY, c)] += outG_val;
+                        }
+                    }
+                }
+
+#undef POS_IN
+#undef POS_OUT
+}
+
+template <PaddingType padding>
+void pool_grad_avg_nhwc(const float* in, const float* out, const float* outG,
+                        float* inG, const std::vector<int>& inShape,
+                        const std::vector<int>& outShape,
+                        const std::vector<int>& kernel,
+                        const std::vector<int>& strides)
+{
+#define POS_IN(n, x, y, c) \
+    ((((n)*inShape[1] + (x)) * inShape[2] + (y)) * inShape[3] + (c))
+#define POS_OUT(n, x, y, c) \
+    ((((n)*outShape[1] + (x)) * outShape[2] + (y)) * outShape[3] + (c))
+
+    for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
+        inG[i] = 0.;
+
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int x = 0; x < outShape[1]; ++x)
+            for (int y = 0; y < outShape[2]; ++y)
+                for (int c = 0; c < outShape[3]; ++c)
+                {
+                    int x2 = x * strides[0], y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
+                    }
+
+                    float outG_val =
+                        outG[POS_OUT(n, x, y, c)] / (kernel[0] * kernel[1]);
+
+                    for (int iX = std::max(x2, 0);
+                         iX < std::min(x2 + kernel[0], inShape[1]); ++iX)
+                    {
+                        for (int iY = std::max(y2, 0);
+                             iY < std::min(y2 + kernel[1], inShape[2]); ++iY)
+                        {
+                            inG[POS_IN(n, iX, iY, c)] += outG_val;
+                        }
+                    }
+                }
+
+#undef POS_IN
+#undef POS_OUT
+}
+
+template <PaddingType padding>
+void pool_grad_max_nchw(const float* in, const float* out, const float* outG,
+                        float* inG, const std::vector<int>& inShape,
+                        const std::vector<int>& outShape,
+                        const std::vector<int>& kernel,
+                        const std::vector<int>& strides)
+{
+#define POS_IN(n, c, x, y) \
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
+#define POS_OUT(n, c, x, y) \
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
+
+    for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
+        inG[i] = 0.;
+
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int c = 0; c < outShape[1]; ++c)
+            for (int x = 0; x < outShape[2]; ++x)
+                for (int y = 0; y < outShape[3]; ++y)
+                {
+                    int x2 = x * strides[0], y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
+                    }
+
+                    float out_val = out[POS_OUT(n, c, x, y)];
+                    float outG_val = outG[POS_OUT(n, c, x, y)];
+
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
+                    {
+                        if (iX >= inShape[2]) break;
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
+                        {
+                            if (iY >= inShape[3]) break;
+                            if (in[POS_IN(n, c, iX, iY)] == out_val)
+                                inG[POS_IN(n, c, iX, iY)] += outG_val;
+                        }
+                    }
+                }
+
+#undef POS_IN
+#undef POS_OUT
+}
+
+template <PaddingType padding>
+void pool_grad_avg_nchw(const float* in, const float* out, const float* outG,
+                        float* inG, const std::vector<int>& inShape,
+                        const std::vector<int>& outShape,
+                        const std::vector<int>& kernel,
+                        const std::vector<int>& strides)
+{
+#define POS_IN(n, c, x, y) \
+    ((((n)*inShape[1] + (c)) * inShape[2] + (x)) * inShape[3] + (y))
+#define POS_OUT(n, c, x, y) \
+    ((((n)*outShape[1] + (c)) * outShape[2] + (x)) * outShape[3] + (y))
+
+    for (int i = 0; i < inShape[0] * inShape[1] * inShape[2] * inShape[3]; ++i)
+        inG[i] = 0.;
+
+    for (int n = 0; n < outShape[0]; ++n)
+        for (int c = 0; c < outShape[1]; ++c)
+            for (int x = 0; x < outShape[2]; ++x)
+                for (int y = 0; y < outShape[3]; ++y)
+                {
+                    int x2 = x * strides[0], y2 = y * strides[1];
+                    if (padding == PaddingType::kSAME)
+                    {
+                        x2 -= (kernel[0] - 1) / 2;
+                        y2 -= (kernel[1] - 1) / 2;
+                    }
+
+                    float outG_val =
+                        outG[POS_OUT(n, c, x, y)] / (kernel[0] * kernel[1]);
+
+                    for (int iX = std::max(x2, 0); iX < x2 + kernel[0]; ++iX)
+                    {
+                        if (iX >= inShape[2]) break;
+                        for (int iY = std::max(y2, 0); iY < y2 + kernel[1];
+                             ++iY)
+                        {
+                            if (iY >= inShape[3]) break;
+                            inG[POS_IN(n, c, iX, iY)] += outG_val;
+                        }
+                    }
+                }
+
+#undef POS_IN
+#undef POS_OUT
 }
 
 }  // namespace layers

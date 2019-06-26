@@ -38,6 +38,12 @@ class TensorShape
     iterator begin();
     iterator end();
 
+    //! \fn subshape
+    //! \brief Returns shape cut from this shape.
+    //! Returned shape is [mDims[start], ..., mDims[start + size - 1]].
+    //!
+    TensorShape subshape(int start, int size);
+
   private:
     std::vector<int> mDims;
 };

@@ -15,13 +15,45 @@ std::vector<MemoryLocation> LOCATIONS = {
 };
 #endif
 
-bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
-                   float eps)
+std::ostream& operator<<(std::ostream& os, MemoryLocation loc)
 {
-    EXPECT_EQ(refOutput.getCount(), output.size());
+    if (loc == MemoryLocation::kHOST) return os << "HOST";
+    return os << "DEVICE";
+}
 
-    for (std::size_t i = 0; i < output.size(); ++i)
-        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "pos=" << i;
+std::ostream& operator<<(std::ostream& os, layers::PoolingType pooling)
+{
+    if (pooling == layers::PoolingType::kMAX) return os << "MAX";
+    return os << "AVERAGE";
+}
+
+std::ostream& operator<<(std::ostream& os, layers::PaddingType padding)
+{
+    if (padding == layers::PaddingType::kSAME) return os << "SAME";
+    return os << "VALID";
+}
+
+std::ostream& operator<<(std::ostream& os, layers::DataFormat format)
+{
+    if (format == layers::DataFormat::kNHWC) return os << "NHWC";
+    return os << "NCHW";
+}
+
+bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
+                   float eps, int tensorNum)
+{
+    EXPECT_EQ(refOutput.getCount(), output.size())
+        << refOutput.getCount() << " and " << output.size();
+
+    for (size_t i = 0; i < output.size(); ++i)
+    {
+        Coord c = refOutput.coordAt(i);
+        std::string s = "[";
+        for (int i = 0; i < int(c.size()) - 1; ++i)
+            s += std::to_string(c[i]) + ", ";
+        if (c.size() > 0) s += std::to_string(c[c.size() - 1]) + "]";
+        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "tensor = " << tensorNum << ", coord = " << s;
+    }
 
     return true;
 }
@@ -33,7 +65,7 @@ bool compareTensors(const std::vector<RefTensor>& refOutputs,
 
     bool acc = true;
     for (std::size_t i = 0; i < refOutputs.size(); ++i)
-        acc &= compareTensor(refOutputs[i], outputs[i], eps);
+        acc &= compareTensor(refOutputs[i], outputs[i], eps, i);
 
     return acc;
 }
