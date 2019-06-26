@@ -98,6 +98,19 @@ std::vector<Elementwise> OPS = {
     // clang-format on
 };
 
+std::ostream& operator<<(std::ostream& os, Elementwise e)
+{
+    switch (e)
+    {
+    case Elementwise::kADD: return os << "ADD";
+    case Elementwise::kSUB: return os << "SUB";
+    case Elementwise::kMUL: return os << "MUL";
+    case Elementwise::kDIV: return os << "DIV";
+    }
+
+    return os;
+}
+
 class ElementwiseTest : public LayerTest,
                         public testing::WithParamInterface<TestCase>
 {
