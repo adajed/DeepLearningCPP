@@ -9,6 +9,7 @@ NVCC_RESULT=$(shell which /usr/local/cuda/bin/nvcc 2> /dev/null)
 NVCC_TEST=$(notdir $(NVCC_RESULT))
 ifeq ($(NVCC_TEST),nvcc)
     CUDA_AVAILABLE=1
+    CUDA_VERSION=10.0
 else
     CUDA_AVAILABLE=0
 endif
@@ -17,11 +18,11 @@ COMMON_CFLAGS=-std=c++14 -Wall -I$(ROOT_DIR)/includes
 COMMON_LFLAGS=
 
 ifeq ($(CUDA_AVAILABLE),1)
-    COMMON_CFLAGS += -DCUDA_AVAILABLE -I/usr/local/cuda/include
+    COMMON_CFLAGS += -DCUDA_AVAILABLE -I/usr/local/cuda-$(CUDA_VERSION)/include
 endif
 
 CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+NVCC=/usr/local/cuda-$(CUDA_VERSION)/bin/nvcc
 
 # clang-format
 CLANG_FORMAT=clang-format

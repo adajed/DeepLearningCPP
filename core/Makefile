@@ -57,19 +57,19 @@ initializers_debug:
 
 #### LINKING
 
-$(SHARED_R): $(OUTDIR_R) $(OBJS_R)
+$(SHARED_R): layers_release trainers_release initializers_release $(OUTDIR_R) $(OBJS_R)
 	@echo "Linking: $@"
 	@$(CC) -o $@ $(wildcard $(OUTDIR_R)/*.o) $(LFLAGS_R)
 
-$(SHARED_D): $(OUTDIR_D) $(OBJS_D)
+$(SHARED_D): layers_debug trainers_debug initializers_debug $(OUTDIR_D) $(OBJS_D)
 	@echo "Linking: $@"
 	@$(CC) -o $@ $(wildcard $(OUTDIR_D)/*.o) $(LFLAGS_D)
 
-$(STATIC_R): $(OUTDIR_R) $(OBJS_R)
+$(STATIC_R): layers_release trainers_release initializers_release $(OUTDIR_R) $(OBJS_R)
 	@echo "Linking: $@"
 	@ar rs $@ $(wildcard $(OUTDIR_R)/*.o)
 
-$(STATIC_D): $(OUTDIR_D) $(OBJS_D)
+$(STATIC_D): layers_debug trainers_debug initializers_debug $(OUTDIR_D) $(OBJS_D)
 	@echo "Linking: $@"
 	@ar rs $@ $(wildcard $(OUTDIR_D)/*.o)
 
