@@ -120,7 +120,7 @@ ITensorPtr abs(const ITensorPtr& t);
 ITensorPtr neg(const ITensorPtr& t);
 
 //! \fn ITensorPtr reciprocal(const ITensorPtr& t)
-//! \brief 
+//! \brief Reverses each number in tensor.
 //!
 ITensorPtr reciprocal(const ITensorPtr& t);
 
@@ -191,6 +191,10 @@ ITensorPtr reshape(const ITensorPtr& t, const Shape& shape);
 //!                          const std::vector<int>& strides,
 //!                          const std::string& padding)
 //! \brief Applies max pooling operation.
+//! \param tensor Tensor on which pooling will be performed, must be 4-dimensional.
+//! \param kernel Kernel shape, should be of length 1 or 2.
+//! \param strides Strides, should be of length 1 or 2.
+//! \param padding Type of padding, should be one of: "SAME", "VALID".
 //!
 ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
                      const std::vector<int>& strides,
@@ -199,7 +203,11 @@ ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
 //! \fn ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
 //!                          const std::vector<int>& strides,
 //!                          const std::string& padding)
-//! \brief Applies avarega pooling operation.
+//! \brief Applies average pooling operation.
+//! \param tensor Tensor on which pooling will be performed, must be 4-dimensional.
+//! \param kernel Kernel shape, should be of length 1 or 2.
+//! \param strides Strides, should be of length 1 or 2.
+//! \param padding Type of padding, should be one of: "SAME", "VALID".
 //!
 ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
                      const std::vector<int>& strides,
@@ -208,12 +216,19 @@ ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
 //! \fn ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
 //!                       const std::vector<int>& strides, const std::string& padding)
 //! \brief Applies 2D convolution operation.
+//! \param tensor Tensor on which convolution will be performed, must be 4-dimensional.
+//! \param kernel Tensor with convolution kernel, must be 4-dimensional.
+//! \param strides Strides, should be of length 1 or 2.
+//! \param padding Type of padding, should be one of: "SAME", "VALID".
 //!
 ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
                   const std::vector<int>& strides, const std::string& padding);
 
 //! \fn ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1)
-//! \brief Applies softmax operation.
+//! \brief Applies softmax operation on last numAxes axes.
+//! \param tensor Tensor on which softmax will be performed.
+//! \param numAxes Number of axes, if non-positive then it is set
+//!                to number of dimenstions of tensor.
 //!
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
 
