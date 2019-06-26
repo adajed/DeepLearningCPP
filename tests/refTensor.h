@@ -65,14 +65,16 @@ class RefTensor
     //! \fn at
     //! \brief Returns value given its linear coordinate.
     //!
-    float& at(std::size_t pos);
-    const float& at(std::size_t pos) const;
+    float& at(size_t pos);
+    const float& at(size_t pos) const;
 
     //! \fn operator []
     //! \brief Return value given its multidimensional coordinate.
     //!
     float& operator[](const Coord& c);
     const float& operator[](const Coord& c) const;
+
+    Coord coordAt(size_t pos) const;
 
     Coord_iterator begin();
     Coord_iterator end();
