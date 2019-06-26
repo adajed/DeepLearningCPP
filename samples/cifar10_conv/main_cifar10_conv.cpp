@@ -54,39 +54,46 @@ ComputationalGraph buildNetwork()
     SharedPtr<IInitializer> initK3 = normalInitializer(0., 1. / 48., 0);
     SharedPtr<IInitializer> initK4 = normalInitializer(0., 1. / 96., 0);
 
+    SharedPtr<IInitializer> init_0 = constantInitializer(0.);
+    SharedPtr<IInitializer> init_1 = constantInitializer(1.);
+
     // inputs
     ITensorPtr X = createInput("X", {BATCH_SIZE, 32, 32, 3}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 
-    // convolution kernels
-    ITensorPtr K1 = createWeights("K1", {3, 3, 3, 8}, initK1, loc);
-    ITensorPtr K2 = createWeights("K2", {3, 3, 8, 16}, initK2, loc);
-    ITensorPtr K3 = createWeights("K3", {3, 3, 16, 32}, initK3, loc);
-    ITensorPtr K4 = createWeights("K4", {3, 3, 32, 64}, initK4, loc);
+    ITensorPtr a = X;
 
-    // weights
-    ITensorPtr W1 = createWeights("W1", {64 * 4 * 4, 128}, init, loc);
-    ITensorPtr W2 = createWeights("W2", {128, 10}, init, loc);
-    ITensorPtr b1 = createWeights("b1", {128}, init, loc);
-    ITensorPtr b2 = createWeights("b2", {10}, init, loc);
+    a = create_conv2D(a, 8, {3, 3}, {1, 1}, "SAME", "NHWC", "conv1");
+    a = maxPool2D(a, {2, 2}, {2, 2}, "VALID", "NHWC");
+    a = create_batchNorm(a, 3, "batchnorm1");
+    a = relu(a);
 
-    ITensorPtr a = conv2DAndMaxPool2D(X, K1);
-    a = conv2DAndMaxPool2D(a, K2);
-    a = conv2DAndMaxPool2D(a, K3);
-    a = conv2D(a, K4, {1, 1}, "SAME", "NHWC");
+    a = create_conv2D(a, 16, {3, 3}, {1, 1}, "SAME", "NHWC", "conv2");
+    a = maxPool2D(a, {2, 2}, {2, 2}, "VALID", "NHWC");
+    a = create_batchNorm(a, 3, "batchnorm2");
+    a = relu(a);
+
+    a = create_conv2D(a, 32, {3, 3}, {1, 1}, "SAME", "NHWC", "conv3");
+    a = maxPool2D(a, {2, 2}, {2, 2}, "VALID", "NHWC");
+    /* a = create_batchNorm(a, 3, "batchnorm3"); */
+    a = relu(a);
+
+    a = create_conv2D(a, 64, {3, 3}, {1, 1}, "SAME", "NHWC", "conv4");
+
     a = reshape(a, {BATCH_SIZE, 64 * 4 * 4});
-    a = relu(matmul(a, W1) + b1);
-    a = matmul(a, W2) + b2;
+    a = create_matmulAndAddBias(a, 128, "dense1");
+    a = relu(a);
+    a = create_matmulAndAddBias(a, 10, "dense2");
     a = softmax(a, 1);
 
     ITensorPtr loss = neg(reduceSum(Y * log(a))) / float(BATCH_SIZE);
 
     ITensorPtr opt =
-        train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
+        train::gradientDescent(LEARNING_RATE)->optimize(loss);
 
     ComputationalGraph net;
     net.inputs = {{"X", X}, {"Y", Y}};
-    net.weights = {K1, K2, K3, K4, W1, W2, b1, b2};
+    net.weights = {};
     net.output = a;
     net.loss = loss;
     net.optimize = opt;

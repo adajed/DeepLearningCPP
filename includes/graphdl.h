@@ -105,11 +105,13 @@ class IInitializer
                       MemoryLocation location) const = 0;
 };
 
-SharedPtr<IInitializer> constantInitializer(float value);
+using IInitializerPtr = SharedPtr<IInitializer>;
 
-SharedPtr<IInitializer> uniformInitializer(float min, float max, size_t seed);
+IInitializerPtr constantInitializer(float value);
 
-SharedPtr<IInitializer> normalInitializer(float mean, float stddev,
+IInitializerPtr uniformInitializer(float min, float max, size_t seed);
+
+IInitializerPtr normalInitializer(float mean, float stddev,
                                           size_t seed);
 
 //! \fn createIGraph
@@ -148,7 +150,7 @@ ITensorPtr createInput(const std::string& name, const Shape& shape,
 //! \param location Location of the weights.
 //!
 ITensorPtr createWeights(const std::string& name, const Shape& shape,
-                         const SharedPtr<IInitializer>& initializer,
+                         const IInitializerPtr& initializer,
                          MemoryLocation location);
 
 //! \fn

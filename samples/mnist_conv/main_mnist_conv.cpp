@@ -37,32 +37,24 @@ ComputationalGraph buildNetwork()
     MemoryLocation loc = MemoryLocation::kHOST;
 #endif
 
-    SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);
-    SharedPtr<IInitializer> initW1 = normalInitializer(0., 1. / 5., 0);
-    SharedPtr<IInitializer> initW2 = normalInitializer(0., 1. / 20., 0);
-    SharedPtr<IInitializer> initW3 = normalInitializer(0., 1. / 48., 0);
     ITensorPtr X = createInput("X", {BATCH_SIZE, 28, 28, 1}, loc);
     ITensorPtr Y = createInput("Y", {BATCH_SIZE, 10}, loc);
 
-    ITensorPtr W1 = createWeights("W1", {3, 3, 1, 4}, initW1, loc);
-    ITensorPtr W2 = createWeights("W2", {3, 3, 4, 16}, initW2, loc);
-    ITensorPtr W3 = createWeights("W3", {3, 3, 16, 32}, initW3, loc);
-    ITensorPtr W4 = createWeights("W4", {32 * 7 * 7, 128}, init, loc);
-    ITensorPtr W5 = createWeights("W5", {128, 10}, init, loc);
-    ITensorPtr b1 = createWeights("b1", {128}, init, loc);
-    ITensorPtr b2 = createWeights("b2", {10}, init, loc);
-
     ITensorPtr a;
-    a = conv2D(X, W1, {1, 1}, "SAME", "NHWC");
+    a = create_conv2D(X, 4, {3, 3}, {1, 1}, "SAME", "NHWC", "conv1");
     a = maxPool2D(a, {2, 2}, {2, 2}, "SAME", "NHWC");
+    a = create_batchNorm(a, 3, "batchnorm1");
     a = relu(a);
-    a = conv2D(a, W2, {1, 1}, "SAME", "NHWC");
+
+    a = create_conv2D(a, 16, {3, 3}, {1, 1}, "SAME", "NHWC", "conv2");
     a = maxPool2D(a, {2, 2}, {2, 2}, "SAME", "NHWC");
+    /* a = create_batchNorm(a, 3, "batchnorm2"); */
     a = relu(a);
-    a = conv2D(a, W3, {1, 1}, "SAME", "NHWC");
+
+    a = create_conv2D(a, 32, {3, 3}, {1, 1}, "SAME", "NHWC", "conv3");
     a = reshape(a, {BATCH_SIZE, 32 * 7 * 7});
-    a = relu(matmul(a, W4) + b1);
-    a = matmul(a, W5) + b2;
+    a = relu(create_matmulAndAddBias(a, 128, "dense1"));
+    a = create_matmulAndAddBias(a, 10, "dense2");
     a = softmax(a, 1);
 
     ITensorPtr loss = neg(reduceSum(Y * log(a))) / float(BATCH_SIZE);
@@ -72,7 +64,7 @@ ComputationalGraph buildNetwork()
 
     ComputationalGraph net;
     net.inputs = {{"X", X}, {"Y", Y}};
-    net.weights = {W1, W2, W3};
+    net.weights = {};
     net.output = a;
     net.loss = loss;
     net.optimize = opt;

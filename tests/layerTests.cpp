@@ -40,13 +40,13 @@ std::ostream& operator<<(std::ostream& os, layers::DataFormat format)
 }
 
 bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
-                   float eps)
+                   float eps, int tensorNum)
 {
     EXPECT_EQ(refOutput.getCount(), output.size())
         << refOutput.getCount() << " and " << output.size();
 
     for (std::size_t i = 0; i < output.size(); ++i)
-        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "pos=" << i;
+        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "tensorNum=" << tensorNum << " ,pos=" << i;
 
     return true;
 }
@@ -58,7 +58,7 @@ bool compareTensors(const std::vector<RefTensor>& refOutputs,
 
     bool acc = true;
     for (std::size_t i = 0; i < refOutputs.size(); ++i)
-        acc &= compareTensor(refOutputs[i], outputs[i], eps);
+        acc &= compareTensor(refOutputs[i], outputs[i], eps, i);
 
     return acc;
 }
