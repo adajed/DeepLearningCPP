@@ -91,6 +91,16 @@ Coord& Coord_iterator::operator()()
     return mCoord;
 }
 
+int& Coord_iterator::operator[](size_t pos)
+{
+    return mCoord[pos];
+}
+
+const int& Coord_iterator::operator[](size_t pos) const
+{
+    return mCoord[pos];
+}
+
 bool isInside(const Coord& c, const TensorShape& shape)
 {
     assert(c.size() == shape.size());
@@ -220,6 +230,14 @@ std::ostream& operator<<(std::ostream& stream, const RefTensor& tensor)
 {
     for (std::size_t i = 0; i < tensor.getCount(); ++i)
         stream << tensor.at(i) << " ";
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Coord& c)
+{
+    stream << "[";
+    for (int i = 0; i < c.size() - 1; ++i) stream << c[i] << ", ";
+    stream << c[c.size() - 1] << "]";
     return stream;
 }
 

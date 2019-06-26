@@ -8,8 +8,10 @@ namespace layers
 {
 namespace cuda
 {
+namespace
+{
 template <int TILE_SIZE, bool tran1, bool tran2>
-__global__ void matmulKernel(int n, int m, int k, float* X1, float* X2,
+__global__ void matmulKernel(int n, int m, int k, const float* X1, const float* X2,
                              float* Y)
 {
     __shared__ float tile_X1[TILE_SIZE * TILE_SIZE];
@@ -54,44 +56,20 @@ __global__ void matmulKernel(int n, int m, int k, float* X1, float* X2,
     if (row < n && col < k) Y[k * row + col] = tmp;
 }
 
-__global__ void matmulGradientKernel(int n, int m, int k, float* X1, float* X2,
-                                     float* Ygrad, float* X1grad, float* X2grad)
-{
-    int id = blockIdx.x * blockDim.x + threadIdx.x;
-    if (id < n * m)
-    {
-        int x = id / m;
-        int y = id % m;
-        X1grad[id] = 0.;
-        for (int i = 0; i < k; ++i)
-            X1grad[id] += X2[k * y + i] * Ygrad[k * x + i];
-    }
-    else
-    {
-        id -= n * m;
-        if (id < m * k)
-        {
-            int x = id / k;
-            int y = id % k;
-            X2grad[id] = 0.;
-            for (int i = 0; i < n; ++i)
-                X2grad[id] += X1[m * i + x] * Ygrad[k * i + y];
-        }
-    }
-}
+}  // namespace
 
-extern "C" void runMatmulDevice(int n, int m, int k, float* X1, float* X2,
-                                float* Y)
+void runMatmulDevice(const float* x1, const float* x2, float* y, int n, int m,
+                     int k)
 {
     const int TILE_SIZE = 16;
     dim3 GRID((n + TILE_SIZE - 1) / TILE_SIZE, (k + TILE_SIZE - 1) / TILE_SIZE);
     dim3 BLOCK(TILE_SIZE, TILE_SIZE);
-    matmulKernel<TILE_SIZE, false, false><<<GRID, BLOCK>>>(n, m, k, X1, X2, Y);
+    matmulKernel<TILE_SIZE, false, false><<<GRID, BLOCK>>>(n, m, k, x1, x2, y);
 }
 
-extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1,
-                                        float* X2, float* Ygrad, float* X1grad,
-                                        float* X2grad)
+void runMatmulGradientDevice(const float* x1, const float* x2,
+                             const float* yGrad, float* x1Grad, float* x2Grad,
+                             int n, int m, int k)
 {
     const int TILE_SIZE = 16;
     dim3 BLOCK(TILE_SIZE, TILE_SIZE);
@@ -101,9 +79,9 @@ extern "C" void runMatmulGradientDevice(int n, int m, int k, float* X1,
                (k + TILE_SIZE - 1) / TILE_SIZE);
 
     matmulKernel<TILE_SIZE, false, true>
-        <<<GRID1, BLOCK>>>(n, k, m, Ygrad, X2, X1grad);
+        <<<GRID1, BLOCK>>>(n, k, m, yGrad, x2, x1Grad);
     matmulKernel<TILE_SIZE, true, false>
-        <<<GRID2, BLOCK>>>(m, n, k, X1, Ygrad, X2grad);
+        <<<GRID2, BLOCK>>>(m, n, k, x1, yGrad, x2Grad);
 }
 
 }  // namespace cuda

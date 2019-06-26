@@ -1,5 +1,3 @@
-# include ../makes/defines.inc
-
 OUTDIR_R=$(OUTDIR)/sample_objs_r
 OUTDIR_D=$(OUTDIR)/sample_objs_d
 

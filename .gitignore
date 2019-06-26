@@ -43,7 +43,7 @@ tags
 #doxygen
 docs/
 
-#compile_commands
+# compile_commands
 compile_commands.json
 
 # mnist sample dataset

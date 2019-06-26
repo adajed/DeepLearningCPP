@@ -1,4 +1,6 @@
 #include "layers/convolution.h"
+#include "layers/cuda/macros.h"
+#include "layers/cuda/utils.h"
 
 namespace graphdl
 {
@@ -10,183 +12,243 @@ namespace cuda
 {
 namespace
 {
-// info = [N, C_IN, X_IN, Y_IN, C_OUT, X_OUT, Y_OUT, X_KER, Y_KER, X_STR, Y_STR]
+// params = [inShape, outShape, kerShape, strides]
+__constant__ int shapeParams[14];
 
-#define N info[0]
-#define C_IN info[1]
-#define X_IN info[2]
-#define Y_IN info[3]
-#define C_OUT info[4]
-#define X_OUT info[5]
-#define Y_OUT info[6]
-#define X_KER info[7]
-#define Y_KER info[8]
-#define X_STR info[9]
-#define Y_STR info[10]
+#define IN_SHAPE shapeParams
+#define OUT_SHAPE (shapeParams + 4)
+#define KER_SHAPE (shapeParams + 8)
+#define strideX (shapeParams[12])
+#define strideY (shapeParams[13])
 
 template <PaddingType padding>
-__global__ void convKernel(const float* xArr, const float* kArr, float* yArr,
-                           const int* info)
+__global__ void conv2D_nhwc_kernel(const float* in, const float* ker,
+                                   float* out)
 {
-    size_t outPos = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t n = outPos;
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c_out = n % OUT_SHAPE[3];
+    n /= OUT_SHAPE[3];
 
-    int y = n % Y_OUT;
-    n /= Y_OUT;
-    int x = n % X_OUT;
-    n /= X_OUT;
-    int c = n % C_OUT;
-    n /= C_OUT;
-
-    if (n < N)
+    if (n < OUT_SHAPE[0] && x_out < OUT_SHAPE[1] && y_out < OUT_SHAPE[2])
     {
-        xArr += n * C_IN * X_IN * Y_IN;
-        kArr += c * C_IN * X_KER * Y_KER;
+        float val = 0;
 
-        x *= X_STR;
-        y *= Y_STR;
+        int x_in = x_out * strideX, y_in = y_out * strideY;
         if (padding == PaddingType::kSAME)
         {
-            x -= (X_KER - 1) / 2;
-            y -= (Y_KER - 1) / 2;
+            x_in -= (KER_SHAPE[0] - 1) / 2;
+            y_in -= (KER_SHAPE[1] - 1) / 2;
         }
 
-        float v = 0.;
-        for (int dc = 0; dc < C_IN; ++dc)
+        for (int dx = x_in < 0 ? -x_in : 0; dx < KER_SHAPE[0]; ++dx)
         {
-            for (int dx = x < 0 ? -x : 0; dx < X_KER; ++dx)
+            if (x_in + dx >= IN_SHAPE[1]) break;
+            for (int dy = y_in < 0 ? -y_in : 0; dy < KER_SHAPE[1]; ++dy)
             {
-                if (x + dx >= X_IN) break;
-                for (int dy = y < 0 ? -y : 0; dy < Y_KER; ++dy)
-                {
-                    if (y + dy >= Y_IN) break;
-                    v += xArr[(x + dx) * Y_IN + y + dy] * kArr[dx * Y_KER + dy];
-                }
+                if (y_in + dy >= IN_SHAPE[2]) break;
+                for (int c_in = 0; c_in < KER_SHAPE[2]; ++c_in)
+                    val += in[POS_4D(n, x_in + dx, y_in + dy, c_in, IN_SHAPE)] *
+                           ker[POS_4D(dx, dy, c_in, c_out, KER_SHAPE)];
             }
-
-            xArr += X_IN * Y_IN;
-            kArr += X_KER * Y_KER;
         }
 
-        yArr[outPos] = v;
+        out[POS_4D(n, x_out, y_out, c_out, OUT_SHAPE)] = val;
     }
 }
 
 template <PaddingType padding>
-__device__ int firstWindow(int x, int k, int s);
-
-template <>
-__device__ int firstWindow<PaddingType::kVALID>(int x, int k, int s)
+__global__ void conv2D_nchw_kernel(const float* in, const float* ker,
+                                   float* out)
 {
-    int c = x - k + 1;
-    c = c > 0 ? c : 0;
-    return c / s + int(c % s > 0);
-}
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c_out = n % OUT_SHAPE[1];
+    n /= OUT_SHAPE[1];
 
-template <>
-__device__ int firstWindow<PaddingType::kSAME>(int x, int k, int s)
-{
-    int c = x + (k - 1) / 2 - k + 1;
-    c = c > 0 ? c : 0;
-    return c / s + int(c % s > 0);
-}
+    if (n < OUT_SHAPE[0] && x_out < OUT_SHAPE[2] && y_out < OUT_SHAPE[3])
+    {
+        float val = 0;
 
-template <PaddingType>
-__device__ int out2in(int x, int k, int s);
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
+        {
+            x_in -= (KER_SHAPE[0] - 1) / 2;
+            y_in -= (KER_SHAPE[1] - 1) / 2;
+        }
 
-template <>
-__device__ int out2in<PaddingType::kVALID>(int x, int /* k */, int s)
-{
-    return x * s;
-}
+        for (int dx = x_in < 0 ? -x_in : 0; dx < KER_SHAPE[0]; ++dx)
+        {
+            if (x_in + dx >= IN_SHAPE[2]) break;
+            for (int dy = y_in < 0 ? -y_in : 0; dy < KER_SHAPE[1]; ++dy)
+            {
+                if (y_in + dy >= IN_SHAPE[3]) break;
+                for (int c_in = 0; c_in < KER_SHAPE[2]; ++c_in)
+                    val += in[POS_4D(n, c_in, x_in + dx, y_in + dy, IN_SHAPE)] *
+                           ker[POS_4D(dx, dy, c_in, c_out, KER_SHAPE)];
+            }
+        }
 
-template <>
-__device__ int out2in<PaddingType::kSAME>(int x, int k, int s)
-{
-    return x * s - (k - 1) / 2;
+        out[POS_4D(n, c_out, x_out, y_out, OUT_SHAPE)] = val;
+    }
 }
 
 template <PaddingType padding>
-__global__ void convGradientKernel_X(const float* kArr, const float* yGArr,
-                                     float* xGArr, int* info)
+__global__ void conv2D_grad_x_nhwc_kernel(const float* ker, const float* outG,
+                                          float* inG)
 {
-    size_t inPos = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t n = inPos;
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c_out = n % OUT_SHAPE[3];
+    n /= OUT_SHAPE[3];
 
-    int y = n % Y_IN;
-    n /= Y_IN;
-    int x = n % X_IN;
-    n /= X_IN;
-    int c = n % C_IN;
-    n /= C_IN;
-
-    if (n < N)
+    if (n < OUT_SHAPE[0] && x_out < OUT_SHAPE[1] && y_out < OUT_SHAPE[2])
     {
-        xGArr[inPos] = 0.;
-        int xOut = firstWindow<padding>(x, X_KER, X_STR);
-        int yOut;
-
-        while (out2in<padding>(xOut, X_KER, X_STR) <= x && xOut < X_OUT)
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
         {
-            yOut = firstWindow<padding>(y, Y_KER, Y_STR);
-            while (out2in<padding>(yOut, Y_KER, Y_STR) <= y && yOut < Y_OUT)
+            x_in -= (KER_SHAPE[0] - 1) / 2;
+            y_in -= (KER_SHAPE[1] - 1) / 2;
+        }
+
+        float outG_val = outG[POS_4D(n, x_out, y_out, c_out, OUT_SHAPE)];
+
+        for (int dx = x_in < 0 ? -x_in : 0; dx < KER_SHAPE[0]; ++dx)
+        {
+            if (x_in + dx >= IN_SHAPE[1]) break;
+            for (int dy = y_in < 0 ? -y_in : 0; dy < KER_SHAPE[1]; ++dy)
             {
-                for (int cOut = 0; cOut < C_OUT; ++cOut)
+                if (y_in + dy >= IN_SHAPE[2]) break;
+                for (int c_in = 0; c_in < KER_SHAPE[2]; ++c_in)
                 {
-                    size_t outPos = n * C_OUT + cOut;
-                    outPos = outPos * X_OUT + xOut;
-                    outPos = outPos * Y_OUT + yOut;
-                    size_t kerPos = cOut * C_IN + c;
-                    kerPos = kerPos * X_KER + x -
-                             out2in<padding>(xOut, X_KER, X_STR);
-                    kerPos = kerPos * Y_KER + y -
-                             out2in<padding>(yOut, Y_KER, Y_STR);
-                    xGArr[inPos] += yGArr[outPos] * kArr[kerPos];
+                    float val =
+                        outG_val * ker[POS_4D(dx, dy, c_in, c_out, KER_SHAPE)];
+                    atomicAdd(
+                        &inG[POS_4D(n, x_in + dx, y_in + dy, c_in, IN_SHAPE)],
+                        val);
                 }
-                yOut++;
             }
-            xOut++;
         }
     }
 }
 
 template <PaddingType padding>
-__global__ void convGradientKernel_K(const float* xArr, const float* yGArr,
-                                     float* kGArr, int* info)
+__global__ void conv2D_grad_k_nhwc_kernel(const float* in, const float* outG,
+                                          float* kerG)
 {
-    size_t kerPos = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t cOut = kerPos;
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c_out = n % OUT_SHAPE[3];
+    n /= OUT_SHAPE[3];
 
-    int yKer = cOut % Y_KER;
-    cOut /= Y_KER;
-    int xKer = cOut % X_KER;
-    cOut /= X_KER;
-    int cIn = cOut % C_IN;
-    cOut /= C_IN;
-
-    if (cOut < C_OUT)
+    if (n < OUT_SHAPE[0] && x_out < OUT_SHAPE[1] && y_out < OUT_SHAPE[2])
     {
-        kGArr[kerPos] = 0.;
-        for (int n = 0; n < N; ++n)
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
         {
-            for (int xOut = 0; xOut < X_OUT; ++xOut)
-            {
-                int xIn = out2in<padding>(xOut, X_KER, X_STR) + xKer;
-                if (xIn < 0) continue;
-                if (xIn >= X_IN) break;
-                for (int yOut = 0; yOut < Y_OUT; ++yOut)
-                {
-                    int yIn = out2in<padding>(yOut, Y_KER, Y_STR) + yKer;
-                    if (yIn < 0) continue;
-                    if (yIn >= Y_IN) break;
+            x_in -= (KER_SHAPE[0] - 1) / 2;
+            y_in -= (KER_SHAPE[1] - 1) / 2;
+        }
 
-                    size_t inPos = n * C_IN + cIn;
-                    inPos = inPos * X_IN + xIn;
-                    inPos = inPos * Y_IN + yIn;
-                    size_t outPos = n * C_OUT + cOut;
-                    outPos = outPos * X_OUT + xOut;
-                    outPos = outPos * Y_OUT + yOut;
-                    kGArr[kerPos] += xArr[inPos] * yGArr[outPos];
+        float outG_val = outG[POS_4D(n, x_out, y_out, c_out, OUT_SHAPE)];
+
+        for (int dx = x_in < 0 ? -x_in : 0; dx < KER_SHAPE[0]; ++dx)
+        {
+            if (x_in + dx >= IN_SHAPE[1]) break;
+            for (int dy = y_in < 0 ? -y_in : 0; dy < KER_SHAPE[1]; ++dy)
+            {
+                if (y_in + dy >= IN_SHAPE[2]) break;
+                for (int c_in = 0; c_in < KER_SHAPE[2]; ++c_in)
+                {
+                    float val =
+                        outG_val *
+                        in[POS_4D(n, x_in + dx, y_in + dy, c_in, IN_SHAPE)];
+                    atomicAdd(&kerG[POS_4D(dx, dy, c_in, c_out, KER_SHAPE)],
+                              val);
+                }
+            }
+        }
+    }
+}
+
+template <PaddingType padding>
+__global__ void conv2D_grad_x_nchw_kernel(const float* ker, const float* outG,
+                                          float* inG)
+{
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c_out = n % OUT_SHAPE[1];
+    n /= OUT_SHAPE[1];
+
+    if (n < OUT_SHAPE[0] && x_out < OUT_SHAPE[2] && y_out < OUT_SHAPE[3])
+    {
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
+        {
+            x_in -= (KER_SHAPE[0] - 1) / 2;
+            y_in -= (KER_SHAPE[1] - 1) / 2;
+        }
+
+        float outG_val = outG[POS_4D(n, c_out, x_out, y_out, OUT_SHAPE)];
+
+        for (int dx = x_in < 0 ? -x_in : 0; dx < KER_SHAPE[0]; ++dx)
+        {
+            if (x_in + dx >= IN_SHAPE[2]) break;
+            for (int dy = y_in < 0 ? -y_in : 0; dy < KER_SHAPE[1]; ++dy)
+            {
+                if (y_in + dy >= IN_SHAPE[3]) break;
+                for (int c_in = 0; c_in < KER_SHAPE[2]; ++c_in)
+                {
+                    float val =
+                        outG_val * ker[POS_4D(dx, dy, c_in, c_out, KER_SHAPE)];
+                    atomicAdd(
+                        &inG[POS_4D(n, c_in, x_in + dx, y_in + dy, IN_SHAPE)],
+                        val);
+                }
+            }
+        }
+    }
+}
+
+template <PaddingType padding>
+__global__ void conv2D_grad_k_nchw_kernel(const float* in, const float* outG,
+                                          float* kerG)
+{
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c_out = n % OUT_SHAPE[1];
+    n /= OUT_SHAPE[1];
+
+    if (n < OUT_SHAPE[0] && x_out < OUT_SHAPE[2] && y_out < OUT_SHAPE[3])
+    {
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
+        {
+            x_in -= (KER_SHAPE[0] - 1) / 2;
+            y_in -= (KER_SHAPE[1] - 1) / 2;
+        }
+
+        float outG_val = outG[POS_4D(n, c_out, x_out, y_out, OUT_SHAPE)];
+
+        for (int dx = x_in < 0 ? -x_in : 0; dx < KER_SHAPE[0]; ++dx)
+        {
+            if (x_in + dx >= IN_SHAPE[2]) break;
+            for (int dy = y_in < 0 ? -y_in : 0; dy < KER_SHAPE[1]; ++dy)
+            {
+                if (y_in + dy >= IN_SHAPE[3]) break;
+                for (int c_in = 0; c_in < KER_SHAPE[2]; ++c_in)
+                {
+                    float val =
+                        outG_val *
+                        in[POS_4D(n, c_in, x_in + dx, y_in + dy, IN_SHAPE)];
+                    atomicAdd(&kerG[POS_4D(dx, dy, c_in, c_out, KER_SHAPE)],
+                              val);
                 }
             }
         }
@@ -195,66 +257,107 @@ __global__ void convGradientKernel_K(const float* xArr, const float* yGArr,
 
 }  // namespace
 
-extern "C" void runConv2DDevice(const float* x, const float* k, float* y,
-                                size_t size, int* info, PaddingType padding)
+void runConv2DDevice(const float* x, const float* k, float* y,
+                     const int* params, PaddingType padding,
+                     DataFormat dataFormat)
 {
-    const int BLOCK_SIZE = 256;
-    const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    const int TILE = 8;
+    const dim3 BLOCK(TILE, TILE, TILE);
 
-    if (padding == PaddingType::kVALID)
-        convKernel<PaddingType::kVALID>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, k, y, info);
-    else  // padding == PaddingType::kSAME
-        convKernel<PaddingType::kSAME>
-            <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, k, y, info);
-}
+    dim3 GRID;
+    if (dataFormat == DataFormat::kNHWC)
+        GRID =
+            dim3((params[5] + TILE - 1) / TILE, (params[6] + TILE - 1) / TILE,
+                 (params[4] * params[7] + TILE - 1) / TILE);
+    else
+        GRID =
+            dim3((params[6] + TILE - 1) / TILE, (params[7] + TILE - 1) / TILE,
+                 (params[4] * params[5] + TILE - 1) / TILE);
 
-extern "C" void runConv2DGradientDevice(const float* x, const float* k,
-                                        const float* yG, float* xG, float* kG,
-                                        size_t xSize, size_t kSize, int* info,
-                                        PaddingType padding)
-{
-    const int BLOCK_SIZE = 256;
-    const int NUM_BLOCKS_X = (xSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    const int NUM_BLOCKS_K = (kSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    cudaMemcpyToSymbol(shapeParams, params, 14 * sizeof(int));
 
-    if (padding == PaddingType::kVALID)
+    if (dataFormat == DataFormat::kNHWC)
     {
-        convGradientKernel_X<PaddingType::kVALID>
-            <<<NUM_BLOCKS_X, BLOCK_SIZE>>>(k, yG, xG, info);
-        convGradientKernel_K<PaddingType::kVALID>
-            <<<NUM_BLOCKS_K, BLOCK_SIZE>>>(x, yG, kG, info);
+        if (padding == PaddingType::kVALID)
+            conv2D_nhwc_kernel<PaddingType::kVALID><<<GRID, BLOCK>>>(x, k, y);
+        else  // padding == PaddingType::kSAME
+            conv2D_nhwc_kernel<PaddingType::kSAME><<<GRID, BLOCK>>>(x, k, y);
     }
-    else  // padding == PaddingType::kSAME
+    else  // dataFormat == DataFormat::kNCHW
     {
-        convGradientKernel_X<PaddingType::kSAME>
-            <<<NUM_BLOCKS_X, BLOCK_SIZE>>>(k, yG, xG, info);
-        convGradientKernel_K<PaddingType::kSAME>
-            <<<NUM_BLOCKS_K, BLOCK_SIZE>>>(x, yG, kG, info);
+        if (padding == PaddingType::kVALID)
+            conv2D_nchw_kernel<PaddingType::kVALID><<<GRID, BLOCK>>>(x, k, y);
+        else  // padding == PaddingType::kSAME
+            conv2D_nchw_kernel<PaddingType::kSAME><<<GRID, BLOCK>>>(x, k, y);
     }
 }
 
-extern "C" void initializeConvGpuParams(void* dest, int* inShape, int* kerShape,
-                                        int* outShape, int* strides)
+void runConv2DGradientDevice(const float* x, const float* k, const float* yG,
+                             float* xG, float* kG, const int* params,
+                             PaddingType padding, DataFormat dataFormat)
 {
-    int* ptr = (int*)dest;
-    cudaMemcpy(ptr, inShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 4, outShape + 1, 3 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 7, kerShape + 2, 2 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 9, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
+    const int TILE = 8;
+    const dim3 BLOCK(TILE, TILE, TILE);
+
+    dim3 GRID;
+    if (dataFormat == DataFormat::kNHWC)
+        GRID =
+            dim3((params[5] + TILE - 1) / TILE, (params[6] + TILE - 1) / TILE,
+                 (params[4] * params[7] + TILE - 1) / TILE);
+    else
+        GRID =
+            dim3((params[6] + TILE - 1) / TILE, (params[7] + TILE - 1) / TILE,
+                 (params[4] * params[5] + TILE - 1) / TILE);
+
+    cudaMemcpyToSymbol(shapeParams, params, 14 * sizeof(int));
+
+    size_t size = params[0] * params[1] * params[2] * params[3];
+    utils::fill(xG, size, 0.);
+
+    size = params[8] * params[7] * params[8] * params[9];
+    utils::fill(kG, size, 0.);
+
+    if (dataFormat == DataFormat::kNHWC)
+    {
+        if (padding == PaddingType::kVALID)
+        {
+            conv2D_grad_x_nhwc_kernel<PaddingType::kVALID>
+                <<<GRID, BLOCK>>>(k, yG, xG);
+            conv2D_grad_k_nhwc_kernel<PaddingType::kVALID>
+                <<<GRID, BLOCK>>>(x, yG, kG);
+        }
+        else  // padding == PaddingType::kSAME
+        {
+            conv2D_grad_x_nhwc_kernel<PaddingType::kSAME>
+                <<<GRID, BLOCK>>>(k, yG, xG);
+            conv2D_grad_k_nhwc_kernel<PaddingType::kSAME>
+                <<<GRID, BLOCK>>>(x, yG, kG);
+        }
+    }
+    else  // dataFormat == DataFormat::kNCHW
+    {
+        if (padding == PaddingType::kVALID)
+        {
+            conv2D_grad_x_nchw_kernel<PaddingType::kVALID>
+                <<<GRID, BLOCK>>>(k, yG, xG);
+            conv2D_grad_k_nchw_kernel<PaddingType::kVALID>
+                <<<GRID, BLOCK>>>(x, yG, kG);
+        }
+        else  // padding == PaddingType::kSAME
+        {
+            conv2D_grad_x_nchw_kernel<PaddingType::kSAME>
+                <<<GRID, BLOCK>>>(k, yG, xG);
+            conv2D_grad_k_nchw_kernel<PaddingType::kSAME>
+                <<<GRID, BLOCK>>>(x, yG, kG);
+        }
+    }
 }
 
-#undef N
-#undef C_IN
-#undef X_IN
-#undef Y_IN
-#undef C_OUT
-#undef X_OUT
-#undef Y_OUT
-#undef X_KER
-#undef Y_KER
-#undef X_STR
-#undef Y_STR
+#undef IN_SHAPE
+#undef OUT_SHAPE
+#undef KER_SHAPE
+#undef strideX
+#undef strideY
 
 }  // namespace cuda
 }  // namespace layers

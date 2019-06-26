@@ -44,6 +44,9 @@ class Coord_iterator
 
     Coord& operator()();
 
+    int& operator[](size_t pos);
+    const int& operator[](size_t pos) const;
+
   private:
     Coord mCoord;
     Coord mShape;
@@ -100,6 +103,8 @@ Coord_iterator shapeBegin(const TensorShape& shape);
 
 Coord_iterator shapeEnd(const TensorShape& shape);
 
-std::ostream& operator<<(std::ostream&, const RefTensor&);
+std::ostream& operator<<(std::ostream&, const RefTensor& t);
+
+std::ostream& operator<<(std::ostream&, const Coord& c);
 
 #endif  // TESTS_REF_TENSOR_H_

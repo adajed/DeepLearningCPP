@@ -38,13 +38,19 @@ class AddNGradientLayer : public Layer
 #ifdef CUDA_AVAILABLE
 namespace cuda
 {
-extern "C" void runAddNDevice(int n, std::size_t size, float** xs, float* y);
+void runAddNDevice(int n, size_t size, float** xs, float* y);
 
-extern "C" void runAddNGradientDevice(int n, std::size_t size, float* yGrad,
-                                      float** xGrads);
+void runAddNGradientDevice(int n, size_t size, float* yGrad,
+                           float** xGrads);
 
 }  // namespace cuda
 #endif
+
+void runAddNHost(float** xs, int n, float* y, size_t size);
+
+void runAddNGradientHost(const float* yGrad, float** xGrads, int n,
+                         size_t size);
+
 }  // namespace layers
 
 Tensor::SPtr addN(std::vector<Tensor::SPtr> tensors);

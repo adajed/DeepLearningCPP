@@ -136,29 +136,33 @@ class IInitializer
                       MemoryLocation location) const = 0;
 };
 
-//! \fn SharedPtr<IInitializer> constantInitializer(float value)
+//! \typedef IInitializerPtr
+//! \brief Shared pointer to IInitializer.
+//!
+using IInitializerPtr = SharedPtr<IInitializer>;
+
+//! \fn IInitializerPtr constantInitializer(float value)
 //! \brief Creates initializer that initializes every element to given value.
 //! \param value Value to initialize elements with.
 //! \return
 //!
-SharedPtr<IInitializer> constantInitializer(float value);
+IInitializerPtr constantInitializer(float value);
 
-//! \fn SharedPtr<IInitializer> uniformInitializer(float min, float max, size_t seed)
+//! \fn IInitializerPtr uniformInitializer(float min, float max, size_t seed)
 //! \brief Creates initializer that initializes with uniform distribution.
 //! \param min Minimal value of distribution.
 //! \param max Maximal value of distribution.
 //! \param seed Initial seed for pseudo-random generator.
 //!
-SharedPtr<IInitializer> uniformInitializer(float min, float max, size_t seed);
+IInitializerPtr uniformInitializer(float min, float max, size_t seed);
 
-//! \fn SharedPtr<IInitializer> normalInitializer(float mean, float stddev, size_t seed)
+//! \fn IInitializerPtr normalInitializer(float mean, float stddev, size_t seed)
 //! \brief Creates initializer that initializes with normal distribution.
 //! \param mean Mean of normal distribution.
 //! \param stddev Standard deviation of normal distribution.
 //! \param seed Initial seed for pseudo-random generator.
 //!
-SharedPtr<IInitializer> normalInitializer(float mean, float stddev,
-                                          size_t seed);
+IInitializerPtr normalInitializer(float mean, float stddev, size_t seed);
 
 //! \fn IGraphPtr createGraph(const std::string& name)
 //! \brief This function creates new IGraph object.
@@ -201,7 +205,7 @@ ITensorPtr createInput(const std::string& name, const Shape& shape,
 //! \param location Location of the weights.
 //!
 ITensorPtr createWeights(const std::string& name, const Shape& shape,
-                         const SharedPtr<IInitializer>& initializer,
+                         const IInitializerPtr& initializer,
                          MemoryLocation location);
 
 //! \fn void initializeGraph()

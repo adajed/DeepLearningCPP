@@ -1,3 +1,5 @@
+#include "layers/cuda/macros.h"
+#include "layers/cuda/utils.h"
 #include "layers/pooling.h"
 
 namespace graphdl
@@ -10,253 +12,367 @@ namespace cuda
 {
 namespace
 {
-// info = [N, C, X_IN, Y_IN, X_OUT, Y_OUT, X_KER, Y_KER, X_STR, Y_STR]
+// shapeParams = [inShape, outShape, kernelShape, strides]
+__constant__ int shapeParams[12];
 
-#define N info[0]
-#define C info[1]
-#define X_IN info[2]
-#define Y_IN info[3]
-#define X_OUT info[4]
-#define Y_OUT info[5]
-#define X_KER info[6]
-#define Y_KER info[7]
-#define X_STR info[8]
-#define Y_STR info[9]
-// KER_SIZE_REC is 1. / (X_KER * Y_KER)
-#define KER_SIZE_REC (*((float*)(info + 10)))
+#define IN_SHAPE shapeParams
+#define OUT_SHAPE (shapeParams + 4)
+#define kernelX (shapeParams[8])
+#define kernelY (shapeParams[9])
+#define strideX (shapeParams[10])
+#define strideY (shapeParams[11])
 
 template <PaddingType padding>
-__device__ int firstWindow(int x, int k, int s);
-
-template <>
-__device__ int firstWindow<PaddingType::kVALID>(int x, int k, int s)
+__global__ void pool2D_max_nhwc_kernel(const float* in, float* out)
 {
-    int c = x - k + 1;
-    c = c > 0 ? c : 0;
-    return c / s + int(c % s > 0);
-}
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c = n % shapeParams[7];
+    n /= shapeParams[7];
 
-template <>
-__device__ int firstWindow<PaddingType::kSAME>(int x, int k, int s)
-{
-    int c = x + (k - 1) / 2 - k + 1;
-    c = c > 0 ? c : 0;
-    return c / s + int(c % s > 0);
-}
-
-template <PaddingType>
-__device__ int out2in(int x, int k, int s);
-
-template <>
-__device__ int out2in<PaddingType::kVALID>(int x, int /* k */, int s)
-{
-    return x * s;
-}
-
-template <>
-__device__ int out2in<PaddingType::kSAME>(int x, int k, int s)
-{
-    return x * s - (k - 1) / 2;
-}
-
-template <PoolingType pooling>
-__device__ float pool2DReduceKernel(const float* in, int* info, int x, int y);
-
-template <>
-__device__ float pool2DReduceKernel<PoolingType::kMAX>(const float* in,
-                                                       int* info, int x, int y)
-{
-    float ret = 0;
-    if (x >= 0 && y >= 0) ret = in[x * Y_IN + y];
-
-    for (int iX = x > 0 ? x : 0; iX < x + X_KER; ++iX)
+    if (n < shapeParams[4] && x_out < shapeParams[5] &&
+        y_out < shapeParams[6] && c < shapeParams[7])
     {
-        if (iX >= X_IN)
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
         {
-            ret = ret > 0. ? ret : 0.;
-            break;
+            x_in -= (kernelX - 1) / 2;
+            y_in -= (kernelY - 1) / 2;
         }
-        for (int iY = y > 0 ? y : 0; iY < y + Y_KER; ++iY)
+
+        float val = 0.;
+        if (x_in >= 0 && y_in >= 0)
+            val = in[POS_4D(n, x_in, y_in, c, IN_SHAPE)];
+
+        if (x_in < 0 || x_in + kernelX > shapeParams[1] || y_in < 0 ||
+            y_in + kernelY > shapeParams[2])
+            val = max(val, 0.);
+
+        for (int x_iter = max(x_in, 0);
+             x_iter < min(x_in + kernelX, shapeParams[1]); ++x_iter)
         {
-            if (iY >= Y_IN)
+            for (int y_iter = max(y_in, 0);
+                 y_iter < min(y_in + kernelY, shapeParams[2]); ++y_iter)
             {
-                ret = ret > 0. ? ret : 0.;
-                break;
+                val = max(val, in[POS_4D(n, x_iter, y_iter, c, IN_SHAPE)]);
             }
-            float val = in[iX * Y_IN + iY];
-            ret = ret > val ? ret : val;
         }
-    }
 
-    return ret;
+        out[POS_4D(n, x_out, y_out, c, OUT_SHAPE)] = val;
+    }
 }
 
-template <>
-__device__ float pool2DReduceKernel<PoolingType::kAVERAGE>(const float* in,
-                                                           int* info, int x,
-                                                           int y)
+template <PaddingType padding>
+__global__ void pool2D_avg_nhwc_kernel(const float* in, float* out)
 {
-    float ret = 0.;
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c = n % shapeParams[7];
+    n /= shapeParams[7];
 
-    for (int iX = x > 0 ? x : 0; iX < x + X_KER && iX < X_IN; ++iX)
+    if (n < shapeParams[4] && x_out < shapeParams[5] &&
+        y_out < shapeParams[6] && c < shapeParams[7])
     {
-        for (int iY = y > 0 ? y : 0; iY < y + Y_KER && iY < Y_IN; ++iY)
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
         {
-            ret += in[iX * Y_IN + iY];
+            x_in -= (kernelX - 1) / 2;
+            y_in -= (kernelY - 1) / 2;
         }
-    }
 
-    return ret * KER_SIZE_REC;
-}
-
-template <PoolingType pooling, PaddingType padding>
-__global__ void poolKernel(const float* in, float* out, int* info)
-{
-    size_t n = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t outPos = n;
-
-    int y = n % Y_OUT;
-    n /= Y_OUT;
-    int x = n % X_OUT;
-    n /= X_OUT;
-    int c = n % C;
-    n /= C;
-
-    if (n < N)
-    {
-        size_t inPos = (n * C + c) * X_IN * Y_IN;
-        out[outPos] = pool2DReduceKernel<pooling>(
-            in + inPos, info, out2in<padding>(x, X_KER, X_STR),
-            out2in<padding>(y, Y_KER, Y_STR));
-    }
-}
-
-template <PoolingType pooling, PaddingType padding>
-__global__ void poolGradientKernel(const float* in, const float* out,
-                                   const float* outG, float* inG, int* info)
-{
-    size_t inPos = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t n = inPos;
-
-    int y = n % Y_IN;
-    n /= Y_IN;
-    int x = n % X_IN;
-    n /= X_IN;
-    int c = n % C;
-    n /= C;
-
-    if (n < N)
-    {
-        inG[inPos] = 0.;
-        int xOut = firstWindow<padding>(x, X_KER, X_STR);
-        int yOut;
-
-        while (out2in<padding>(xOut, X_KER, X_STR) <= x && xOut < X_OUT)
+        float val = 0.;
+        for (int x_iter = max(x_in, 0);
+             x_iter < min(x_in + kernelX, shapeParams[1]); ++x_iter)
         {
-            yOut = firstWindow<padding>(y, Y_KER, Y_STR);
-            while (out2in<padding>(yOut, Y_KER, Y_STR) <= y && yOut < Y_OUT)
+            for (int y_iter = max(y_in, 0);
+                 y_iter < min(y_in + kernelY, shapeParams[2]); ++y_iter)
             {
-                size_t outPos = n * C + c;
-                outPos = outPos * X_OUT + xOut;
-                outPos = outPos * Y_OUT + yOut;
+                val += in[POS_4D(n, x_iter, y_iter, c, IN_SHAPE)];
+            }
+        }
 
+        out[POS_4D(n, x_out, y_out, c, OUT_SHAPE)] = val / (kernelX * kernelY);
+    }
+}
+
+template <PaddingType padding>
+__global__ void pool2D_max_nchw_kernel(const float* in, float* out)
+{
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c = n % shapeParams[5];
+    n /= shapeParams[5];
+
+    if (n < shapeParams[4] && c < shapeParams[5] && x_out < shapeParams[6] &&
+        y_out < shapeParams[7])
+    {
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
+        {
+            x_in -= (kernelX - 1) / 2;
+            y_in -= (kernelY - 1) / 2;
+        }
+
+        float val = 0.;
+        if (x_in >= 0 && y_in >= 0)
+            val = in[POS_4D(n, c, x_in, y_in, IN_SHAPE)];
+
+        if (x_in < 0 || x_in + kernelX > shapeParams[2] || y_in < 0 ||
+            y_in + kernelY > shapeParams[3])
+            val = max(val, 0.);
+
+        for (int x_iter = max(x_in, 0);
+             x_iter < min(x_in + kernelX, shapeParams[2]); ++x_iter)
+        {
+            for (int y_iter = max(y_in, 0);
+                 y_iter < min(y_in + kernelY, shapeParams[3]); ++y_iter)
+            {
+                val = max(val, in[POS_4D(n, c, x_iter, y_iter, IN_SHAPE)]);
+            }
+        }
+
+        out[POS_4D(n, c, x_out, y_out, OUT_SHAPE)] = val;
+    }
+}
+
+template <PaddingType padding>
+__global__ void pool2D_avg_nchw_kernel(const float* in, float* out)
+{
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c = n % shapeParams[5];
+    n /= shapeParams[5];
+
+    if (n < shapeParams[4] && c < shapeParams[5] && x_out < shapeParams[6] &&
+        y_out < shapeParams[7])
+    {
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
+        {
+            x_in -= (kernelX - 1) / 2;
+            y_in -= (kernelY - 1) / 2;
+        }
+
+        float val = 0.;
+        for (int x_iter = max(x_in, 0);
+             x_iter < min(x_in + kernelX, shapeParams[2]); ++x_iter)
+        {
+            for (int y_iter = max(y_in, 0);
+                 y_iter < min(y_in + kernelY, shapeParams[3]); ++y_iter)
+            {
+                val += in[POS_4D(n, c, x_iter, y_iter, IN_SHAPE)];
+            }
+        }
+
+        out[POS_4D(n, c, x_out, y_out, OUT_SHAPE)] = val / (kernelX * kernelY);
+    }
+}
+
+template <PoolingType pooling, PaddingType padding>
+__global__ void pool2D_grad_nhwc_kernel(const float* in, const float* out,
+                                        const float* outG, float* inG)
+{
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c = n % shapeParams[7];
+    n /= shapeParams[7];
+
+    if (n < shapeParams[4] && x_out < shapeParams[5] &&
+        y_out < shapeParams[6] && c < shapeParams[7])
+    {
+        float outVal = out[POS_4D(n, x_out, y_out, c, OUT_SHAPE)];
+        float outGVal = outG[POS_4D(n, x_out, y_out, c, OUT_SHAPE)];
+
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
+        {
+            x_in -= (kernelX - 1) / 2;
+            y_in -= (kernelY - 1) / 2;
+        }
+
+        for (int x_iter = max(x_in, 0);
+             x_iter < min(x_in + kernelX, shapeParams[1]); ++x_iter)
+        {
+            for (int y_iter = max(y_in, 0);
+                 y_iter < min(y_in + kernelY, shapeParams[2]); ++y_iter)
+            {
                 if (pooling == PoolingType::kMAX)
                 {
-                    if (in[inPos] == out[outPos]) inG[inPos] += outG[outPos];
+                    if (in[POS_4D(n, x_iter, y_iter, c, IN_SHAPE)] == outVal)
+                        atomicAdd(&inG[POS_4D(n, x_iter, y_iter, c, IN_SHAPE)],
+                                  outGVal);
                 }
-                else  // pooling == PoolingType::kAVERAGE
+                if (pooling == PoolingType::kAVERAGE)
                 {
-                    inG[inPos] += KER_SIZE_REC * outG[outPos];
+                    atomicAdd(&inG[POS_4D(n, x_iter, y_iter, c, IN_SHAPE)],
+                              outGVal / (kernelX * kernelY));
                 }
-
-                yOut++;
             }
-            xOut++;
+        }
+    }
+}
+
+template <PoolingType pooling, PaddingType padding>
+__global__ void pool2D_grad_nchw_kernel(const float* in, const float* out,
+                                        const float* outG, float* inG)
+{
+    int x_out = blockIdx.x * blockDim.x + threadIdx.x;
+    int y_out = blockIdx.y * blockDim.y + threadIdx.y;
+    int n = blockIdx.z * blockDim.z + threadIdx.z;
+    int c = n % shapeParams[5];
+    n /= shapeParams[5];
+
+    if (n < shapeParams[4] && c < shapeParams[5] && x_out < shapeParams[6] &&
+        y_out < shapeParams[7])
+    {
+        float outVal = out[POS_4D(n, c, x_out, y_out, OUT_SHAPE)];
+        float outGVal = outG[POS_4D(n, c, x_out, y_out, OUT_SHAPE)];
+
+        int x_in = x_out * strideX, y_in = y_out * strideY;
+        if (padding == PaddingType::kSAME)
+        {
+            x_in -= (kernelX - 1) / 2;
+            y_in -= (kernelY - 1) / 2;
+        }
+
+        for (int x_iter = max(x_in, 0);
+             x_iter < min(x_in + kernelX, shapeParams[2]); ++x_iter)
+        {
+            for (int y_iter = max(y_in, 0);
+                 y_iter < min(y_in + kernelY, shapeParams[3]); ++y_iter)
+            {
+                if (pooling == PoolingType::kMAX)
+                {
+                    if (in[POS_4D(n, c, x_iter, y_iter, IN_SHAPE)] == outVal)
+                        atomicAdd(&inG[POS_4D(n, c, x_iter, y_iter, IN_SHAPE)],
+                                  outGVal);
+                }
+                if (pooling == PoolingType::kAVERAGE)
+                {
+                    atomicAdd(&inG[POS_4D(n, c, x_iter, y_iter, IN_SHAPE)],
+                              outGVal / (kernelX * kernelY));
+                }
+            }
         }
     }
 }
 
 }  // namespace
 
-extern "C" void runPool2DDevice(const float* x, float* y, int* info,
-                                size_t size, PoolingType pooling,
-                                PaddingType padding)
+void runPool2DDevice(const float* x, float* y, const int* params,
+                     PoolingType pooling, PaddingType padding,
+                     DataFormat dataFormat)
 {
-    const int BLOCK_SIZE = 256;
-    const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    const int TILE = 8;
+    const dim3 BLOCK(TILE, TILE, TILE);
 
-    if (pooling == PoolingType::kMAX)
-    {
-        if (padding == PaddingType::kVALID)
-            poolKernel<PoolingType::kMAX, PaddingType::kVALID>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
-        else  // padding == PaddingType::kSAME
-            poolKernel<PoolingType::kMAX, PaddingType::kSAME>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+    dim3 GRID;
+    if (dataFormat == DataFormat::kNHWC)
+        GRID =
+            dim3((params[5] + TILE - 1) / TILE, (params[6] + TILE - 1) / TILE,
+                 (params[4] * params[7] + TILE - 1) / TILE);
+    else
+        GRID =
+            dim3((params[6] + TILE - 1) / TILE, (params[7] + TILE - 1) / TILE,
+                 (params[4] * params[5] + TILE - 1) / TILE);
+
+    cudaMemcpyToSymbol(shapeParams, params, 12 * sizeof(int));
+
+#define LAUNCH(format, pool)                                       \
+    {                                                              \
+        if (padding == PaddingType::kSAME)                         \
+            pool2D_##pool##_##format##_kernel<PaddingType::kSAME>  \
+                <<<GRID, BLOCK>>>(x, y);                           \
+        else                                                       \
+            pool2D_##pool##_##format##_kernel<PaddingType::kVALID> \
+                <<<GRID, BLOCK>>>(x, y);                           \
     }
-    else  // pooling == PoolingType::kAVERAGE
+
+    if (dataFormat == DataFormat::kNHWC)
     {
-        if (padding == PaddingType::kVALID)
-            poolKernel<PoolingType::kAVERAGE, PaddingType::kVALID>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
-        else  // padding == PaddingType::kSAME
-            poolKernel<PoolingType::kAVERAGE, PaddingType::kSAME>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, info);
+        if (pooling == PoolingType::kMAX)
+            LAUNCH(nhwc, max)
+        else
+            LAUNCH(nhwc, avg)
     }
+    else  // dataFormat == DataFormat::kNCHW
+    {
+        if (pooling == PoolingType::kMAX)
+            LAUNCH(nchw, max)
+        else
+            LAUNCH(nchw, avg)
+    }
+
+#undef LAUNCH
 }
 
-extern "C" void runPool2DGradientDevice(const float* x, const float* y,
-                                        const float* yG, float* xG, int* info,
-                                        size_t size, PoolingType pooling,
-                                        PaddingType padding)
+void runPool2DGradientDevice(const float* x, const float* y, const float* yG,
+                             float* xG, const int* params, PoolingType pooling,
+                             PaddingType padding, DataFormat dataFormat)
 {
-    const int BLOCK_SIZE = 256;
-    const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    size_t size = params[0] * params[1] * params[2] * params[3];
+    utils::fill(xG, size, 0.);
 
-    if (pooling == PoolingType::kMAX)
-    {
-        if (padding == PaddingType::kVALID)
-            poolGradientKernel<PoolingType::kMAX, PaddingType::kVALID>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
-        else  // padding == PaddingType::kSAME
-            poolGradientKernel<PoolingType::kMAX, PaddingType::kSAME>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
+    const int TILE = 8;
+    const dim3 BLOCK(TILE, TILE, TILE);
+
+    dim3 GRID;
+    if (dataFormat == DataFormat::kNHWC)
+        GRID =
+            dim3((params[5] + TILE - 1) / TILE, (params[6] + TILE - 1) / TILE,
+                 (params[4] * params[7] + TILE - 1) / TILE);
+    else
+        GRID =
+            dim3((params[6] + TILE - 1) / TILE, (params[7] + TILE - 1) / TILE,
+                 (params[4] * params[5] + TILE - 1) / TILE);
+
+    cudaMemcpyToSymbol(shapeParams, params, 12 * sizeof(int));
+
+#define LAUNCH(format)                                                 \
+    {                                                                  \
+        if (pooling == PoolingType::kMAX)                              \
+        {                                                              \
+            if (padding == PaddingType::kSAME)                         \
+                pool2D_grad##_##format##_kernel<PoolingType::kMAX,     \
+                                                PaddingType::kSAME>    \
+                    <<<GRID, BLOCK>>>(x, y, yG, xG);                   \
+            else                                                       \
+                pool2D_grad##_##format##_kernel<PoolingType::kMAX,     \
+                                                PaddingType::kVALID>   \
+                    <<<GRID, BLOCK>>>(x, y, yG, xG);                   \
+        }                                                              \
+        else                                                           \
+        {                                                              \
+            if (padding == PaddingType::kSAME)                         \
+                pool2D_grad##_##format##_kernel<PoolingType::kAVERAGE, \
+                                                PaddingType::kSAME>    \
+                    <<<GRID, BLOCK>>>(x, y, yG, xG);                   \
+            else                                                       \
+                pool2D_grad##_##format##_kernel<PoolingType::kAVERAGE, \
+                                                PaddingType::kVALID>   \
+                    <<<GRID, BLOCK>>>(x, y, yG, xG);                   \
+        }                                                              \
     }
-    else  // pooling == PoolingType::kAVERAGE
-    {
-        if (padding == PaddingType::kVALID)
-            poolGradientKernel<PoolingType::kAVERAGE, PaddingType::kVALID>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
-        else  // padding == PaddingType::kSAME
-            poolGradientKernel<PoolingType::kAVERAGE, PaddingType::kSAME>
-                <<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, yG, xG, info);
-    }
+
+    if (dataFormat == DataFormat::kNHWC)
+        LAUNCH(nhwc)
+    else  // dataFormat == DataFormat::kNCHW
+        LAUNCH(nchw)
+
+#undef LAUNCH
 }
 
-extern "C" void initializePoolGpuParams(void* dest, int* inShape, int* kernel,
-                                        int* strides, int* outShape)
-{
-    int* ptr = (int*)dest;
-    float grad = 1. / float(kernel[0] * kernel[1]);
-    cudaMemcpy(ptr, inShape, 4 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 4, outShape + 2, 2 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 6, kernel, 2 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ptr + 8, strides, 2 * sizeof(int), cudaMemcpyHostToDevice);
-
-    // necessary for gradient calculating
-    cudaMemcpy(ptr + 10, &grad, sizeof(float), cudaMemcpyHostToDevice);
-}
-
-#undef N
-#undef C
-#undef X_IN
-#undef Y_IN
-#undef X_OUT
-#undef Y_OUT
-#undef X_KER
-#undef Y_KER
-#undef X_STR
-#undef Y_STR
+#undef IN_SHAPE
+#undef OUT_SHAPE
+#undef kernelX
+#undef kernelY
+#undef strideX
+#undef strideY
 
 }  // namespace cuda
 }  // namespace layers

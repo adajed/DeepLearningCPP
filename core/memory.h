@@ -47,13 +47,37 @@ class Memory
 
     const T* getValues() const { return mValues; }
 
-    std::size_t getCount() const { return mCount; }
+    size_t getCount() const { return mCount; }
 
-    //! \fn fill
+    //! \fillFrom
+    //! \brief Fills memory from given host pointer.
+    //! Copies sizeof(T) * getCount() number of bytes.
+    //!
+    void fillFrom(const T* memory)
+    {
+        assert(isAllocated());
+
+        if (mType == MemoryType::kHOST_MEMORY)
+        {
+            std::memcpy(mValues, memory, sizeof(T) * getCount());
+        }
+        else  // mType == MemoryType::kDEVICE_MEMORY
+        {
+#ifdef CUDA_AVAILABLE
+            CUDA_CALL(cudaMemcpy(mValues, memory, sizeof(T) * getCount(),
+                                 cudaMemcpyHostToDevice));
+#else
+            throw std::runtime_error(
+                "GPU support not implemented, please use CPU");
+#endif
+        }
+    }
+
+    //! \fn copyTo
     //! \brief Copies values to given pointer.
     //! Assumes that array can store all values.
     //!
-    void fill(T* memory) const
+    void copyTo(T* memory) const
     {
         assert(isAllocated());
 
@@ -61,7 +85,7 @@ class Memory
         {
             std::memcpy(memory, mValues, sizeof(T) * getCount());
         }
-        else  // mType == MemoryType::kHOST_MEMORY
+        else  // mType == MemoryType::kDEVICE_MEMORY
         {
 #ifdef CUDA_AVAILABLE
             CUDA_CALL(cudaMemcpy(memory, mValues, sizeof(T) * getCount(),

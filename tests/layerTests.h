@@ -3,6 +3,7 @@
 
 #include "graph.h"
 #include "graphdl.h"
+#include "pooling.h"
 #include "refTensor.h"
 
 #include <functional>
@@ -22,6 +23,14 @@ using HostVec = std::vector<HostTensor>;
 extern std::vector<MemoryLocation> LOCATIONS;
 
 extern unsigned seed;
+
+std::ostream& operator<<(std::ostream& os, MemoryLocation loc);
+
+std::ostream& operator<<(std::ostream& os, layers::PoolingType pooling);
+
+std::ostream& operator<<(std::ostream& os, layers::PaddingType padding);
+
+std::ostream& operator<<(std::ostream& os, layers::DataFormat format);
 
 class LayerTest : public testing::Test
 {

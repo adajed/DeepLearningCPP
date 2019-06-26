@@ -187,42 +187,67 @@ ITensorPtr queue(const std::vector<ITensorPtr>& tensors);
 //!
 ITensorPtr reshape(const ITensorPtr& t, const Shape& shape);
 
-//! \fn ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
-//!                          const std::vector<int>& strides,
-//!                          const std::string& padding)
+//! \fn ITensorPtr maxPool2D(const ITensorPtr& tensor,
+//!                          const std::vector<int>& kernel = {2, 2},
+//!                          const std::vector<int>& strides = {2, 2},
+//!                          const std::string& padding = "VALID",
+//!                          const std::string& format = "NHWC")
 //! \brief Applies max pooling operation.
 //! \param tensor Tensor on which pooling will be performed, must be 4-dimensional.
 //! \param kernel Kernel shape, should be of length 1 or 2.
 //! \param strides Strides, should be of length 1 or 2.
 //! \param padding Type of padding, should be one of: "SAME", "VALID".
+//! \param format Type of data format, should be one of : "NHWC", "NCHW".
 //!
-ITensorPtr maxPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
-                     const std::vector<int>& strides,
-                     const std::string& padding);
+ITensorPtr maxPool2D(const ITensorPtr& tensor,
+                     const std::vector<int>& kernel = {2, 2},
+                     const std::vector<int>& strides = {2, 2},
+                     const std::string& padding = "VALID",
+                     const std::string& format = "NHWC");
 
-//! \fn ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
-//!                          const std::vector<int>& strides,
-//!                          const std::string& padding)
+//! \fn ITensorPtr avgPool2D(const ITensorPtr& tensor,
+//!                          const std::vector<int>& kernel = {2, 2},
+//!                          const std::vector<int>& strides = {2, 2},
+//!                          const std::string& padding = "VALID",
+//!                          const std::string& format = "NHWC")
 //! \brief Applies average pooling operation.
 //! \param tensor Tensor on which pooling will be performed, must be 4-dimensional.
 //! \param kernel Kernel shape, should be of length 1 or 2.
 //! \param strides Strides, should be of length 1 or 2.
 //! \param padding Type of padding, should be one of: "SAME", "VALID".
+//! \param format Type of data format, should be one of : "NHWC", "NCHW".
 //!
-ITensorPtr avgPool2D(const ITensorPtr& tensor, const std::vector<int>& kernel,
-                     const std::vector<int>& strides,
-                     const std::string& padding);
+ITensorPtr avgPool2D(const ITensorPtr& tensor,
+                     const std::vector<int>& kernel = {2, 2},
+                     const std::vector<int>& strides = {2, 2},
+                     const std::string& padding = "VALID",
+                     const std::string& format = "NHWC");
 
 //! \fn ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
-//!                       const std::vector<int>& strides, const std::string& padding)
+//!                       const std::vector<int>& strides = {1, 1},
+//!                       const std::string& padding = "SAME",
+//!                       const std::string& format = "NHWC")
 //! \brief Applies 2D convolution operation.
 //! \param tensor Tensor on which convolution will be performed, must be 4-dimensional.
 //! \param kernel Tensor with convolution kernel, must be 4-dimensional.
 //! \param strides Strides, should be of length 1 or 2.
 //! \param padding Type of padding, should be one of: "SAME", "VALID".
+//! \param format Type of data format, should be one of : "NHWC", "NCHW".
 //!
 ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
-                  const std::vector<int>& strides, const std::string& padding);
+                  const std::vector<int>& strides = {1, 1},
+                  const std::string& padding = "SAME",
+                  const std::string& format = "NHWC");
+
+//! \fn ITensorPtr nhwc2nchw(const ITensorPtr& tensor)
+//! \brief Reformats tensor from NHWC to NCHW format.
+//!
+ITensorPtr nhwc2nchw(const ITensorPtr& tensor);
+
+//! \fn ITensorPtr nchw2nhwc(const ITensorPtr& tensor)
+//! \brief Reformats tensor from NCHW to NHWC format.
+//!
+ITensorPtr nchw2nhwc(const ITensorPtr& tensor);
 
 //! \fn ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1)
 //! \brief Applies softmax operation on last numAxes axes.
@@ -231,6 +256,21 @@ ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
 //!                to number of dimenstions of tensor.
 //!
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
+
+//! \fn ITensorPtr batchNorm(const ITensorPtr& tensor, const ITensorPtr& alpha,
+//!                          const ITensorPtr& beta, int numAxes = -1)
+//! \brief Applies batch normalization.
+//! \param tensor Tensor on which normalization will be performed.
+//! \param alpha Tensor with alpha weights for normalization.
+//! \param beta Tensor with beta weights for normalization.
+//! \param numAxes Number of axes (counting from begging) normalization
+//!                will be applied.
+//! \details If tensor has N dimensions, then alpha and beta should have the shape
+//!          as last <N - numAxes> of axes of tensor.
+//!          If numAxes is non-positive then normalization if done over all axes.
+//!
+ITensorPtr batchNorm(const ITensorPtr& tensor, const ITensorPtr& alpha,
+                     const ITensorPtr& beta, int numAxes = -1);
 
 }  // namespace graphdl
 

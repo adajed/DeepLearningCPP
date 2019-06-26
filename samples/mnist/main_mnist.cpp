@@ -41,7 +41,7 @@ ComputationalGraph buildNetwork()
     MemoryLocation loc = MemoryLocation::kHOST;
 #endif
 
-    SharedPtr<IInitializer> init = uniformInitializer(-1., 1., 0);
+    IInitializerPtr init = uniformInitializer(-1., 1., 0);
 
     // network inputs
     ITensorPtr X = createInput("X", {BATCH_SIZE, 28 * 28}, loc);
