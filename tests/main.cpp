@@ -69,7 +69,8 @@ int main(int argc, char** argv)
         std::string filter = "";
         if (br)
             for (int i = start; i <= end; ++i)
-                filter += "LayerTest/" + layer + "Test.testAPI/" + std::to_string(i) + ":";
+                filter += "LayerTest/" + layer + "Test.testAPI/" +
+                          std::to_string(i) + ":";
         else
             filter = "LayerTest/" + layer + "Test.testAPI/*";
 

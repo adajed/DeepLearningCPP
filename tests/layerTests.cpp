@@ -52,7 +52,8 @@ bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
         for (int i = 0; i < int(c.size()) - 1; ++i)
             s += std::to_string(c[i]) + ", ";
         if (c.size() > 0) s += std::to_string(c[c.size() - 1]) + "]";
-        EXPECT_NEAR(refOutput.at(i), output[i], eps) << "tensor = " << tensorNum << ", coord = " << s;
+        EXPECT_NEAR(refOutput.at(i), output[i], eps)
+            << "tensor = " << tensorNum << ", coord = " << s;
     }
 
     return true;
