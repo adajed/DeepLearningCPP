@@ -39,7 +39,6 @@ std::vector<Tensor::SPtr> createGradientOutputs(const Tensor::SPtr& t1,
 
 }  // namespace
 
-
 // ElementwiseBackLayer
 
 ElementwiseBackLayer::ElementwiseBackLayer(ID id, const Tensor::SPtr& t1,
@@ -80,7 +79,6 @@ Layer::TensorMap ElementwiseBackLayer::gradients(Tensor::SPtr output,
     std::vector<Tensor::SPtr> grads = layer->getOutputs();
     return {{inputs[0], grads[0]}, {inputs[1], grads[1]}};
 }
-
 
 // ElementwiseBackGradientLayer
 
@@ -166,8 +164,8 @@ ElementwiseFrontGradientLayer::ElementwiseFrontGradientLayer(
       mOp(op){};
 
 void ElementwiseFrontGradientLayer::execute(const std::vector<float*>& inputs,
-                                       const std::vector<float*>& outputs,
-                                       const InputDict& /*inputDict*/)
+                                            const std::vector<float*>& outputs,
+                                            const InputDict& /*inputDict*/)
 {
     float* x1 = inputs[0];
     float* x2 = inputs[1];
@@ -178,12 +176,12 @@ void ElementwiseFrontGradientLayer::execute(const std::vector<float*>& inputs,
     size_t size2 = getInputs()[1]->getCount();
 
     if (mInputs[0].lock()->getType() == MemoryType::kHOST_MEMORY)
-        runElementwiseFrontGradientHost(x1, size1, x2, size2, yGrad, x1Grad, x2Grad,
-                                   mOp);
+        runElementwiseFrontGradientHost(x1, size1, x2, size2, yGrad, x1Grad,
+                                        x2Grad, mOp);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runElementwiseFrontGradientDevice(x1, size1, x2, size2, yGrad, x1Grad,
-                                           x2Grad, mOp);
+        cuda::runElementwiseFrontGradientDevice(x1, size1, x2, size2, yGrad,
+                                                x1Grad, x2Grad, mOp);
 #endif
 }
 
@@ -219,7 +217,6 @@ bool checkShapesCompatibleFront(const TensorShape& s1, const TensorShape& s2)
     TensorShape shortShape = shorterShape(s1, s2);
     TensorShape longShape = longerShape(s1, s2);
     int sizeShort = shortShape.size();
-    int sizeLong = longShape.size();
 
     for (int i = 0; i < sizeShort; ++i)
         if (shortShape[i] != longShape[i]) return false;

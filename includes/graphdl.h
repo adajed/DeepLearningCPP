@@ -16,7 +16,6 @@
 //!
 namespace graphdl
 {
-
 //! \typedef HostTensor
 //! \brief Holds memory in host.
 //! \details Used for providing data to graph
@@ -36,11 +35,15 @@ using Shape = std::vector<unsigned int>;
 
 //! \enum MemoryLocation
 //! \brief Represents type of memory.
+//!
 enum class MemoryLocation
 {
-    kHOST = 0,                  //!< memory on host (CPU)
-    kDEVICE = 1,                //!< memory on device (GPU)
-    kDEVICE_IF_ENABLED = 2,     //!< use memory on device if availble, host otherwise
+    ///< memory on host (CPU)
+    kHOST = 0,
+    ///< memory on device (GPU)
+    kDEVICE = 1,
+    ///< use memory on device if availble, host otherwise
+    kDEVICE_IF_ENABLED = 2,
 };
 
 //! \brief Metatype for shared pointers.
@@ -224,12 +227,12 @@ void initializeGraph();
 std::vector<HostTensor> eval(const std::vector<ITensorPtr>& tensors,
                              const InputDict& inputs);
 
-//! \fn std::map<ITensorPtr, ITensorPtr> gradients(const ITensorPtr& tensor)
+//! \fn std::map<ITensorPtr, ITensorPtr> gradients(const ITensorPtr& iTensor)
 //! \brief Creates part of graph responsible for calculating gradients.
-//! \param tensor Tensor for which gradients will be calculated (i.e. loss).
+//! \param iTensor Tensor for which gradients will be calculated (i.e. loss).
 //! \return Map from weights name to tensor representing gradient.
 //!
-std::map<ITensorPtr, ITensorPtr> gradients(const ITensorPtr& tensor);
+std::map<ITensorPtr, ITensorPtr> gradients(const ITensorPtr& iTensor);
 
 }  // namespace graphdl
 

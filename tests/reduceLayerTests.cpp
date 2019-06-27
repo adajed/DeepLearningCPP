@@ -65,6 +65,7 @@ std::ostream& operator<<(std::ostream& os, ReduceType t)
     {
     case ReduceType::kSUM: return os << "SUM";
     }
+    return os;
 }
 
 class ReduceBackTest : public LayerTest,

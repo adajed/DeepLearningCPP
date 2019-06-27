@@ -14,7 +14,7 @@ else
     CUDA_AVAILABLE=0
 endif
 
-COMMON_CFLAGS=-std=c++14 -Wall -I$(ROOT_DIR)/includes
+COMMON_CFLAGS=-std=c++14 -Wall -Wno-sign-compare -I$(ROOT_DIR)/includes
 COMMON_LFLAGS=
 
 ifeq ($(CUDA_AVAILABLE),1)

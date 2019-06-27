@@ -7,7 +7,7 @@ SAMPLE_NAMES = toySample mnist mnist_conv cifar10_conv
 all: release debug
 
 release: library_release tests_release samples_release
-debug: library_debug tests_release samples_release
+debug: library_debug tests_debug samples_debug
 
 #### library
 
@@ -28,10 +28,10 @@ tests_debug: library_debug
 #### samples
 
 samples_release: library_release
-	$(foreach sample,$(SAMPLE_NAMES),make -C samples/$(sample) release;)
+	@+make -C samples release
 
 samples_debug: library_debug
-	$(foreach sample,$(SAMPLE_NAMES),make -C samples/$(sample) debug;)
+	@+make -C samples debug
 
 #### utils
 

@@ -30,7 +30,7 @@ __global__ void addNGradientKernel(int n, size_t size, const float* yG,
     }
 }
 
-}
+}  // namespace
 
 void runAddNDevice(int n, size_t size, float** xs, float* y)
 {
@@ -45,8 +45,7 @@ void runAddNDevice(int n, size_t size, float** xs, float* y)
     cudaFree(xsDevice);
 }
 
-void runAddNGradientDevice(int n, size_t size, float* yGrad,
-                           float** xGrads)
+void runAddNGradientDevice(int n, size_t size, float* yGrad, float** xGrads)
 {
     const int BLOCK_SIZE = 256;
     const int NUM_BLOCKS = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -55,7 +54,8 @@ void runAddNGradientDevice(int n, size_t size, float* yGrad,
     cudaMalloc((void**)&xGradsDevice, n * sizeof(float*));
     cudaMemcpy(xGradsDevice, xGrads, n * sizeof(float*),
                cudaMemcpyHostToDevice);
-    addNGradientKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(n, size, yGrad, xGradsDevice);
+    addNGradientKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(n, size, yGrad,
+                                                   xGradsDevice);
     cudaDeviceSynchronize();
     cudaFree(xGradsDevice);
 }

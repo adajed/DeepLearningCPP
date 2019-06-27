@@ -14,7 +14,6 @@ namespace graphdl
 //! \namespace train
 namespace train
 {
-
 //! \class ITrainer
 //! \brief Interface for optimalization algorithm.
 //!
@@ -45,7 +44,8 @@ using ITrainerPtr = std::unique_ptr<ITrainer>;
 ITrainerPtr gradientDescent(float lr);
 
 //! \fn ITrainerPtr momentum(float lr, float m)
-//! \brief Returns ITrainer representing gradient descent algorithm with momentum.
+//! \brief Returns ITrainer representing gradient descent algorithm with
+//!                momentum.
 //! \param lr Learning rate for the algorithm.
 //! \param m Momentum value.
 //!
