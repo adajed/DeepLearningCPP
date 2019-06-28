@@ -6,6 +6,7 @@
 #include "graphdl_ops.h"
 
 #include <cassert>
+#include <cfloat>
 #include <utility>
 
 namespace graphdl
@@ -30,30 +31,124 @@ Tensor::SPtr createOutputFront(const Tensor::SPtr& t, int numAxes)
     return createTensor("", shape, t->getType());
 }
 
-}  // namespace
-
-// TODO(adajed): for now there is only one possible ReduceType
-void runReduceBackHost(const float* in, float* out, size_t outSize,
-                       size_t reduceSize, ReduceType /*reduceType*/)
+template <ReduceType op>
+float initialValue();
+template <>
+float initialValue<ReduceType::kSUM>()
 {
-    for (size_t posY = 0; posY < outSize; ++posY)
+    return 0.;
+}
+template <>
+float initialValue<ReduceType::kMIN>()
+{
+    return FLT_MAX;
+}
+template <>
+float initialValue<ReduceType::kMAX>()
+{
+    return -FLT_MAX;
+}
+
+template <ReduceType op>
+float reduce(float acc, float val);
+template <>
+float reduce<ReduceType::kSUM>(float acc, float val)
+{
+    return acc + val;
+}
+template <>
+float reduce<ReduceType::kMAX>(float acc, float val)
+{
+    return acc > val ? acc : val;
+}
+template <>
+float reduce<ReduceType::kMIN>(float acc, float val)
+{
+    return acc < val ? acc : val;
+}
+
+template <ReduceType op>
+float reduceGrad(float x, float y);
+template <>
+float reduceGrad<ReduceType::kSUM>(float /* x */, float /* y */)
+{
+    return 1.;
+}
+template <>
+float reduceGrad<ReduceType::kMAX>(float x, float y)
+{
+    return float(x == y);
+}
+template <>
+float reduceGrad<ReduceType::kMIN>(float x, float y)
+{
+    return float(x == y);
+}
+
+template <ReduceType op>
+void reduceBackHost(const float* x, float* y, size_t outSize, size_t reduceSize)
+{
+    for (size_t pos_y = 0; pos_y < outSize; ++pos_y)
     {
-        out[posY] = 0.;
-        for (size_t i = 0; i < reduceSize; ++i) out[posY] += in[i];
-        in += reduceSize;
+        float val = initialValue<op>();
+        for (size_t i = 0; i < reduceSize; ++i) val = reduce<op>(val, x[i]);
+        y[pos_y] = val;
+        x += reduceSize;
     }
 }
 
-// TODO(adajed): for now there is only one possible ReduceType
-void runReduceBackGradientHost(const float* /*in*/, const float* /*out*/,
-                               const float* outGrad, float* inGrad,
-                               size_t outSize, size_t reduceSize,
-                               ReduceType /*reduceType*/)
+template <ReduceType op>
+void reduceBackGradientHost(const float* in, const float* out,
+                            const float* outGrad, float* inGrad, size_t outSize,
+                            size_t reduceSize)
 {
     for (size_t posY = 0; posY < outSize; ++posY)
     {
-        for (size_t i = 0; i < reduceSize; ++i) inGrad[i] = outGrad[posY];
+        for (size_t i = 0; i < reduceSize; ++i)
+            inGrad[i] = outGrad[posY] * reduceGrad<op>(in[i], out[posY]);
+        in += reduceSize;
         inGrad += reduceSize;
+    }
+}
+
+}  // namespace
+
+void runReduceBackHost(const float* in, float* out, size_t outSize,
+                       size_t reduceSize, ReduceType reduceType)
+{
+    switch (reduceType)
+    {
+    case ReduceType::kSUM:
+        reduceBackHost<ReduceType::kSUM>(in, out, outSize, reduceSize);
+        break;
+    case ReduceType::kMAX:
+        reduceBackHost<ReduceType::kMAX>(in, out, outSize, reduceSize);
+        break;
+    case ReduceType::kMIN:
+        reduceBackHost<ReduceType::kMIN>(in, out, outSize, reduceSize);
+        break;
+    }
+}
+
+void runReduceBackGradientHost(const float* in, const float* out,
+                               const float* outGrad, float* inGrad,
+                               size_t outSize, size_t reduceSize,
+                               ReduceType reduceType)
+{
+    switch (reduceType)
+    {
+    case ReduceType::kSUM:
+        reduceBackGradientHost<ReduceType::kSUM>(in, out, outGrad, inGrad,
+                                                 outSize, reduceSize);
+        break;
+    case ReduceType::kMAX:
+        reduceBackGradientHost<ReduceType::kMAX>(in, out, outGrad, inGrad,
+                                                 outSize, reduceSize);
+        break;
+    case ReduceType::kMIN:
+        reduceBackGradientHost<ReduceType::kMIN>(in, out, outGrad, inGrad,
+                                                 outSize, reduceSize);
+        break;
     }
 }
 
@@ -257,11 +352,27 @@ Tensor::SPtr reduceFront(const Tensor::SPtr& t, int numAxes,
 
 }  // namespace core
 
-ITensorPtr reduceSum(const ITensorPtr& t, int numAxes)
+template <core::layers::ReduceType reduceType>
+ITensorPtr  reduceOperation(const ITensorPtr& t, int numAxes)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
     return makeAbstractTensor(core::reduceBack(tensor->get(), numAxes,
-                                               core::layers::ReduceType::kSUM));
+                                               reduceType));
+}
+
+ITensorPtr reduceSum(const ITensorPtr& t, int numAxes)
+{
+    return reduceOperation<core::layers::ReduceType::kSUM>(t, numAxes);
+}
+
+ITensorPtr reduceMax(const ITensorPtr& t, int numAxes)
+{
+    return reduceOperation<core::layers::ReduceType::kMAX>(t, numAxes);
+}
+
+ITensorPtr reduceMin(const ITensorPtr& t, int numAxes)
+{
+    return reduceOperation<core::layers::ReduceType::kMIN>(t, numAxes);
 }
 
 }  // namespace graphdl

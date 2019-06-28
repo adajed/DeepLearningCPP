@@ -74,8 +74,7 @@ ComputationalGraph buildNetwork()
 
     ITensorPtr loss = neg(reduceSum(Y * log(a))) / float(BATCH_SIZE);
 
-    ITensorPtr opt =
-        train::gradientDescent(LEARNING_RATE)->optimize(loss);
+    ITensorPtr opt = train::gradientDescent(LEARNING_RATE)->optimize(loss);
 
     ComputationalGraph net;
     net.inputs = {{"X", X}, {"Y", Y}};

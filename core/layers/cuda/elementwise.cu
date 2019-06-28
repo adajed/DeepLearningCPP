@@ -1,5 +1,5 @@
 #include "layers/elementwise.h"
-#include "reduceUtils.h"
+#include "reduceUtils.cuh"
 
 namespace graphdl
 {

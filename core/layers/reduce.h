@@ -11,7 +11,9 @@ namespace layers
 {
 enum class ReduceType
 {
-    kSUM = 0
+    kSUM = 0,
+    kMAX = 1,
+    kMIN = 2,
 };
 
 class ReduceBackLayer : public DifferentiableLayer

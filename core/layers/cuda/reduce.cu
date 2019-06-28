@@ -1,5 +1,5 @@
 #include "layers/reduce.h"
-#include "reduceUtils.h"
+#include "reduceUtils.cuh"
 
 namespace graphdl
 {
@@ -11,13 +11,6 @@ namespace cuda
 {
 namespace
 {
-__global__ void reduceSumGradientKernel(const float* yGrad, float* xGrad,
-                                        size_t size, size_t reduceSize)
-{
-    int id = blockIdx.x * blockDim.x + threadIdx.x;
-    if (id < size) xGrad[id] = yGrad[id / reduceSize];
-}
-
 __global__ void reduceSumFrontKernel(const float* x, float* y,
                                      size_t reduceSize, size_t outSize)
 {
@@ -41,21 +34,42 @@ __global__ void reduceSumFrontGradientKernel(const float* yGrad, float* xGrad,
 }  // namespace
 
 void runReduceBackDevice(const float* x, float* y, size_t outSize,
-                         size_t reduceSize, ReduceType /*reduceType*/)
+                         size_t reduceSize, ReduceType reduceType)
 {
-    reduce<ReduceOpCuda::kSUM>(x, y, outSize, reduceSize);
+    switch (reduceType)
+    {
+    case ReduceType::kSUM:
+        reduce<ReduceOpCuda::kSUM>(x, y, outSize, reduceSize);
+        break;
+    case ReduceType::kMIN:
+        reduce<ReduceOpCuda::kMIN>(x, y, outSize, reduceSize);
+        break;
+    case ReduceType::kMAX:
+        reduce<ReduceOpCuda::kMAX>(x, y, outSize, reduceSize);
+        break;
+    }
 }
 
 void runReduceBackGradientDevice(const float* x, const float* y,
                                  const float* yGrad, float* xGrad,
                                  size_t outSize, size_t reduceSize,
-                                 ReduceType /*reduceType*/)
+                                 ReduceType reduceType)
 {
-    const int BLOCK_SIZE = 256;
-    const int NUM_BLOCKS = (outSize * reduceSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-    reduceSumGradientKernel<<<NUM_BLOCKS, BLOCK_SIZE>>>(
-        yGrad, xGrad, outSize * reduceSize, reduceSize);
+    switch (reduceType)
+    {
+    case ReduceType::kSUM:
+        reduceGradient<ReduceOpCuda::kSUM>(x, y, yGrad, xGrad, outSize,
+                                           reduceSize);
+        break;
+    case ReduceType::kMIN:
+        reduceGradient<ReduceOpCuda::kMIN>(x, y, yGrad, xGrad, outSize,
+                                           reduceSize);
+        break;
+    case ReduceType::kMAX:
+        reduceGradient<ReduceOpCuda::kMAX>(x, y, yGrad, xGrad, outSize,
+                                           reduceSize);
+        break;
+    }
 }
 
 void runReduceFrontDevice(const float* x, float* y, size_t outSize,

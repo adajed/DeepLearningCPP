@@ -67,8 +67,8 @@ ITensorPtr operator/(float val, const ITensorPtr& t2);
 ITensorPtr operator/(const ITensorPtr& t1, float val);
 ///@}
 
-//! \fn ITensorPtr constant(float value, const Shape& shape, MemoryLocation location)
-//! \brief Creates constant tensor.
+//! \fn ITensorPtr constant(float value, const Shape& shape, MemoryLocation
+//! location) \brief Creates constant tensor.
 //!
 ITensorPtr constant(float value, const Shape& shape, MemoryLocation location);
 
@@ -148,12 +148,15 @@ ITensorPtr exp(const ITensorPtr& t);
 //!
 ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src);
 
-
 //! \fn ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1)
 //! \brief Calculate sum of values along last numAxes axes.
 //! If numAxes is non-positive calculates sum of all values in tensor.
 //!
 ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1);
+
+ITensorPtr reduceMax(const ITensorPtr& t, int numAxes = -1);
+
+ITensorPtr reduceMin(const ITensorPtr& t, int numAxes = -1);
 
 //! \fn ITensorPtr addN(std::vector<ITensorPtr> tensors)
 //! \brief Calculates pointwise addtion of all tensors in vector.
@@ -193,8 +196,8 @@ ITensorPtr reshape(const ITensorPtr& t, const Shape& shape);
 //!                          const std::string& padding = "VALID",
 //!                          const std::string& format = "NHWC")
 //! \brief Applies max pooling operation.
-//! \param tensor Tensor on which pooling will be performed, must be 4-dimensional.
-//! \param kernel Kernel shape, should be of length 1 or 2.
+//! \param tensor Tensor on which pooling will be performed, must be
+//! 4-dimensional. \param kernel Kernel shape, should be of length 1 or 2.
 //! \param strides Strides, should be of length 1 or 2.
 //! \param padding Type of padding, should be one of: "SAME", "VALID".
 //! \param format Type of data format, should be one of : "NHWC", "NCHW".
@@ -211,8 +214,8 @@ ITensorPtr maxPool2D(const ITensorPtr& tensor,
 //!                          const std::string& padding = "VALID",
 //!                          const std::string& format = "NHWC")
 //! \brief Applies average pooling operation.
-//! \param tensor Tensor on which pooling will be performed, must be 4-dimensional.
-//! \param kernel Kernel shape, should be of length 1 or 2.
+//! \param tensor Tensor on which pooling will be performed, must be
+//! 4-dimensional. \param kernel Kernel shape, should be of length 1 or 2.
 //! \param strides Strides, should be of length 1 or 2.
 //! \param padding Type of padding, should be one of: "SAME", "VALID".
 //! \param format Type of data format, should be one of : "NHWC", "NCHW".
@@ -228,11 +231,11 @@ ITensorPtr avgPool2D(const ITensorPtr& tensor,
 //!                       const std::string& padding = "SAME",
 //!                       const std::string& format = "NHWC")
 //! \brief Applies 2D convolution operation.
-//! \param tensor Tensor on which convolution will be performed, must be 4-dimensional.
-//! \param kernel Tensor with convolution kernel, must be 4-dimensional.
-//! \param strides Strides, should be of length 1 or 2.
-//! \param padding Type of padding, should be one of: "SAME", "VALID".
-//! \param format Type of data format, should be one of : "NHWC", "NCHW".
+//! \param tensor Tensor on which convolution will be performed, must be
+//! 4-dimensional. \param kernel Tensor with convolution kernel, must be
+//! 4-dimensional. \param strides Strides, should be of length 1 or 2. \param
+//! padding Type of padding, should be one of: "SAME", "VALID". \param format
+//! Type of data format, should be one of : "NHWC", "NCHW".
 //!
 ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
                   const std::vector<int>& strides = {1, 1},
@@ -265,9 +268,11 @@ ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
 //! \param beta Tensor with beta weights for normalization.
 //! \param numAxes Number of axes (counting from begging) normalization
 //!                will be applied.
-//! \details If tensor has N dimensions, then alpha and beta should have the shape
+//! \details If tensor has N dimensions, then alpha and beta should have the
+//! shape
 //!          as last <N - numAxes> of axes of tensor.
-//!          If numAxes is non-positive then normalization if done over all axes.
+//!          If numAxes is non-positive then normalization if done over all
+//!          axes.
 //!
 ITensorPtr batchNorm(const ITensorPtr& tensor, const ITensorPtr& alpha,
                      const ITensorPtr& beta, int numAxes = -1);

@@ -2,6 +2,7 @@
 #define GRAPHDL_CORE_LAYERS_CUDA_REDUCE_UTILS_H_
 
 #include <cuda.h>
+#include <cfloat>
 
 namespace graphdl
 {
@@ -14,50 +15,84 @@ namespace cuda
 
 enum class ReduceOpCuda
 {
-    // y = x_1 + x_2 + x_3 + ... + x_n
+    ///< sum of elements
     kSUM = 0,
 
-    // y = x_1 * x_1 + x_2 * x_2 + ... + x_n * x_n
-    kSQUARED_SUM = 1
+    ///< sum of elements squared
+    kSQUARED_SUM = 1,
+
+    kMIN = 2,
+    kMAX = 3,
 };
 
 namespace
 {
-//! \fn initialReduceOp
-//! \brief Represents initial operation on elements
-//!
-template <ReduceOpCuda op>
-__device__ float initialReduceOp(float x);
 
-template <> inline
-__device__ float initialReduceOp<ReduceOpCuda::kSUM>(float x)
+// represent initial value from which reduction starts
+// (initial value for accumulator)
+template <ReduceOpCuda op> __device__ float initialValue()
+{
+    return 0.;
+}
+template <> __device__ float initialValue<ReduceOpCuda::kMIN>()
+{
+    return FLT_MAX;
+}
+template <> __device__ float initialValue<ReduceOpCuda::kMAX>()
+{
+    return -FLT_MAX;
+}
+
+// represent initial transformation for elements
+template <ReduceOpCuda op>
+__device__ float initialReduceOp(float x)
 {
     return x;
 }
-
-template <> inline
+template <>
 __device__ float initialReduceOp<ReduceOpCuda::kSQUARED_SUM>(float x)
 {
     return x * x;
 }
 
-//! \fn reduceOp
-//! \brief Describes how to reduce elements.
-//!
-template <ReduceOpCuda op>
-__device__ float reduceOp(float f1, float f2);
-
-template <> inline
-__device__ float reduceOp<ReduceOpCuda::kSUM>(float f1, float f2)
+// describes how to reduce elements
+template <ReduceOpCuda op> __device__ float reduceOp(float f1, float f2);
+template <> __device__ float reduceOp<ReduceOpCuda::kSUM>(float f1, float f2)
 {
     return f1 + f2;
 }
-
-template <> inline
-__device__ float reduceOp<ReduceOpCuda::kSQUARED_SUM>(float f1, float f2)
+template <> __device__ float reduceOp<ReduceOpCuda::kSQUARED_SUM>(float f1, float f2)
 {
     return f1 + f2;
 }
+template <> __device__ float reduceOp<ReduceOpCuda::kMIN>(float f1, float f2)
+{
+    return f1 < f2 ? f1 : f2;
+}
+template <> __device__ float reduceOp<ReduceOpCuda::kMAX>(float f1, float f2)
+{
+    return f1 > f2 ? f1 : f2;
+}
+
+// describes how to compute gradient
+template <ReduceOpCuda op> __device__ float reduceGradientOp(float x, float y);
+template <> __device__ float reduceGradientOp<ReduceOpCuda::kSUM>(float x, float y)
+{
+    return 1.;
+}
+template <> __device__ float reduceGradientOp<ReduceOpCuda::kSQUARED_SUM>(float x, float y)
+{
+    return 2 * x;
+}
+template <> __device__ float reduceGradientOp<ReduceOpCuda::kMIN>(float x, float y)
+{
+    return float(x == y);
+}
+template <> __device__ float reduceGradientOp<ReduceOpCuda::kMAX>(float x, float y)
+{
+    return float(x == y);
+}
+
 
 template <ReduceOpCuda op, unsigned BS>
 __device__ void warpReduce(volatile float *sdata, unsigned tid)
@@ -80,7 +115,7 @@ __global__ void reduceKernel(const float* x, float* y, size_t reduceSize, int bl
     int id = (blockIdx.x % blockPerReduce) * BS + threadIdx.x;
     float v;
 
-    sData[tid] = 0.;
+    sData[tid] = initialValue<op>();
     while (id < reduceSize)
     {
         v = initialReduceOp<op>(x[id]);
@@ -109,6 +144,17 @@ __global__ void reduceKernel(const float* x, float* y, size_t reduceSize, int bl
     if (tid == 0) y[blockIdx.x] = sData[0];
 }
 
+template <ReduceOpCuda op>
+__global__ void reduceGradientKernel(const float* x, const float* y,
+                                     const float* yGrad, float* xGrad,
+                                     size_t size, size_t reduceSize)
+{
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < size)
+        xGrad[id] = yGrad[id / reduceSize] *
+                    reduceGradientOp<op>(x[id], y[id / reduceSize]);
+}
+
 }  // namespace
 
 template<ReduceOpCuda op>
@@ -130,6 +176,18 @@ void reduce(const float* x, float* y, size_t outSize, size_t reduceSize)
     }
     else
         reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, reduceSize, NUM_BLOCKS_PER_REDUCTION);
+}
+
+template <ReduceOpCuda op>
+void reduceGradient(const float* x, const float* y,
+                    const float* yGrad, float* xGrad,
+                    size_t outSize, size_t reduceSize)
+{
+    const int BLOCK_SIZE = 256;
+    const int NUM_BLOCKS = (outSize * reduceSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    reduceGradientKernel<op><<<NUM_BLOCKS, BLOCK_SIZE>>>(
+            x, y, yGrad, xGrad, outSize * reduceSize, reduceSize);
 }
 
 
