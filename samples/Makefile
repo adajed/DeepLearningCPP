@@ -6,7 +6,7 @@ release: $(patsubst %,%_release,$(SAMPLES))
 debug: $(patsubst %,%_debug,$(SAMPLES))
 
 %_release:
-	make -C $* release
+	@+make -C $* release
 
 %_debug:
-	make -C $* debug
+	@+make -C $* debug
