@@ -67,8 +67,9 @@ ITensorPtr operator/(float val, const ITensorPtr& t2);
 ITensorPtr operator/(const ITensorPtr& t1, float val);
 ///@}
 
-//! \fn ITensorPtr constant(float value, const Shape& shape, MemoryLocation
-//! location) \brief Creates constant tensor.
+//! \fn ITensorPtr constant(float value, const Shape& shape,
+//!                         MemoryLocation location)
+//! \brief Creates constant tensor.
 //!
 ITensorPtr constant(float value, const Shape& shape, MemoryLocation location);
 
@@ -211,7 +212,8 @@ ITensorPtr reshape(const ITensorPtr& t, const Shape& shape);
 //!                          const std::string& format = "NHWC")
 //! \brief Applies max pooling operation.
 //! \param tensor Tensor on which pooling will be performed, must be
-//! 4-dimensional. \param kernel Kernel shape, should be of length 1 or 2.
+//!               4-dimensional.
+//! \param kernel Kernel shape, should be of length 1 or 2.
 //! \param strides Strides, should be of length 1 or 2.
 //! \param padding Type of padding, should be one of: "SAME", "VALID".
 //! \param format Type of data format, should be one of : "NHWC", "NCHW".
@@ -229,7 +231,8 @@ ITensorPtr maxPool2D(const ITensorPtr& tensor,
 //!                          const std::string& format = "NHWC")
 //! \brief Applies average pooling operation.
 //! \param tensor Tensor on which pooling will be performed, must be
-//! 4-dimensional. \param kernel Kernel shape, should be of length 1 or 2.
+//!               4-dimensional.
+//! \param kernel Kernel shape, should be of length 1 or 2.
 //! \param strides Strides, should be of length 1 or 2.
 //! \param padding Type of padding, should be one of: "SAME", "VALID".
 //! \param format Type of data format, should be one of : "NHWC", "NCHW".
@@ -246,10 +249,12 @@ ITensorPtr avgPool2D(const ITensorPtr& tensor,
 //!                       const std::string& format = "NHWC")
 //! \brief Applies 2D convolution operation.
 //! \param tensor Tensor on which convolution will be performed, must be
-//! 4-dimensional. \param kernel Tensor with convolution kernel, must be
-//! 4-dimensional. \param strides Strides, should be of length 1 or 2. \param
-//! padding Type of padding, should be one of: "SAME", "VALID". \param format
-//! Type of data format, should be one of : "NHWC", "NCHW".
+//!               4-dimensional.
+//! \param kernel Tensor with convolution kernel, must be
+//!               4-dimensional.
+//! \param strides Strides, should be of length 1 or 2.
+//! \param padding Type of padding, should be one of: "SAME", "VALID".
+//! \param format Type of data format, should be one of : "NHWC", "NCHW".
 //!
 ITensorPtr conv2D(const ITensorPtr& tensor, const ITensorPtr& kernel,
                   const std::vector<int>& strides = {1, 1},
@@ -293,8 +298,7 @@ ITensorPtr softmax_c(const ITensorPtr& tensor, int numAxes = -1);
 //! \param numAxes Number of axes (counting from begging) normalization
 //!                will be applied.
 //! \details If tensor has N dimensions, then alpha and beta should have the
-//! shape
-//!          as last <N - numAxes> of axes of tensor.
+//!          shape as last <N - numAxes> of axes of tensor.
 //!          If numAxes is non-positive then normalization if done over all
 //!          axes.
 //!

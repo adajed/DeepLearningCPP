@@ -258,8 +258,9 @@ void pool_grad_max_nhwc(const float* in, const float* out, const float* outG,
 }
 
 template <PaddingType padding>
-void pool_grad_avg_nhwc(const float* in, const float* out, const float* outG,
-                        float* inG, const std::vector<int>& inShape,
+void pool_grad_avg_nhwc(const float* /*in*/, const float* /*out*/,
+                        const float* outG, float* inG,
+                        const std::vector<int>& inShape,
                         const std::vector<int>& outShape,
                         const std::vector<int>& kernel,
                         const std::vector<int>& strides)
@@ -350,8 +351,9 @@ void pool_grad_max_nchw(const float* in, const float* out, const float* outG,
 }
 
 template <PaddingType padding>
-void pool_grad_avg_nchw(const float* in, const float* out, const float* outG,
-                        float* inG, const std::vector<int>& inShape,
+void pool_grad_avg_nchw(const float* /*in*/, const float* /*out*/,
+                        const float* outG, float* inG,
+                        const std::vector<int>& inShape,
                         const std::vector<int>& outShape,
                         const std::vector<int>& kernel,
                         const std::vector<int>& strides)

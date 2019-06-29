@@ -225,8 +225,8 @@ ReduceBackLayer::ReduceBackLayer(ID id, const Tensor::SPtr& tensor, int numAxes,
 }
 
 void ReduceBackLayer::execute(const std::vector<float*>& inputs,
-                                const std::vector<float*>& outputs,
-                                const InputDict& /*inputDict*/)
+                              const std::vector<float*>& outputs,
+                              const InputDict& /*inputDict*/)
 {
     Tensor::SPtr in = getInputs()[0];
 
@@ -271,8 +271,8 @@ ReduceBackGradientLayer::ReduceBackGradientLayer(ID id, const Tensor::SPtr& in,
 }
 
 void ReduceBackGradientLayer::execute(const std::vector<float*>& inputs,
-                                const std::vector<float*>& outputs,
-                                const InputDict& /*inputDict*/)
+                                      const std::vector<float*>& outputs,
+                                      const InputDict& /*inputDict*/)
 {
     Tensor::SPtr outputGrad = getInputs()[2];
 
@@ -314,8 +314,8 @@ void ReduceFrontLayer::execute(const std::vector<float*>& inputs,
     float* out = outputs[0];
     std::vector<int> shape = input->getShape();
     size_t outSize = 1, reduceSize = 1;
-    for (unsigned i = 0; i < mNumAxes; ++i) reduceSize *= shape[i];
-    for (unsigned i = mNumAxes; i < shape.size(); ++i) outSize *= shape[i];
+    for (int i = 0; i < mNumAxes; ++i) reduceSize *= shape[i];
+    for (int i = mNumAxes; i < shape.size(); ++i) outSize *= shape[i];
 
     if (input->getType() == MemoryType::kHOST_MEMORY)
         runReduceFrontHost(in, out, outSize, reduceSize, mReduceType);
@@ -358,8 +358,8 @@ void ReduceFrontGradientLayer::execute(const std::vector<float*>& inputs,
     float* inGrad = outputs[0];
     std::vector<int> shape = mOutputs[0]->getShape();
     size_t outSize = 1, reduceSize = 1;
-    for (unsigned i = 0; i < mNumAxes; ++i) reduceSize *= shape[i];
-    for (unsigned i = mNumAxes; i < shape.size(); ++i) outSize *= shape[i];
+    for (int i = 0; i < mNumAxes; ++i) reduceSize *= shape[i];
+    for (int i = mNumAxes; i < shape.size(); ++i) outSize *= shape[i];
 
     if (outputGrad->getType() == MemoryType::kHOST_MEMORY)
         runReduceFrontGradientHost(in, out, outGrad, inGrad, outSize,

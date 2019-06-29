@@ -40,8 +40,7 @@ namespace cuda
 {
 void runAddNDevice(int n, size_t size, float** xs, float* y);
 
-void runAddNGradientDevice(int n, size_t size, float* yGrad,
-                           float** xGrads);
+void runAddNGradientDevice(int n, size_t size, float* yGrad, float** xGrads);
 
 }  // namespace cuda
 #endif

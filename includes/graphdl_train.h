@@ -45,8 +45,9 @@ ITrainerPtr gradientDescent(float lr);
 
 //! \fn ITrainerPtr momentum(float lr, float m)
 //! \brief Returns ITrainer representing gradient descent algorithm with
-//! momentum. \param lr Learning rate for the algorithm. \param m Momentum
-//! value.
+//!                momentum.
+//! \param lr Learning rate for the algorithm.
+//! \param m Momentum value.
 //!
 ITrainerPtr momentum(float lr, float m);
 

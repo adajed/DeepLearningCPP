@@ -89,6 +89,7 @@ std::ostream& operator<<(std::ostream& os, ReduceType t)
     case ReduceType::kMAX: return os << "MAX";
     case ReduceType::kMIN: return os << "MIN";
     }
+    return os;
 }
 
 std::function<float(float, float)> getReduceOp(ReduceType reduceType)
@@ -100,7 +101,9 @@ std::function<float(float, float)> getReduceOp(ReduceType reduceType)
         return [](float acc, float x) { return acc > x ? acc : x; };
     case ReduceType::kMIN:
         return [](float acc, float x) { return acc < x ? acc : x; };
+    default: return [](float acc, float x) { return 0.; };
     }
+
 }
 
 float getInitialValue(ReduceType reduceType)
@@ -110,6 +113,7 @@ float getInitialValue(ReduceType reduceType)
     case ReduceType::kSUM: return 0;
     case ReduceType::kMAX: return -FLT_MAX;
     case ReduceType::kMIN: return FLT_MAX;
+    default: return 0.;
     }
 }
 
@@ -122,6 +126,7 @@ std::function<float(float, float)> getReduceOpGrad(ReduceType reduceType)
         return [](float x, float y) { return x == y ? 1. : 0.; };
     case ReduceType::kMIN:
         return [](float x, float y) { return x == y ? 1. : 0.; };
+    default: return [](float x, float y) { return 0.; };
     }
 }
 

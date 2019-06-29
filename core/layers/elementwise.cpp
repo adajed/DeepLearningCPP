@@ -217,7 +217,6 @@ bool checkShapesCompatibleFront(const TensorShape& s1, const TensorShape& s2)
     TensorShape shortShape = shorterShape(s1, s2);
     TensorShape longShape = longerShape(s1, s2);
     int sizeShort = shortShape.size();
-    int sizeLong = longShape.size();
 
     for (int i = 0; i < sizeShort; ++i)
         if (shortShape[i] != longShape[i]) return false;
