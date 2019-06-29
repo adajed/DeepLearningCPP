@@ -149,19 +149,25 @@ ITensorPtr exp(const ITensorPtr& t);
 ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src);
 
 //! \fn ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1)
-//! \brief Calculate sum of values along last numAxes axes.
+//! \brief Calculate sum of values along last <numAxes> axes.
 //! \details If numAxes is non-positive calculates along all axes.
 //!
 ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1);
 
 //! \fn ITensorPtr reduceMax(const ITensorPtr& t, int numAxes = -1)
-//! \brief Calculates maximum value along last numAxes axes.
+//! \brief Calculates maximum value along last <numAxes> axes.
 //! \details If numAxes is non-positive calculates along all axes.
 //!
 ITensorPtr reduceMax(const ITensorPtr& t, int numAxes = -1);
 
+//! \fn ITensorPtr reduceMean(const ITensorPtr& t, int numAxes = -1)
+//! \brief Calculates mean value along last <numAxes> axes.
+//! \details If numAxes is non-positive calculates along all axes.
+//!
+ITensorPtr reduceMean(const ITensorPtr& t, int numAxes = -1);
+
 //! \fn ITensorPtr reduceMin(const ITensorPtr& t, int numAxes = -1)
-//! \brief Calculates minimal value along last numAxes axes.
+//! \brief Calculates minimal value along last <numAxes> axes.
 //! \details If numAxes is non-positive calculates along all axes.
 //!
 ITensorPtr reduceMin(const ITensorPtr& t, int numAxes = -1);

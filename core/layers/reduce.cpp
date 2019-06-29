@@ -391,6 +391,17 @@ Tensor::SPtr reduceFront(const Tensor::SPtr& t, int numAxes,
     return layer->getOutputs()[0];
 }
 
+Tensor::SPtr reduceMean(const Tensor::SPtr& t, int numAxes)
+{
+    if (numAxes <= 0) numAxes = t->getShape().size();
+    size_t size = 1;
+    for (int i = t->getShape().size() - numAxes; i < t->getShape().size(); ++i)
+        size *= t->getShape()[i];
+
+    Tensor::SPtr sum = reduceBack(t, numAxes, layers::ReduceType::kSUM);
+    return sum * (1. / float(size));
+}
+
 }  // namespace core
 
 template <core::layers::ReduceType reduceType>
@@ -409,6 +420,12 @@ ITensorPtr reduceSum(const ITensorPtr& t, int numAxes)
 ITensorPtr reduceMax(const ITensorPtr& t, int numAxes)
 {
     return reduceOperation<core::layers::ReduceType::kMAX>(t, numAxes);
+}
+
+ITensorPtr reduceMean(const ITensorPtr& t, int numAxes)
+{
+    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
+    return makeAbstractTensor(core::reduceMean(tensor->get(), numAxes));
 }
 
 ITensorPtr reduceMin(const ITensorPtr& t, int numAxes)

@@ -33,6 +33,7 @@ global:
         graphdl::assign*;
         graphdl::reduceSum*;
         graphdl::reduceMax*;
+        graphdl::reduceMean*;
         graphdl::reduceMin*;
         graphdl::addN*;
         graphdl::group*;
