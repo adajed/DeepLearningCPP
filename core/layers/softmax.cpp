@@ -2,6 +2,7 @@
 
 #include "abstractTensor.h"
 #include "activation.h"
+#include "elementwise.h"
 #include "graph.h"
 #include "reduce.h"
 
@@ -149,12 +150,26 @@ Tensor::SPtr softmax(const Tensor::SPtr& tensor, int numAxes)
     return layer->getOutputs()[0];
 }
 
+Tensor::SPtr softmax_c(const Tensor::SPtr& tensor, int numAxes)
+{
+    if (numAxes <= 0) numAxes = tensor->getShape().size();
+
+    Tensor::SPtr max = reduceBack(tensor, numAxes, layers::ReduceType::kMAX);
+    return softmax(tensor - max, numAxes);
+}
+
 }  // namespace core
 
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes)
 {
     core::Tensor::SPtr t = core::castITensorPtr(tensor)->get();
     return core::makeAbstractTensor(core::softmax(t, numAxes));
+}
+
+ITensorPtr softmax_c(const ITensorPtr& tensor, int numAxes)
+{
+    core::Tensor::SPtr t = core::castITensorPtr(tensor)->get();
+    return core::makeAbstractTensor(core::softmax_c(t, numAxes));
 }
 
 }  // namespace graphdl

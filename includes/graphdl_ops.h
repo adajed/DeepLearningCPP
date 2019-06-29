@@ -150,10 +150,28 @@ ITensorPtr exp(const ITensorPtr& t);
 ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src);
 
 //! \fn ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1)
-//! \brief Calculate sum of values along last numAxes axes.
-//! If numAxes is non-positive calculates sum of all values in tensor.
+//! \brief Calculate sum of values along last <numAxes> axes.
+//! \details If numAxes is non-positive calculates along all axes.
 //!
 ITensorPtr reduceSum(const ITensorPtr& t, int numAxes = -1);
+
+//! \fn ITensorPtr reduceMax(const ITensorPtr& t, int numAxes = -1)
+//! \brief Calculates maximum value along last <numAxes> axes.
+//! \details If numAxes is non-positive calculates along all axes.
+//!
+ITensorPtr reduceMax(const ITensorPtr& t, int numAxes = -1);
+
+//! \fn ITensorPtr reduceMean(const ITensorPtr& t, int numAxes = -1)
+//! \brief Calculates mean value along last <numAxes> axes.
+//! \details If numAxes is non-positive calculates along all axes.
+//!
+ITensorPtr reduceMean(const ITensorPtr& t, int numAxes = -1);
+
+//! \fn ITensorPtr reduceMin(const ITensorPtr& t, int numAxes = -1)
+//! \brief Calculates minimal value along last <numAxes> axes.
+//! \details If numAxes is non-positive calculates along all axes.
+//!
+ITensorPtr reduceMin(const ITensorPtr& t, int numAxes = -1);
 
 //! \fn ITensorPtr addN(std::vector<ITensorPtr> tensors)
 //! \brief Calculates pointwise addtion of all tensors in vector.
@@ -260,6 +278,16 @@ ITensorPtr nchw2nhwc(const ITensorPtr& tensor);
 //!                to number of dimenstions of tensor.
 //!
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1);
+
+//! \fn ITensorPtr softmax(const ITensorPtr& tensor, int numAxes = -1)
+//! \brief Applies centered softmax operation on last numAxes axes.
+//! \param tensor Tensor on which softmax will be performed.
+//! \param numAxes Number of axes, if non-positive then it is set
+//!                to number of dimenstions of tensor.
+//! \details Before appling softmax it substracts maximal value
+//!          in each reduction block. It helps numerical stability.
+//!
+ITensorPtr softmax_c(const ITensorPtr& tensor, int numAxes = -1);
 
 //! \fn ITensorPtr batchNorm(const ITensorPtr& tensor, const ITensorPtr& alpha,
 //!                          const ITensorPtr& beta, int numAxes = -1)

@@ -39,19 +39,17 @@ ComputationalGraph buildNetwork()
     ITensorPtr a;
     a = create_conv2D(X, 4, {3, 3}, {1, 1}, "SAME", "NHWC", "conv1");
     a = maxPool2D(a, {2, 2}, {2, 2}, "SAME", "NHWC");
-    a = create_batchNorm(a, 3, "batchnorm1");
     a = relu(a);
 
     a = create_conv2D(a, 16, {3, 3}, {1, 1}, "SAME", "NHWC", "conv2");
     a = maxPool2D(a, {2, 2}, {2, 2}, "SAME", "NHWC");
-    /* a = create_batchNorm(a, 3, "batchnorm2"); */
     a = relu(a);
 
     a = create_conv2D(a, 32, {3, 3}, {1, 1}, "SAME", "NHWC", "conv3");
     a = reshape(a, {BATCH_SIZE, 32 * 7 * 7});
     a = relu(create_matmulAndAddBias(a, 128, "dense1"));
     a = create_matmulAndAddBias(a, 10, "dense2");
-    a = softmax(a, 1);
+    a = softmax_c(a, 1);
 
     ITensorPtr loss = neg(reduceSum(Y * log(a))) / float(BATCH_SIZE);
 
