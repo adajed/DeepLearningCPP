@@ -155,9 +155,61 @@ __global__ void reduceGradientKernel(const float* x, const float* y,
                     reduceGradientOp<op>(x[id], y[id / reduceSize]);
 }
 
+template <ReduceOpCuda op, unsigned BS>
+__global__ void reduceFrontKernel(const float* x, float* y,
+                                  size_t outSize, size_t reduceSize,
+                                  int blockPerReduce)
+{
+    __shared__ float sData[BS];
+
+    int tid = threadIdx.x;
+    int id = ((blockIdx.x % blockPerReduce) * BS + tid) * outSize +
+             (blockIdx.x / blockPerReduce);
+    float v;
+
+    sData[tid] = initialValue<op>();
+    while (id < outSize * reduceSize)
+    {
+        v = initialReduceOp<op>(x[id]);
+        sData[tid] = reduceOp<op>(sData[tid], v);
+        id += BS * blockPerReduce * outSize;
+    }
+    __syncthreads();
+
+    if (BS >= 512)
+    {
+        if (tid < 256) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 256]);
+        __syncthreads();
+    }
+    if (BS >= 256)
+    {
+        if (tid < 128) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 128]);
+        __syncthreads();
+    }
+    if (BS >= 128)
+    {
+        if (tid < 64) sData[tid] = reduceOp<op>(sData[tid], sData[tid + 64]);
+        __syncthreads();
+    }
+
+    if (tid < 32) warpReduce<op, BS>(sData, tid);
+    if (tid == 0) y[blockIdx.x] = sData[0];
+}
+
+template <ReduceOpCuda op>
+__global__ void reduceFrontGradientKernel(const float* x, const float* y,
+                                          const float* yGrad, float* xGrad,
+                                          size_t size, size_t outSize)
+{
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < size)
+        xGrad[id] = yGrad[id % outSize] *
+                    reduceGradientOp<op>(x[id], y[id % outSize]);
+}
+
 }  // namespace
 
-template<ReduceOpCuda op>
+template <ReduceOpCuda op>
 void reduce(const float* x, float* y, size_t outSize, size_t reduceSize)
 {
     const int BLOCK_SIZE = 256;
@@ -175,7 +227,8 @@ void reduce(const float* x, float* y, size_t outSize, size_t reduceSize)
         cudaFree(temp);
     }
     else
-        reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(x, y, reduceSize, NUM_BLOCKS_PER_REDUCTION);
+        reduceKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(
+                x, y, reduceSize, NUM_BLOCKS_PER_REDUCTION);
 }
 
 template <ReduceOpCuda op>
@@ -190,6 +243,39 @@ void reduceGradient(const float* x, const float* y,
             x, y, yGrad, xGrad, outSize * reduceSize, reduceSize);
 }
 
+template <ReduceOpCuda op>
+void reduceFront(const float* x, float* y, size_t outSize, size_t reduceSize)
+{
+    const int BLOCK_SIZE = 256;
+    const int NUM_BLOCKS_PER_REDUCTION = (reduceSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    const int NUM_BLOCKS = NUM_BLOCKS_PER_REDUCTION * outSize;
+
+    if (NUM_BLOCKS_PER_REDUCTION > 1)
+    {
+        float* temp;
+        cudaMalloc(&temp, NUM_BLOCKS * sizeof(float));
+        reduceFrontKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(
+                x, temp, outSize, reduceSize, NUM_BLOCKS_PER_REDUCTION);
+        reduceKernel<op, BLOCK_SIZE><<<outSize, BLOCK_SIZE>>>(
+                temp, y, NUM_BLOCKS_PER_REDUCTION, 1);
+        cudaFree(temp);
+    }
+    else
+        reduceFrontKernel<op, BLOCK_SIZE><<<NUM_BLOCKS, BLOCK_SIZE>>>(
+                x, y, outSize, reduceSize, NUM_BLOCKS_PER_REDUCTION);
+}
+
+template <ReduceOpCuda op>
+void reduceFrontGradient(const float* x, const float* y,
+                         const float* yGrad, float* xGrad,
+                         size_t outSize, size_t reduceSize)
+{
+    const int BLOCK_SIZE = 256;
+    const int NUM_BLOCKS = (outSize * reduceSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    reduceFrontGradientKernel<op><<<NUM_BLOCKS, BLOCK_SIZE>>>(
+            x, y, yGrad, xGrad, outSize * reduceSize, outSize);
+}
 
 
 }  // namespace cuda
