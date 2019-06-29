@@ -314,7 +314,7 @@ void runConv2DGradientDevice(const float* x, const float* k, const float* yG,
     size_t size = params[0] * params[1] * params[2] * params[3];
     utils::fill(xG, size, 0.);
 
-    size = params[8] * params[7] * params[8] * params[9];
+    size = params[8] * params[9] * params[10] * params[11];
     utils::fill(kG, size, 0.);
 
     if (dataFormat == DataFormat::kNHWC)
