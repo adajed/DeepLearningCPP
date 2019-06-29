@@ -112,7 +112,8 @@ void reduceBackGradientHost(const float* in, const float* out,
 }
 
 template <ReduceType op>
-void reduceFrontHost(const float* x, float* y, size_t outSize, size_t reduceSize)
+void reduceFrontHost(const float* x, float* y, size_t outSize,
+                     size_t reduceSize)
 {
     for (size_t posY = 0; posY < outSize; ++posY)
     {
@@ -124,9 +125,8 @@ void reduceFrontHost(const float* x, float* y, size_t outSize, size_t reduceSize
 }
 
 template <ReduceType op>
-void reduceFrontGradientHost(const float* x, const float* y,
-                             const float* yGrad, float* xGrad,
-                             size_t outSize, size_t reduceSize)
+void reduceFrontGradientHost(const float* x, const float* y, const float* yGrad,
+                             float* xGrad, size_t outSize, size_t reduceSize)
 {
     for (size_t posY = 0; posY < outSize; ++posY)
     {
@@ -202,16 +202,16 @@ void runReduceFrontGradientHost(const float* in, const float* out,
     switch (reduceType)
     {
     case ReduceType::kSUM:
-        reduceFrontGradientHost<ReduceType::kSUM>(
-                in, out, outGrad, inGrad, outSize, reduceSize);
+        reduceFrontGradientHost<ReduceType::kSUM>(in, out, outGrad, inGrad,
+                                                  outSize, reduceSize);
         break;
     case ReduceType::kMAX:
-        reduceFrontGradientHost<ReduceType::kMAX>(
-                in, out, outGrad, inGrad, outSize, reduceSize);
+        reduceFrontGradientHost<ReduceType::kMAX>(in, out, outGrad, inGrad,
+                                                  outSize, reduceSize);
         break;
     case ReduceType::kMIN:
-        reduceFrontGradientHost<ReduceType::kMIN>(
-                in, out, outGrad, inGrad, outSize, reduceSize);
+        reduceFrontGradientHost<ReduceType::kMIN>(in, out, outGrad, inGrad,
+                                                  outSize, reduceSize);
         break;
     }
 }
@@ -405,11 +405,11 @@ Tensor::SPtr reduceMean(const Tensor::SPtr& t, int numAxes)
 }  // namespace core
 
 template <core::layers::ReduceType reduceType>
-ITensorPtr  reduceOperation(const ITensorPtr& t, int numAxes)
+ITensorPtr reduceOperation(const ITensorPtr& t, int numAxes)
 {
     core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::reduceBack(tensor->get(), numAxes,
-                                               reduceType));
+    return makeAbstractTensor(
+        core::reduceBack(tensor->get(), numAxes, reduceType));
 }
 
 ITensorPtr reduceSum(const ITensorPtr& t, int numAxes)

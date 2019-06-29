@@ -103,7 +103,6 @@ std::function<float(float, float)> getReduceOp(ReduceType reduceType)
         return [](float acc, float x) { return acc < x ? acc : x; };
     default: return [](float acc, float x) { return 0.; };
     }
-
 }
 
 float getInitialValue(ReduceType reduceType)
