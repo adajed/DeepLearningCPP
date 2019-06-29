@@ -111,6 +111,31 @@ void reduceBackGradientHost(const float* in, const float* out,
     }
 }
 
+template <ReduceType op>
+void reduceFrontHost(const float* x, float* y, size_t outSize, size_t reduceSize)
+{
+    for (size_t posY = 0; posY < outSize; ++posY)
+    {
+        float val = initialValue<op>();
+        for (size_t i = 0; i < reduceSize; ++i)
+            val = reduce<op>(val, x[i * outSize + posY]);
+        y[posY] = val;
+    }
+}
+
+template <ReduceType op>
+void reduceFrontGradientHost(const float* x, const float* y,
+                             const float* yGrad, float* xGrad,
+                             size_t outSize, size_t reduceSize)
+{
+    for (size_t posY = 0; posY < outSize; ++posY)
+    {
+        for (size_t i = 0; i < reduceSize; ++i)
+            xGrad[i * outSize + posY] =
+                yGrad[posY] * reduceGrad<op>(x[i * outSize + posY], y[posY]);
+    }
+}
+
 }  // namespace
 
 void runReduceBackHost(const float* in, float* out, size_t outSize,
@@ -152,27 +177,43 @@ void runReduceBackGradientHost(const float* in, const float* out,
     }
 }
 
-// TODO(adajed): for now there is only one possible ReduceType
 void runReduceFrontHost(const float* in, float* out, size_t outSize,
-                        size_t reduceSize, ReduceType /*reduceType*/)
+                        size_t reduceSize, ReduceType reduceType)
 {
-    for (size_t posY = 0; posY < outSize; ++posY)
+    switch (reduceType)
     {
-        out[posY] = 0.;
-        for (size_t i = 0; i < reduceSize; ++i)
-            out[posY] += in[i * outSize + posY];
+    case ReduceType::kSUM:
+        reduceFrontHost<ReduceType::kSUM>(in, out, outSize, reduceSize);
+        break;
+    case ReduceType::kMAX:
+        reduceFrontHost<ReduceType::kMAX>(in, out, outSize, reduceSize);
+        break;
+    case ReduceType::kMIN:
+        reduceFrontHost<ReduceType::kMIN>(in, out, outSize, reduceSize);
+        break;
     }
 }
 
-// TODO(adajed): for now there is only one possible ReduceType
-void runReduceFrontGradientHost(const float* /*in*/, const float* /*out*/,
+void runReduceFrontGradientHost(const float* in, const float* out,
                                 const float* outGrad, float* inGrad,
                                 size_t outSize, size_t reduceSize,
-                                ReduceType /*reduceType*/)
+                                ReduceType reduceType)
 {
-    for (size_t posY = 0; posY < outSize; ++posY)
-        for (size_t i = 0; i < reduceSize; ++i)
-            inGrad[i * outSize + posY] = outGrad[posY];
+    switch (reduceType)
+    {
+    case ReduceType::kSUM:
+        reduceFrontGradientHost<ReduceType::kSUM>(
+                in, out, outGrad, inGrad, outSize, reduceSize);
+        break;
+    case ReduceType::kMAX:
+        reduceFrontGradientHost<ReduceType::kMAX>(
+                in, out, outGrad, inGrad, outSize, reduceSize);
+        break;
+    case ReduceType::kMIN:
+        reduceFrontGradientHost<ReduceType::kMIN>(
+                in, out, outGrad, inGrad, outSize, reduceSize);
+        break;
+    }
 }
 
 ReduceBackLayer::ReduceBackLayer(ID id, const Tensor::SPtr& tensor, int numAxes,

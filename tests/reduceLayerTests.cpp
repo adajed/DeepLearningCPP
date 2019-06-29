@@ -439,7 +439,7 @@ TEST_P(ReduceFrontTest, testAPI)
     test(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, ReduceFrontTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn({ReduceType::kSUM}),
+                        Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES),
                                 ValuesIn(LOCATIONS)));
 
 class ReduceFrontGradientTest : public ReduceFrontTest
@@ -450,7 +450,7 @@ TEST_P(ReduceFrontGradientTest, testAPI)
     testGradient(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, ReduceFrontGradientTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn({ReduceType::kSUM}),
+                        Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES),
                                 ValuesIn(LOCATIONS)));
 
 }  // namespace
