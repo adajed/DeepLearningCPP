@@ -54,7 +54,8 @@ class BatchNormTest : public LayerTest,
     {
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
-        bool correct = runTest({mInput, mAlpha, mBeta}, {mOutput}, builder);
+        bool correct =
+            runTest({mInput, mAlpha, mBeta}, {mOutput}, builder, 10e-4);
         EXPECT_TRUE(correct);
     }
 

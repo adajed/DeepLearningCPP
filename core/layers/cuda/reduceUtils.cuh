@@ -23,6 +23,12 @@ enum class ReduceOpCuda
 
     kMIN = 2,
     kMAX = 3,
+
+    ///< mean of elements
+    kMEAN = 4,
+
+    ///< mean of elements squared
+    kSQUARED_MEAN = 5
 };
 
 namespace
@@ -54,14 +60,14 @@ __device__ float initialReduceOp<ReduceOpCuda::kSQUARED_SUM>(float x)
 {
     return x * x;
 }
+template <>
+__device__ float initialReduceOp<ReduceOpCuda::kSQUARED_MEAN>(float x)
+{
+    return x * x;
+}
 
 // describes how to reduce elements
-template <ReduceOpCuda op> __device__ float reduceOp(float f1, float f2);
-template <> __device__ float reduceOp<ReduceOpCuda::kSUM>(float f1, float f2)
-{
-    return f1 + f2;
-}
-template <> __device__ float reduceOp<ReduceOpCuda::kSQUARED_SUM>(float f1, float f2)
+template <ReduceOpCuda op> __device__ float reduceOp(float f1, float f2)
 {
     return f1 + f2;
 }
@@ -76,19 +82,33 @@ template <> __device__ float reduceOp<ReduceOpCuda::kMAX>(float f1, float f2)
 
 // describes how to compute gradient
 template <ReduceOpCuda op> __device__ float reduceGradientOp(float x, float y);
-template <> __device__ float reduceGradientOp<ReduceOpCuda::kSUM>(float x, float y)
+template <>
+__device__ float reduceGradientOp<ReduceOpCuda::kSUM>(float x, float y)
 {
     return 1.;
 }
-template <> __device__ float reduceGradientOp<ReduceOpCuda::kSQUARED_SUM>(float x, float y)
+template <>
+__device__ float reduceGradientOp<ReduceOpCuda::kMEAN>(float x, float y)
+{
+    return 1.;
+}
+template <>
+__device__ float reduceGradientOp<ReduceOpCuda::kSQUARED_SUM>(float x, float y)
 {
     return 2 * x;
 }
-template <> __device__ float reduceGradientOp<ReduceOpCuda::kMIN>(float x, float y)
+template <>
+__device__ float reduceGradientOp<ReduceOpCuda::kSQUARED_MEAN>(float x, float y)
+{
+    return 2 * x;
+}
+template <>
+__device__ float reduceGradientOp<ReduceOpCuda::kMIN>(float x, float y)
 {
     return float(x == y);
 }
-template <> __device__ float reduceGradientOp<ReduceOpCuda::kMAX>(float x, float y)
+template <>
+__device__ float reduceGradientOp<ReduceOpCuda::kMAX>(float x, float y)
 {
     return float(x == y);
 }
@@ -141,7 +161,16 @@ __global__ void reduceKernel(const float* x, float* y, size_t reduceSize, int bl
     }
 
     if (tid < 32) warpReduce<op, BS>(sData, tid);
-    if (tid == 0) y[blockIdx.x] = sData[0];
+
+    if (op == ReduceOpCuda::kMEAN ||
+        op == ReduceOpCuda::kSQUARED_MEAN)
+    {
+        if (tid == 0) y[blockIdx.x] = sData[0] / reduceSize;
+    }
+    else
+    {
+        if (tid == 0) y[blockIdx.x] = sData[0];
+    }
 }
 
 template <ReduceOpCuda op>
@@ -151,8 +180,19 @@ __global__ void reduceGradientKernel(const float* x, const float* y,
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < size)
-        xGrad[id] = yGrad[id / reduceSize] *
-                    reduceGradientOp<op>(x[id], y[id / reduceSize]);
+    {
+        if (op == ReduceOpCuda::kMEAN ||
+            op == ReduceOpCuda::kSQUARED_MEAN)
+        {
+            xGrad[id] = yGrad[id / reduceSize] *
+                        reduceGradientOp<op>(x[id], y[id / reduceSize]) / reduceSize;
+        }
+        else
+        {
+            xGrad[id] = yGrad[id / reduceSize] *
+                        reduceGradientOp<op>(x[id], y[id / reduceSize]);
+        }
+    }
 }
 
 template <ReduceOpCuda op, unsigned BS>
@@ -193,7 +233,15 @@ __global__ void reduceFrontKernel(const float* x, float* y,
     }
 
     if (tid < 32) warpReduce<op, BS>(sData, tid);
-    if (tid == 0) y[blockIdx.x] = sData[0];
+    if (op == ReduceOpCuda::kMEAN ||
+        op == ReduceOpCuda::kSQUARED_MEAN)
+    {
+        if (tid == 0) y[blockIdx.x] = sData[0] / reduceSize;
+    }
+    else
+    {
+        if (tid == 0) y[blockIdx.x] = sData[0];
+    }
 }
 
 template <ReduceOpCuda op>
@@ -203,8 +251,20 @@ __global__ void reduceFrontGradientKernel(const float* x, const float* y,
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < size)
-        xGrad[id] = yGrad[id % outSize] *
-                    reduceGradientOp<op>(x[id], y[id % outSize]);
+    {
+        if (op == ReduceOpCuda::kMEAN ||
+            op == ReduceOpCuda::kSQUARED_MEAN)
+        {
+            int reduceSize = size / outSize;
+            xGrad[id] = yGrad[id % outSize] *
+                        reduceGradientOp<op>(x[id], y[id % outSize]) / reduceSize;
+        }
+        else
+        {
+            xGrad[id] = yGrad[id % outSize] *
+                        reduceGradientOp<op>(x[id], y[id % outSize]);
+        }
+    }
 }
 
 }  // namespace
