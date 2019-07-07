@@ -17,6 +17,8 @@ namespace layers
 {
 namespace
 {
+#define EPS 10e-8
+
 size_t getBatchSize(const Tensor::SPtr& tensor, int numAxes)
 {
     TensorShape shape = tensor->getShape();
@@ -61,7 +63,7 @@ void runBatchNormHost(const float* x, const float* alpha, const float* beta,
         for (int j = 0; j < batchSize; ++j)
         {
             float val = x[j * stride + i] - mean[i];
-            val /= std::sqrt(stddev[i]) + 10e-8;
+            val /= std::sqrt(stddev[i] + EPS);
             val *= alpha[i];
             val += beta[i];
             y[j * stride + i] = val;
@@ -69,11 +71,11 @@ void runBatchNormHost(const float* x, const float* alpha, const float* beta,
     }
 }
 
-void runBatchNormGradientHost(const float* /*x*/, const float* alpha,
+void runBatchNormGradientHost(const float* x, const float* alpha,
                               const float* beta, const float* y,
-                              const float* yGrad, float* /*xGrad*/,
-                              float* alphaGrad, float* betaGrad,
-                              float* /*mean*/, float* /*stddev*/, size_t size,
+                              const float* yGrad, const float* mean,
+                              const float* stddev, float* xGrad,
+                              float* alphaGrad, float* betaGrad, size_t size,
                               size_t batchSize)
 {
     size_t stride = size / batchSize;
@@ -82,7 +84,7 @@ void runBatchNormGradientHost(const float* /*x*/, const float* alpha,
     for (int i = 0; i < stride; ++i)
     {
         float val = 0.;
-        for (int j = 0; j < batchSize; ++j) val += yGrad[j * stride + i];
+        for (int j = i; j < size; j += stride) val += yGrad[j];
         betaGrad[i] = val;
     }
 
@@ -90,12 +92,25 @@ void runBatchNormGradientHost(const float* /*x*/, const float* alpha,
     for (int i = 0; i < stride; ++i)
     {
         float val = 0.;
-        for (int j = 0; j < batchSize; ++j)
-            val += yGrad[j * stride + i] * y[j * stride + i];
+        for (int j = i; j < size; j += stride) val += yGrad[j] * y[j];
         alphaGrad[i] = (val - betaGrad[i] * beta[i]) / alpha[i];
     }
 
     // xGrad
+    for (int i = 0; i < stride; ++i)
+    {
+        float val = 0.;
+        for (int j = i; j < size; j += stride) val += yGrad[j] * x[j];
+        val -= betaGrad[i] * mean[i];
+
+        for (int j = i; j < size; j += stride)
+        {
+            xGrad[j] = yGrad[j] - betaGrad[i] / float(batchSize) -
+                       0.5 * (x[j] - mean[i]) * val / (stddev[i] + EPS);
+            xGrad[j] /= std::sqrt(stddev[i] + EPS);
+            xGrad[j] *= alpha[i];
+        }
+    }
 }
 
 BatchNormLayer::BatchNormLayer(ID id, const Tensor::SPtr& tensor,
@@ -120,7 +135,7 @@ Layer::TensorMap BatchNormLayer::gradients(Tensor::SPtr out,
     Tensor::SPtr beta = getInputs()[2];
 
     Layer::SPtr layer = createLayer<BatchNormGradientLayer>(
-        tensor, alpha, beta, out, outGrad, mNumAxes, mMean, mStddev);
+        tensor, alpha, beta, out, outGrad, mNumAxes, &mMean, &mStddev);
 
     return {{tensor, layer->getOutputs()[0]},
             {alpha, layer->getOutputs()[1]},
@@ -165,8 +180,8 @@ BatchNormLayer::~BatchNormLayer()
 BatchNormGradientLayer::BatchNormGradientLayer(
     ID id, const Tensor::SPtr& tensor, const Tensor::SPtr& alpha,
     const Tensor::SPtr& beta, const Tensor::SPtr& out,
-    const Tensor::SPtr& outGrad, int numAxes, Memory<float> mean,
-    Memory<float> stddev)
+    const Tensor::SPtr& outGrad, int numAxes, Memory<float>* mean,
+    Memory<float>* stddev)
     : Layer(id, {tensor, alpha, beta, out, outGrad},
             {createTensor("", tensor->getShape(), tensor->getType()),
              createTensor("", alpha->getShape(), alpha->getType()),
@@ -189,20 +204,20 @@ void BatchNormGradientLayer::execute(const std::vector<float*>& inputs,
     float* xGrad = outputs[0];
     float* alphaGrad = outputs[1];
     float* betaGrad = outputs[2];
-    float* mean = mMean.getValues();
-    float* stddev = mStddev.getValues();
+    float* mean = mMean->getValues();
+    float* stddev = mStddev->getValues();
 
     size_t size = getInputs()[0]->getShape().getCount();
     size_t batchSize = getBatchSize(getInputs()[0], mNumAxes);
 
     if (getInputs()[0]->getType() == MemoryType::kHOST_MEMORY)
-        runBatchNormGradientHost(x, alpha, beta, y, yGrad, xGrad, alphaGrad,
-                                 betaGrad, mean, stddev, size, batchSize);
+        runBatchNormGradientHost(x, alpha, beta, y, yGrad, mean, stddev, xGrad,
+                                 alphaGrad, betaGrad, size, batchSize);
 #ifdef CUDA_AVAILABLE
     else
-        cuda::runBatchNormGradientDevice(x, alpha, beta, y, yGrad, xGrad,
-                                         alphaGrad, betaGrad, mean, stddev,
-                                         size, batchSize);
+        cuda::runBatchNormGradientDevice(x, alpha, beta, y, yGrad, mean, stddev,
+                                         xGrad, alphaGrad, betaGrad, size,
+                                         batchSize);
 #endif
 }
 

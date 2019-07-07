@@ -5,6 +5,14 @@
 Coord::Coord(const std::vector<int>& values) : mValues(values) {}
 Coord::Coord(std::initializer_list<int> list) : mValues(list) {}
 
+bool Coord::operator==(const Coord& other) const
+{
+    if (mValues.size() != other.mValues.size()) return false;
+    for (int i = 0; i < mValues.size(); ++i)
+        if (mValues[i] != other.mValues[i]) return false;
+    return true;
+}
+
 Coord Coord::operator+(const Coord& c) const
 {
     assert(mValues.size() == c.mValues.size());
@@ -27,6 +35,13 @@ int& Coord::operator[](size_t pos)
 const int& Coord::operator[](size_t pos) const
 {
     return mValues[pos];
+}
+
+Coord Coord::cast(int start, int end) const
+{
+    std::vector<int> v(end - start, 0);
+    for (int i = start; i < end; ++i) v[i - start] = mValues[i];
+    return Coord(v);
 }
 
 Coord_iterator::Coord_iterator(Coord c, Coord shape) : mCoord(c), mShape(shape)
@@ -113,7 +128,7 @@ bool isInside(const Coord& c, const TensorShape& shape)
 RefTensor::RefTensor() : mValues(0), mCount(0), mShape({}) {}
 
 RefTensor::RefTensor(const TensorShape& shape)
-    : mValues(shape.getCount()), mCount(shape.getCount()), mShape(shape)
+    : mValues(shape.getCount(), 0.), mCount(shape.getCount()), mShape(shape)
 {
 }
 

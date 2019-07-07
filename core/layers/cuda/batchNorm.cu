@@ -14,17 +14,6 @@ namespace
 {
 #define EPS 10e-8
 
-template <unsigned BS>
-__device__ void warpReduce(volatile float* sdata, unsigned tid)
-{
-    if (BS >= 64) sdata[tid] += sdata[tid + 32];
-    if (BS >= 32) sdata[tid] += sdata[tid + 16];
-    if (BS >= 16) sdata[tid] += sdata[tid + 8];
-    if (BS >= 8) sdata[tid] += sdata[tid + 4];
-    if (BS >= 4) sdata[tid] += sdata[tid + 2];
-    if (BS >= 2) sdata[tid] += sdata[tid + 1];
-}
-
 __global__ void normalizeKernel(const float* alpha, const float* beta,
                                 const float* stddev, float* y,
                                 size_t featureSize, size_t size)
@@ -60,7 +49,7 @@ void runBatchNormGradientDevice(const float* x, const float* alpha,
                                 const float* yGrad, const float* mean,
                                 const float* stddev, float* xGrad,
                                 float* alphaGrad, float* betaGrad, size_t size,
-                                size_t batchNorm)
+                                size_t batchSize)
 {
 }
 
