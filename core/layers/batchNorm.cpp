@@ -99,9 +99,8 @@ void runBatchNormGradientHost(const float* x, const float* alpha,
     // xGrad
     for (int i = 0; i < stride; ++i)
     {
-        float val = 0.;
+        float val = -betaGrad[i] * mean[i];
         for (int j = i; j < size; j += stride) val += yGrad[j] * x[j];
-        val -= betaGrad[i] * mean[i];
 
         for (int j = i; j < size; j += stride)
         {

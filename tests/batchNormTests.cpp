@@ -262,7 +262,6 @@ TEST_P(BatchNormGradientTest, testAPI)
     testGradient(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, BatchNormGradientTest,
-                        Combine(ValuesIn(SHAPES),
-                                ValuesIn({MemoryLocation::kHOST})));
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
 }  // namespace

@@ -17,6 +17,11 @@ namespace cuda
 namespace utils
 {
 
+// calculates number of blocks necessary to have
+// <numThreads> threads, where each block has
+// <blockSize> threads
+size_t numBlocks(size_t numThreads, size_t blockSize);
+
 template <typename T>
 void copy(T* out, T* in, size_t size)
 {
