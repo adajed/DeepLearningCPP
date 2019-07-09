@@ -140,6 +140,31 @@ ITensorPtr sqrt(const ITensorPtr& t);
 //!
 ITensorPtr exp(const ITensorPtr& t);
 
+//! \fn ITensorPtr leaky_relu(const ITensorPtr& t)
+//! \brief Preforms leaky relu.
+//!
+ITensorPtr leaky_relu(const ITensorPtr& t);
+
+//! \fn ITensorPtr relu6(const ITensorPtr& t)
+//! \brief Preforms relu6.
+//!
+ITensorPtr relu6(const ITensorPtr& t);
+
+//! \fn ITensorPtr elu(const ITensorPtr& t)
+//! \brief Performs elu.
+//!
+ITensorPtr elu(const ITensorPtr& t);
+
+//! \fn ITensorPtr softplus(const ITensorPtr& t)
+//! \brief Preforms softplus.
+//!
+ITensorPtr softplus(const ITensorPtr& t);
+
+//! \fn ITensorPtr softsign(const ITensorPtr& t)
+//! \brief Performs softsign.
+//!
+ITensorPtr softsign(const ITensorPtr& t);
+
 ///@}
 
 //! \fn ITensorPtr assign(const ITensorPtr& dest, const ITensorPtr& src)

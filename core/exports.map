@@ -30,6 +30,11 @@ global:
         graphdl::log*;
         graphdl::sqrt*;
         graphdl::exp*;
+        graphdl::leaky_relu*;
+        graphdl::relu6*;
+        graphdl::elu*;
+        graphdl::softplus*;
+        graphdl::softsign*;
         graphdl::assign*;
         graphdl::reduceSum*;
         graphdl::reduceMax*;
