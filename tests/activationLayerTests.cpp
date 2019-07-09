@@ -38,7 +38,12 @@ std::vector<Activation> OPS = {
     Activation::kRECIPROCAL,
     Activation::kLOG,
     Activation::kSQRT,
-    Activation::kEXP
+    Activation::kEXP,
+    Activation::kLEAKY_RELU,
+    Activation::kRELU_6,
+    Activation::kELU,
+    Activation::kSOFTPLUS,
+    Activation::kSOFTSIGN,
     // clang-format on
 };
 
@@ -56,6 +61,11 @@ std::ostream& operator<<(std::ostream& os, Activation a)
     case Activation::kLOG: return os << "LOG";
     case Activation::kSQRT: return os << "SQRT";
     case Activation::kEXP: return os << "EXP";
+    case Activation::kLEAKY_RELU: return os << "LEAKY_RELU";
+    case Activation::kRELU_6: return os << "RELU6";
+    case Activation::kELU: return os << "ELU";
+    case Activation::kSOFTPLUS: return os << "SOFTPLUS";
+    case Activation::kSOFTSIGN: return os << "SOFTSIGN";
     }
 
     return os;
@@ -126,6 +136,33 @@ class ActivationTest : public LayerTest,
             fun = [](float x) { return std::sqrt(std::abs(x)); };
             break;
         case Activation::kEXP: fun = [](float x) { return std::exp(x); }; break;
+        case Activation::kLEAKY_RELU:
+            fun = [](float x) {
+                if (x > 0.)
+                    return x;
+                else
+                    return 0.01f * x;
+            };
+            break;
+        case Activation::kRELU_6:
+            fun = [](float x) {
+                if (x < 0.) return 0.f;
+                if (x > 6.) return 6.f;
+                return x;
+            };
+            break;
+        case Activation::kELU:
+            fun = [](float x) {
+                if (x > 0.) return x;
+                return std::exp(x) - 1.f;
+            };
+            break;
+        case Activation::kSOFTPLUS:
+            fun = [](float x) { return std::log(std::exp(x) + 1.); };
+            break;
+        case Activation::kSOFTSIGN:
+            fun = [](float x) { return x / (std::abs(x) + 1.); };
+            break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -179,6 +216,35 @@ class ActivationTest : public LayerTest,
             fun = [](float x) { return 1. / (2 * std::sqrt(std::abs(x))); };
             break;
         case Activation::kEXP: fun = [](float x) { return std::exp(x); }; break;
+        case Activation::kLEAKY_RELU:
+            fun = [](float x) {
+                if (x > 0.)
+                    return 1.f;
+                else
+                    return 0.01f;
+            };
+            break;
+        case Activation::kRELU_6:
+            fun = [](float x) {
+                if (x < 0.) return 0.f;
+                if (x > 6.) return 0.f;
+                return 1.f;
+            };
+            break;
+        case Activation::kELU:
+            fun = [](float x) {
+                if (x > 0.) return 1.f;
+                return std::exp(x);
+            };
+            break;
+        case Activation::kSOFTPLUS:
+            fun = [](float x) { return std::exp(x) / (std::exp(x) + 1.); };
+            break;
+        case Activation::kSOFTSIGN:
+            fun = [](float x) {
+                return 1. / ((std::abs(x) + 1.) * (std::abs(x) + 1.));
+            };
+            break;
         }
 
         for (std::size_t pos = 0; pos < mInput.getCount(); ++pos)
@@ -203,6 +269,11 @@ class ActivationTest : public LayerTest,
             case Activation::kLOG: out = log(abs(in)); break;
             case Activation::kSQRT: out = sqrt(abs(in)); break;
             case Activation::kEXP: out = exp(in); break;
+            case Activation::kLEAKY_RELU: out = leaky_relu(in); break;
+            case Activation::kRELU_6: out = relu6(in); break;
+            case Activation::kELU: out = elu(in); break;
+            case Activation::kSOFTPLUS: out = softplus(in); break;
+            case Activation::kSOFTSIGN: out = softsign(in); break;
             }
             initializeGraph();
 

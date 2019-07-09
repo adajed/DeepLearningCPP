@@ -22,7 +22,12 @@ enum class Activation
     kRECIPROCAL = 6,
     kLOG = 7,
     kSQRT = 8,
-    kEXP = 9
+    kEXP = 9,
+    kLEAKY_RELU = 10,
+    kRELU_6 = 11,
+    kELU = 12,
+    kSOFTPLUS = 13,
+    kSOFTSIGN = 14
 };
 
 class ActivationLayer : public DifferentiableLayer

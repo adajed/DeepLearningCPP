@@ -69,6 +69,31 @@ float activation<Activation::kEXP>(float x)
 {
     return std::exp(x);
 }
+template <>
+float activation<Activation::kLEAKY_RELU>(float x)
+{
+    return x >= 0. ? x : 0.01 * x;
+}
+template <>
+float activation<Activation::kRELU_6>(float x)
+{
+    return x >= 0. ? (x <= 6. ? x : 6.) : 0.;
+}
+template <>
+float activation<Activation::kELU>(float x)
+{
+    return x >= 0. ? x : std::exp(x) - 1.;
+}
+template <>
+float activation<Activation::kSOFTPLUS>(float x)
+{
+    return std::log(std::exp(x) + 1.);
+}
+template <>
+float activation<Activation::kSOFTSIGN>(float x)
+{
+    return x / (std::abs(x) + 1.);
+}
 
 template <Activation act>
 void activationHost(const float* x, float* y, size_t size)
@@ -128,6 +153,33 @@ float activationGradient<Activation::kEXP>(float /* x */, float o)
 {
     return o;
 }
+template <>
+float activationGradient<Activation::kLEAKY_RELU>(float x, float /* o */)
+{
+    return x >= 0. ? 1. : 0.01;
+}
+template <>
+float activationGradient<Activation::kRELU_6>(float x, float /* o */)
+{
+    return x >= 0. ? (x <= 6. ? 1. : 0.) : 0.;
+}
+template <>
+float activationGradient<Activation::kELU>(float x, float o)
+{
+    return x >= 0. ? 1. : o + 1.;
+}
+template <>
+float activationGradient<Activation::kSOFTPLUS>(float x, float /* o */)
+{
+    float v = std::exp(x);
+    return v / (v + 1.);
+}
+template <>
+float activationGradient<Activation::kSOFTSIGN>(float x, float /* o */)
+{
+    float v = std::abs(x) + 1.;
+    return 1. / (v * v);
+}
 
 template <Activation act>
 void activationGradientHost(const float* x, const float* y, const float* yGrad,
@@ -139,73 +191,47 @@ void activationGradientHost(const float* x, const float* y, const float* yGrad,
 
 }  // namespace
 
+#define SINGLE_ARGS(...) __VA_ARGS__
+
+#define CASE_ACTIVATION(ACTIVATION, STMTS)         \
+    case ACTIVATION:                               \
+    {                                              \
+        constexpr Activation __ACT__ = ACTIVATION; \
+        STMTS;                                     \
+        break;                                     \
+    }
+
+#define SWITCH_ACTIVATION(activation, STMTS)                         \
+    switch (activation)                                              \
+    {                                                                \
+        CASE_ACTIVATION(Activation::kRELU, SINGLE_ARGS(STMTS))       \
+        CASE_ACTIVATION(Activation::kABS, SINGLE_ARGS(STMTS))        \
+        CASE_ACTIVATION(Activation::kLOG, SINGLE_ARGS(STMTS))        \
+        CASE_ACTIVATION(Activation::kNEG, SINGLE_ARGS(STMTS))        \
+        CASE_ACTIVATION(Activation::kEXP, SINGLE_ARGS(STMTS))        \
+        CASE_ACTIVATION(Activation::kSQUARE, SINGLE_ARGS(STMTS))     \
+        CASE_ACTIVATION(Activation::kSIGMOID, SINGLE_ARGS(STMTS))    \
+        CASE_ACTIVATION(Activation::kRECIPROCAL, SINGLE_ARGS(STMTS)) \
+        CASE_ACTIVATION(Activation::kTANH, SINGLE_ARGS(STMTS))       \
+        CASE_ACTIVATION(Activation::kSQRT, SINGLE_ARGS(STMTS))       \
+        CASE_ACTIVATION(Activation::kLEAKY_RELU, SINGLE_ARGS(STMTS)) \
+        CASE_ACTIVATION(Activation::kRELU_6, SINGLE_ARGS(STMTS))     \
+        CASE_ACTIVATION(Activation::kELU, SINGLE_ARGS(STMTS))        \
+        CASE_ACTIVATION(Activation::kSOFTPLUS, SINGLE_ARGS(STMTS))   \
+        CASE_ACTIVATION(Activation::kSOFTSIGN, SINGLE_ARGS(STMTS))   \
+    }
+
 void runActivationHost(const float* x, float* y, size_t size, Activation op)
 {
-    switch (op)
-    {
-    case Activation::kRELU:
-        activationHost<Activation::kRELU>(x, y, size);
-        return;
-    case Activation::kSIGMOID:
-        activationHost<Activation::kSIGMOID>(x, y, size);
-        return;
-    case Activation::kTANH:
-        activationHost<Activation::kTANH>(x, y, size);
-        return;
-    case Activation::kSQUARE:
-        activationHost<Activation::kSQUARE>(x, y, size);
-        return;
-    case Activation::kABS: activationHost<Activation::kABS>(x, y, size); return;
-    case Activation::kNEG: activationHost<Activation::kNEG>(x, y, size); return;
-    case Activation::kRECIPROCAL:
-        activationHost<Activation::kRECIPROCAL>(x, y, size);
-        return;
-    case Activation::kLOG: activationHost<Activation::kLOG>(x, y, size); return;
-    case Activation::kSQRT:
-        activationHost<Activation::kSQRT>(x, y, size);
-        return;
-    case Activation::kEXP: activationHost<Activation::kEXP>(x, y, size); return;
-    }
+    SWITCH_ACTIVATION(op, activationHost<__ACT__>(x, y, size));
 }
 
 void runActivationGradientHost(const float* x, const float* y,
                                const float* yGrad, float* xGrad, size_t size,
                                Activation op)
 {
-    switch (op)
-    {
-    case Activation::kRELU:
-        activationGradientHost<Activation::kRELU>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kSIGMOID:
-        activationGradientHost<Activation::kSIGMOID>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kTANH:
-        activationGradientHost<Activation::kTANH>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kSQUARE:
-        activationGradientHost<Activation::kSQUARE>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kABS:
-        activationGradientHost<Activation::kABS>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kNEG:
-        activationGradientHost<Activation::kNEG>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kRECIPROCAL:
-        activationGradientHost<Activation::kRECIPROCAL>(x, y, yGrad, xGrad,
-                                                        size);
-        return;
-    case Activation::kLOG:
-        activationGradientHost<Activation::kLOG>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kSQRT:
-        activationGradientHost<Activation::kSQRT>(x, y, yGrad, xGrad, size);
-        return;
-    case Activation::kEXP:
-        activationGradientHost<Activation::kEXP>(x, y, yGrad, xGrad, size);
-        return;
-    }
+    SWITCH_ACTIVATION(
+        op, activationGradientHost<__ACT__>(x, y, yGrad, xGrad, size));
 }
 
 ActivationLayer::ActivationLayer(ID id, const Tensor::SPtr& t, Activation op)
@@ -287,107 +313,55 @@ Tensor::SPtr createActivation(Tensor::SPtr t, layers::Activation op)
     return layer->getOutputs()[0];
 }
 
-Tensor::SPtr relu(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kRELU);
-}
-Tensor::SPtr sigmoid(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kSIGMOID);
-}
-Tensor::SPtr tanh(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kTANH);
-}
-Tensor::SPtr square(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kSQUARE);
-}
-Tensor::SPtr abs(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kABS);
-}
-Tensor::SPtr neg(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kNEG);
-}
-Tensor::SPtr reciprocal(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kRECIPROCAL);
-}
-Tensor::SPtr log(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kLOG);
-}
-Tensor::SPtr sqrt(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kSQRT);
-}
-Tensor::SPtr exp(Tensor::SPtr t)
-{
-    return createActivation(std::move(t), layers::Activation::kEXP);
-}
+#define DEFINE_ACTIVATION_TENSOR(ACTIVATION, NAME)                             \
+    Tensor::SPtr NAME(Tensor::SPtr t)                                          \
+    {                                                                          \
+        return createActivation(std::move(t), layers::Activation::ACTIVATION); \
+    }
+
+DEFINE_ACTIVATION_TENSOR(kRELU, relu);
+DEFINE_ACTIVATION_TENSOR(kSIGMOID, sigmoid);
+DEFINE_ACTIVATION_TENSOR(kTANH, tanh);
+DEFINE_ACTIVATION_TENSOR(kSQUARE, square);
+DEFINE_ACTIVATION_TENSOR(kABS, abs);
+DEFINE_ACTIVATION_TENSOR(kNEG, neg);
+DEFINE_ACTIVATION_TENSOR(kRECIPROCAL, reciprocal);
+DEFINE_ACTIVATION_TENSOR(kLOG, log);
+DEFINE_ACTIVATION_TENSOR(kSQRT, sqrt);
+DEFINE_ACTIVATION_TENSOR(kEXP, exp);
+DEFINE_ACTIVATION_TENSOR(kLEAKY_RELU, leaky_relu);
+DEFINE_ACTIVATION_TENSOR(kRELU_6, relu6);
+DEFINE_ACTIVATION_TENSOR(kELU, elu);
+DEFINE_ACTIVATION_TENSOR(kSOFTPLUS, softplus);
+DEFINE_ACTIVATION_TENSOR(kSOFTSIGN, softsign);
+
+#undef DEFINE_ACTIVATION_TENSOR
 
 }  // namespace core
 
-ITensorPtr relu(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::relu(tensor->get()));
-}
+#define DEFINE_ACTIVATION_ITENSOR(NAME)                             \
+    ITensorPtr NAME(const ITensorPtr& t)                            \
+    {                                                               \
+        core::AbstractTensor::Ptr tensor = core::castITensorPtr(t); \
+        return makeAbstractTensor(core::NAME(tensor->get()));       \
+    }
 
-ITensorPtr sigmoid(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::sigmoid(tensor->get()));
-}
+DEFINE_ACTIVATION_ITENSOR(relu);
+DEFINE_ACTIVATION_ITENSOR(sigmoid);
+DEFINE_ACTIVATION_ITENSOR(tanh);
+DEFINE_ACTIVATION_ITENSOR(square);
+DEFINE_ACTIVATION_ITENSOR(abs);
+DEFINE_ACTIVATION_ITENSOR(neg);
+DEFINE_ACTIVATION_ITENSOR(reciprocal);
+DEFINE_ACTIVATION_ITENSOR(log);
+DEFINE_ACTIVATION_ITENSOR(sqrt);
+DEFINE_ACTIVATION_ITENSOR(exp);
+DEFINE_ACTIVATION_ITENSOR(leaky_relu);
+DEFINE_ACTIVATION_ITENSOR(relu6);
+DEFINE_ACTIVATION_ITENSOR(elu);
+DEFINE_ACTIVATION_ITENSOR(softplus);
+DEFINE_ACTIVATION_ITENSOR(softsign);
 
-ITensorPtr tanh(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::tanh(tensor->get()));
-}
-
-ITensorPtr square(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::square(tensor->get()));
-}
-
-ITensorPtr abs(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::abs(tensor->get()));
-}
-
-ITensorPtr neg(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::neg(tensor->get()));
-}
-
-ITensorPtr reciprocal(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::reciprocal(tensor->get()));
-}
-
-ITensorPtr log(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::log(tensor->get()));
-}
-
-ITensorPtr sqrt(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::sqrt(tensor->get()));
-}
-
-ITensorPtr exp(const ITensorPtr& t)
-{
-    core::AbstractTensor::Ptr tensor = core::castITensorPtr(t);
-    return makeAbstractTensor(core::exp(tensor->get()));
-}
+#undef DEFINE_ACTIVATION_ITENSOR
 
 }  // namespace graphdl
