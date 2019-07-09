@@ -58,6 +58,11 @@ __global__ void elementwiseCastFrontKernel(const float* x1, size_t size,
 
 }  // namespace
 
+size_t numBlocks(size_t numThreads, size_t blockSize)
+{
+    return (numThreads + blockSize - 1) / blockSize;
+}
+
 void fill(float* memory, size_t size, float value)
 {
     const int BLOCK_SIZE = 256;

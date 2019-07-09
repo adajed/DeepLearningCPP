@@ -1,9 +1,12 @@
 #include "abstractTensor.h"
+#include "batchNorm.h"
 #include "graphdl_ops.h"
 #include "layerTests.h"
 
 namespace
 {
+#define EPS 10e-8
+
 using TestCase = std::tuple<std::tuple<UVec, int>, MemoryLocation>;
 
 UVec shape(const TestCase& testCase)
@@ -43,6 +46,9 @@ std::vector<std::tuple<UVec, int>> SHAPES = {
     {{2, 2, 2, 2}, 2},
     {{2, 2, 2, 2}, 3},
     {{2, 2, 2, 2}, 4},
+    {{4, 4, 4, 16}, 3},
+    {{4, 2, 2, 32}, 3},
+    {{4, 1, 1, 64}, 3},
     // clang-format on
 };
 
@@ -54,7 +60,18 @@ class BatchNormTest : public LayerTest,
     {
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
-        bool correct = runTest({mInput, mAlpha, mBeta}, {mOutput}, builder);
+        bool correct =
+            runTest({mInput, mAlpha, mBeta}, {mOutput}, builder, 10e-4);
+        EXPECT_TRUE(correct);
+    }
+
+    void testGradient(const TestCase& testCase)
+    {
+        setupGradient(testCase);
+        LayerBuilder builder = getGradientBuilder(testCase);
+        bool correct =
+            runTest({mInput, mAlpha, mBeta, mOutputGrad},
+                    {mInputGrad, mAlphaGrad, mBetaGrad}, builder, 10e-4);
         EXPECT_TRUE(correct);
     }
 
@@ -67,50 +84,115 @@ class BatchNormTest : public LayerTest,
         mBeta = RefTensor(paramShape(testCase), gen);
         mOutput = RefTensor(shape(testCase));
 
+        RefTensor mean(paramShape(testCase));
+        RefTensor stddev(paramShape(testCase));
+
+        calculateForward(testCase, mean, stddev);
+    }
+
+    void calculateForward(const TestCase& testCase, RefTensor& mean,
+                          RefTensor& stddev)
+    {
         UVec s = shape(testCase);
         int axes = numAxes(testCase);
 
-        std::vector<int> v;
-        for (int i = 0; i < s.size(); ++i)
-        {
-            if (i < axes)
-                v.push_back(s[i]);
-            else
-                v.push_back(1);
-        }
-        TensorShape reduceShape(v);
+        int cS = axes;
+        int cE = s.size();
+
+        int batchSize = 1;
+        for (int i = 0; i < axes; ++i) batchSize *= s[i];
 
         Coord_iterator sBegin = shapeBegin(shape(testCase));
         Coord_iterator sEnd = shapeEnd(shape(testCase));
+
+        for (Coord_iterator it = sBegin; it != sEnd; ++it)
+            mean[it().cast(cS, cE)] += mInput[it()];
+        for (int i = 0; i < mean.getCount(); ++i)
+            mean.at(i) /= float(batchSize);
         for (Coord_iterator it = sBegin; it != sEnd; ++it)
         {
-            std::vector<int> v;
-            for (int i = 0; i < s.size(); ++i)
+            Coord c = it().cast(cS, cE);
+            stddev[c] += (mInput[it()] - mean[c]) * (mInput[it()] - mean[c]);
+        }
+        for (int i = 0; i < stddev.getCount(); ++i)
+            stddev.at(i) /= float(batchSize);
+        for (Coord_iterator it = sBegin; it != sEnd; ++it)
+        {
+            Coord c = it().cast(cS, cE);
+            mOutput[it()] = mAlpha[c] * (mInput[it()] - mean[c]) /
+                                std::sqrt(stddev[c] + EPS) +
+                            mBeta[c];
+        }
+    }
+
+    void setupGradient(const TestCase& testCase)
+    {
+        UniformGen gen(seed);
+        mInput = RefTensor(shape(testCase), gen);
+        mAlpha = RefTensor(paramShape(testCase), gen);
+        mBeta = RefTensor(paramShape(testCase), gen);
+        mOutputGrad = RefTensor(shape(testCase), gen);
+        mOutput = RefTensor(shape(testCase));
+        mInputGrad = RefTensor(shape(testCase));
+        mAlphaGrad = RefTensor(paramShape(testCase));
+        mBetaGrad = RefTensor(paramShape(testCase));
+
+        RefTensor mean(paramShape(testCase));
+        RefTensor stddev(paramShape(testCase));
+
+        calculateForward(testCase, mean, stddev);
+
+        UVec s = shape(testCase);
+        int axes = numAxes(testCase);
+
+        int cS = axes;
+        int cE = s.size();
+
+        int batchSize = 1;
+        for (int i = 0; i < axes; ++i) batchSize *= s[i];
+
+        Coord_iterator sBegin = shapeBegin(shape(testCase));
+        Coord_iterator sEnd = shapeEnd(shape(testCase));
+
+        for (Coord_iterator it = sBegin; it != sEnd; ++it)
+            mBetaGrad[it().cast(cS, cE)] += mOutputGrad[it()];
+        for (Coord_iterator it = sBegin; it != sEnd; ++it)
+        {
+            Coord c = it().cast(cS, cE);
+            mAlphaGrad[c] += mOutputGrad[it()] * (mInput[it()] - mean[c]) /
+                             std::sqrt(stddev[c] + EPS);
+        }
+        for (Coord_iterator it_x = sBegin; it_x != sEnd; ++it_x)
+        {
+            for (Coord_iterator it_y = sBegin; it_y != sEnd; ++it_y)
             {
-                if (i < axes)
-                    v.push_back(0);
-                else
-                    v.push_back(it()[i]);
+                if (it_x().cast(cS, cE) == it_y().cast(cS, cE))
+                {
+                    Coord c = it_x().cast(cS, cE);
+                    float grad;
+                    if (it_x() == it_y())
+                    {
+                        grad = (1. - 1. / float(batchSize)) *
+                               std::sqrt(stddev[c] + EPS);
+                        grad -= 0.5 * (mInput[it_y()] - mean[c]) *
+                                (mInput[it_y()] - mean[c]) /
+                                std::sqrt(stddev[c] + EPS);
+                        grad /= stddev[c] + EPS;
+                        grad *= mAlpha[c];
+                    }
+                    else
+                    {
+                        grad = (-1. / float(batchSize)) *
+                               std::sqrt(stddev[c] + EPS);
+                        grad -= 0.5 * (mInput[it_x()] - mean[c]) *
+                                (mInput[it_y()] - mean[c]) /
+                                std::sqrt(stddev[c] + EPS);
+                        grad /= stddev[c] + EPS;
+                        grad *= mAlpha[c];
+                    }
+                    mInputGrad[it_x()] += mOutputGrad[it_y()] * grad;
+                }
             }
-
-            RefTensor slice = mInput.slice(Coord(v), reduceShape);
-
-            float mean = 0;
-            for (size_t i = 0; i < slice.getCount(); ++i) mean += slice.at(i);
-            mean /= float(slice.getCount());
-
-            float stddev = 0;
-            for (size_t i = 0; i < slice.getCount(); ++i)
-                stddev += (slice.at(i) - mean) * (slice.at(i) - mean);
-            stddev /= float(slice.getCount());
-
-            v = std::vector<int>();
-            for (int i = 0; i < s.size() - axes; ++i)
-                v.push_back(it()[i + axes]);
-            Coord c(v);
-            mOutput[it()] =
-                mAlpha[c] * (mInput[it()] - mean) / (sqrt(stddev) + 10e-6) +
-                mBeta[c];
         }
     }
 
@@ -129,7 +211,40 @@ class BatchNormTest : public LayerTest,
         };
     }
 
-    RefTensor mInput, mAlpha, mBeta, mOutput;
+    LayerBuilder getGradientBuilder(const TestCase& testCase)
+    {
+        return [&testCase](const HostVec& ins) {
+            MemoryType type = memoryLocationToType(loc(testCase));
+            Graph::SPtr graph = core::getDefaultGraph();
+            Tensor::SPtr in = graph->addInput(
+                "in", createLayer<InputLayer>("in", shape(testCase), type));
+            Tensor::SPtr alpha = graph->addInput(
+                "alpha",
+                createLayer<InputLayer>("alpha", paramShape(testCase), type));
+            Tensor::SPtr beta = graph->addInput(
+                "beta",
+                createLayer<InputLayer>("beta", paramShape(testCase), type));
+            Tensor::SPtr outG = graph->addInput(
+                "outG", createLayer<InputLayer>("outG", shape(testCase), type));
+
+            Layer::SPtr layer = createLayer<layers::BatchNormLayer>(
+                in, alpha, beta, numAxes(testCase));
+            Layer::TensorMap grads =
+                layer->gradients(layer->getOutputs()[0], outG);
+
+            std::vector<ITensorPtr> igrads = {makeAbstractTensor(grads[in]),
+                                              makeAbstractTensor(grads[alpha]),
+                                              makeAbstractTensor(grads[beta])};
+            initializeGraph();
+            return eval(igrads, {{"in", ins[0]},
+                                 {"alpha", ins[1]},
+                                 {"beta", ins[2]},
+                                 {"outG", ins[3]}});
+        };
+    }
+
+    RefTensor mInput, mAlpha, mBeta, mOutput, mInputGrad, mAlphaGrad, mBetaGrad,
+        mOutputGrad;
 };
 
 TEST_P(BatchNormTest, testAPI)
@@ -137,6 +252,16 @@ TEST_P(BatchNormTest, testAPI)
     test(GetParam());
 }
 INSTANTIATE_TEST_CASE_P(LayerTest, BatchNormTest,
+                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+
+class BatchNormGradientTest : public BatchNormTest
+{
+};
+TEST_P(BatchNormGradientTest, testAPI)
+{
+    testGradient(GetParam());
+}
+INSTANTIATE_TEST_CASE_P(LayerTest, BatchNormGradientTest,
                         Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
 
 }  // namespace

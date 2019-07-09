@@ -18,12 +18,15 @@ class Coord
     Coord(const std::vector<int>& values);
     Coord(std::initializer_list<int> list);
 
+    bool operator==(const Coord& other) const;
     Coord operator+(const Coord& c) const;
 
     unsigned size() const;
 
     int& operator[](size_t pos);
     const int& operator[](size_t pos) const;
+
+    Coord cast(int start, int end) const;
 
   private:
     std::vector<int> mValues;
