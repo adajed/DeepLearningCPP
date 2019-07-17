@@ -66,17 +66,18 @@ ComputationalGraph buildNetwork()
     a = reshape(a, {BATCH_SIZE, 64 * 4 * 4});
     a = create_matmulAndAddBias(a, 128, "dense1");
     a = relu(a);
-    a = create_matmulAndAddBias(a, 10, "dense2");
-    a = softmax_c(a, 1);
+    ITensorPtr logits = create_matmulAndAddBias(a, 10, "dense2");
+    ITensorPtr prob = softmax_c(logits, 1);
 
-    ITensorPtr loss = neg(reduceSum(Y * log(a))) / float(BATCH_SIZE);
+    ITensorPtr loss = reduceMean(softmax_cross_entropy_with_logits(logits, Y));
 
-    ITensorPtr opt = train::gradientDescent(LEARNING_RATE)->optimize(loss);
+    ITensorPtr opt =
+        train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
 
     ComputationalGraph net;
     net.inputs = {{"X", X}, {"Y", Y}};
     net.weights = {};
-    net.output = a;
+    net.output = prob;
     net.loss = loss;
     net.optimize = opt;
     return net;
