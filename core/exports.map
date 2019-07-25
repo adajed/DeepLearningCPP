@@ -52,6 +52,7 @@ global:
         graphdl::softmax_c*;
         graphdl::batchNorm*;
         graphdl::softmax_cross_entropy_with_logits*;
+        graphdl::sigmoid_cross_entropy_with_logits*;
         graphdl::train::gradientDescent*;
         graphdl::train::momentum*;
         graphdl::train::adam*;
