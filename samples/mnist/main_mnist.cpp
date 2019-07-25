@@ -11,7 +11,7 @@
 const int BATCH_SIZE = 64;  // how many samples per computation
 const int NUM_EPOCHS = 1;  // # of runs over whole dataset
 const int PRINT_EVERY = 100;  // after how many batches print info
-const float LEARNING_RATE = 0.001;  // learning parameter to the optimizer
+const float LEARNING_RATE = 0.1;  // learning parameter to the optimizer
 
 #define Q(x) std::string(#x)
 #define QUOTE(x) Q(x)
@@ -55,21 +55,21 @@ ComputationalGraph buildNetwork()
 
     ITensorPtr a1 = sigmoid(matmul(X, W1) + b1);
     ITensorPtr a2 = sigmoid(matmul(a1, W2) + b2);
-    ITensorPtr a3 = sigmoid(matmul(a2, W3) + b3);
+    ITensorPtr logits = matmul(a2, W3) + b3;
+    ITensorPtr pred = sigmoid(logits);
 
     // calculate loss
-    ITensorPtr loss = neg(reduceSum(Y * log(a3) + (1. - Y) * log(1. - a3)));
-    loss = loss / float(BATCH_SIZE);
+    ITensorPtr loss = sigmoid_cross_entropy_with_logits(logits, Y);
+    loss = reduceMean(reduceSum(loss, 1));
 
     // optimize weights and biases
-    ITensorPtr opt =
-        train::adam(LEARNING_RATE, 0.9, 0.999, 10e-8)->optimize(loss);
+    ITensorPtr opt = train::momentum(LEARNING_RATE, 0.9)->optimize(loss);
 
     // create network
     ComputationalGraph net;
     net.inputs = {{"X", X}, {"Y", Y}};
     net.weights = {W1, W2, W3};
-    net.output = a3;
+    net.output = pred;
     net.loss = loss;
     net.optimize = opt;
     return net;

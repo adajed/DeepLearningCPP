@@ -158,6 +158,12 @@ Tensor::SPtr softmax_c(const Tensor::SPtr& tensor, int numAxes)
     return softmax(tensor - max, numAxes);
 }
 
+Tensor::SPtr sigmoid_cross_entropy_with_logits(const Tensor::SPtr& logits,
+                                               const Tensor::SPtr& labels)
+{
+    return relu(logits) - labels * logits + log(1. + exp(neg(abs(labels))));
+}
+
 }  // namespace core
 
 ITensorPtr softmax(const ITensorPtr& tensor, int numAxes)
@@ -170,6 +176,15 @@ ITensorPtr softmax_c(const ITensorPtr& tensor, int numAxes)
 {
     core::Tensor::SPtr t = core::castITensorPtr(tensor)->get();
     return core::makeAbstractTensor(core::softmax_c(t, numAxes));
+}
+
+ITensorPtr sigmoid_cross_entropy_with_logits(const ITensorPtr& logits,
+                                             const ITensorPtr& labels)
+{
+    core::Tensor::SPtr logits_ = core::castITensorPtr(logits)->get();
+    core::Tensor::SPtr labels_ = core::castITensorPtr(labels)->get();
+    return core::makeAbstractTensor(
+        core::sigmoid_cross_entropy_with_logits(logits_, labels_));
 }
 
 }  // namespace graphdl
