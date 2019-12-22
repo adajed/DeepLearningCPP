@@ -95,7 +95,7 @@ class ActivationTest : public LayerTest,
   private:
     void setup(const TestCase& testCase)
     {
-        UniformGen gen(seed);
+        UniformGen gen(seed, 1.0f, 2.0f);
         mInput = RefTensor(std::get<0>(testCase), gen);
         mOutput = RefTensor(std::get<0>(testCase));
 
@@ -171,7 +171,7 @@ class ActivationTest : public LayerTest,
 
     void setupGradient(const TestCase& testCase)
     {
-        UniformGen gen(seed);
+        UniformGen gen(seed, 1.0f, 2.0f);
         mInput = RefTensor(std::get<0>(testCase), gen);
         mOutputGrad = RefTensor(std::get<0>(testCase), gen);
         mGradient = RefTensor(std::get<0>(testCase));

@@ -136,7 +136,7 @@ class ElementwiseTest : public LayerTest,
         setupGradient(testCase, true);
         LayerBuilder builder = getGradientBuilder(testCase, true);
         bool correct = runTest({mInput1, mInput2, mOutputGrad},
-                               {mGradient1, mGradient2}, builder, 10e-4);
+                               {mGradient1, mGradient2}, builder, 10e-2);
 
         EXPECT_TRUE(correct);
     }
@@ -146,7 +146,7 @@ class ElementwiseTest : public LayerTest,
         setupGradient(testCase, false);
         LayerBuilder builder = getGradientBuilder(testCase, false);
         bool correct = runTest({mInput1, mInput2, mOutputGrad},
-                               {mGradient1, mGradient2}, builder, 10e-4);
+                               {mGradient1, mGradient2}, builder, 10e-2);
 
         EXPECT_TRUE(correct);
     }

@@ -137,7 +137,7 @@ class ReduceBackTest : public LayerTest,
     {
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
-        bool correct = runTest({input}, {output}, builder, 10e-5);
+        bool correct = runTest({input}, {output}, builder, 10e-2);
         EXPECT_TRUE(correct);
     }
 
@@ -285,7 +285,7 @@ class ReduceFrontTest : public LayerTest,
     {
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
-        bool correct = runTest({input}, {output}, builder, 10e-5);
+        bool correct = runTest({input}, {output}, builder, 10e-2);
         EXPECT_TRUE(correct);
     }
 

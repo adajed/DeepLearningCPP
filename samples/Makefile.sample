@@ -14,7 +14,7 @@ CFLAGS_D=$(COMMON_CFLAGS) -g
 
 COMMON_LFLAGS +=-L$(OUTDIR)
 ifeq ($(CUDA_AVAILABLE),1)
-	COMMON_LFLAGS += -L/usr/local/cuda-10.0/lib64
+	COMMON_LFLAGS += -L/usr/local/cuda-$(CUDA_VERSION)/lib64
 endif
 LFLAGS_R=$(COMMON_LFLAGS) -ldll
 LFLAGS_D=$(COMMON_LFLAGS) -ldll_debug
