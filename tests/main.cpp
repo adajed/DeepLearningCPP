@@ -7,7 +7,7 @@ unsigned seed = 0;
 
 unsigned getSeed(int argc, char** argv)
 {
-    int len = strlen("--seed=");
+    const int len = strlen("--seed=");
     for (int i = 0; i < argc; ++i)
         if (strncmp("--seed=", argv[i], len) == 0)
             return unsigned(atoi(argv[i] + len));
@@ -17,7 +17,7 @@ unsigned getSeed(int argc, char** argv)
 
 bool getFilter(int argc, char** argv, std::string& filter)
 {
-    int len = strlen("--filter=");
+    const int len = strlen("--filter=");
     for (int i = 0; i < argc; ++i)
     {
         if (strncmp("--filter=", argv[i], len) == 0)
@@ -32,7 +32,7 @@ bool getFilter(int argc, char** argv, std::string& filter)
 
 bool getRange(int argc, char** argv, int& start, int& end)
 {
-    int len = strlen("--range=");
+    const int len = strlen("--range=");
     for (int i = 0; i < argc; ++i)
     {
         if (strncmp("--range=", argv[i], len) == 0)

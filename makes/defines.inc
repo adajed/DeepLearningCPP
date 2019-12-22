@@ -9,7 +9,7 @@ NVCC_RESULT=$(shell which /usr/local/cuda/bin/nvcc 2> /dev/null)
 NVCC_TEST=$(notdir $(NVCC_RESULT))
 ifeq ($(NVCC_TEST),nvcc)
     CUDA_AVAILABLE=1
-    CUDA_VERSION=10.0
+    CUDA_VERSION=10.1
 else
     CUDA_AVAILABLE=0
 endif

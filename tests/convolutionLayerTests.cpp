@@ -161,7 +161,7 @@ class Conv2DTest : public LayerTest,
     {
         setup(testCase);
         LayerBuilder builder = getBuilder(testCase);
-        bool correct = runTest({mInput, mKernel}, {mOutput}, builder, 10e-4);
+        bool correct = runTest({mInput, mKernel}, {mOutput}, builder, 10e-2);
         EXPECT_TRUE(correct);
     }
 
@@ -170,7 +170,7 @@ class Conv2DTest : public LayerTest,
         setupGradient(testCase);
         LayerBuilder builder = getGradientBuilder(testCase);
         bool correct = runTest({mInput, mKernel, mOutputGrad},
-                               {mInputGrad, mKernelGrad}, builder, 10e-4);
+                               {mInputGrad, mKernelGrad}, builder, 10e-2);
         EXPECT_TRUE(correct);
     }
 
