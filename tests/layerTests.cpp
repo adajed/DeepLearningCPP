@@ -21,24 +21,6 @@ std::ostream& operator<<(std::ostream& os, MemoryLocation loc)
     return os << "DEVICE";
 }
 
-std::ostream& operator<<(std::ostream& os, layers::PoolingType pooling)
-{
-    if (pooling == layers::PoolingType::kMAX) return os << "MAX";
-    return os << "AVERAGE";
-}
-
-std::ostream& operator<<(std::ostream& os, layers::PaddingType padding)
-{
-    if (padding == layers::PaddingType::kSAME) return os << "SAME";
-    return os << "VALID";
-}
-
-std::ostream& operator<<(std::ostream& os, layers::DataFormat format)
-{
-    if (format == layers::DataFormat::kNHWC) return os << "NHWC";
-    return os << "NCHW";
-}
-
 bool compareTensor(const RefTensor& refOutput, const HostTensor& output,
                    float eps, int tensorNum)
 {

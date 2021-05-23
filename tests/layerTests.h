@@ -5,9 +5,11 @@
 #include "graphdl.h"
 #include "pooling.h"
 #include "refTensor.h"
+#include "utils.h"
 
 #include <functional>
 #include <gtest/gtest.h>
+#include <gtest/gtest-param-test.h>
 
 using namespace graphdl;
 using namespace graphdl::core;
@@ -16,21 +18,15 @@ using testing::Combine;
 using testing::Range;
 using testing::ValuesIn;
 
-using Vec = std::vector<int>;
-using UVec = std::vector<unsigned>;
-using HostVec = std::vector<HostTensor>;
-
 extern std::vector<MemoryLocation> LOCATIONS;
 
 extern unsigned seed;
 
-std::ostream& operator<<(std::ostream& os, MemoryLocation loc);
+/* std::ostream& operator<<(std::ostream& os, layers::PoolingType pooling); */
 
-std::ostream& operator<<(std::ostream& os, layers::PoolingType pooling);
+/* std::ostream& operator<<(std::ostream& os, layers::PaddingType padding); */
 
-std::ostream& operator<<(std::ostream& os, layers::PaddingType padding);
-
-std::ostream& operator<<(std::ostream& os, layers::DataFormat format);
+/* std::ostream& operator<<(std::ostream& os, layers::DataFormat format); */
 
 class LayerTest : public testing::Test
 {

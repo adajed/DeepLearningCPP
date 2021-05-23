@@ -174,8 +174,10 @@ TEST_P(SoftmaxTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, SoftmaxTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, SoftmaxTest,
+    Combine(ValuesIn(PARAMS), ValuesIn(LOCATIONS))
+);
 
 class SoftmaxGradientTest : public SoftmaxTest
 {
@@ -184,7 +186,9 @@ TEST_P(SoftmaxGradientTest, testAPI)
 {
     testGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, SoftmaxGradientTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, SoftmaxGradientTest,
+    Combine(ValuesIn(PARAMS), ValuesIn(LOCATIONS))
+);
 
 }  // namespace

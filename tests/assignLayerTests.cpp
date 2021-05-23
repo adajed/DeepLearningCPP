@@ -81,14 +81,18 @@ TEST_P(AssignTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, AssignTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, AssignTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS))
+);
 
 TEST_P(AssignErrorTest, test)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerErrorTest, AssignErrorTest,
-                        ValuesIn(ERROR_SHAPES));
+INSTANTIATE_TESTS(
+    LayerErrorTest, AssignErrorTest,
+    ValuesIn(ERROR_SHAPES)
+);
 
 }  // namespace

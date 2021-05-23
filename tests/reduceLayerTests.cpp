@@ -2,6 +2,7 @@
 #include "graphdl_ops.h"
 #include "layerTests.h"
 #include "reduce.h"
+#include "utils.h"
 
 namespace
 {
@@ -80,18 +81,6 @@ MemoryLocation loc(const TestCase& testCase)
 {
     return std::get<2>(testCase);
 }
-
-std::ostream& operator<<(std::ostream& os, ReduceType t)
-{
-    switch (t)
-    {
-    case ReduceType::kSUM: return os << "SUM";
-    case ReduceType::kMAX: return os << "MAX";
-    case ReduceType::kMIN: return os << "MIN";
-    }
-    return os;
-}
-
 std::function<float(float, float)> getReduceOp(ReduceType reduceType)
 {
     switch (reduceType)
@@ -423,9 +412,10 @@ TEST_P(ReduceBackTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ReduceBackTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ReduceBackTest,
+    Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES), ValuesIn(LOCATIONS))
+);
 
 class ReduceBackGradientTest : public ReduceBackTest
 {
@@ -434,17 +424,19 @@ TEST_P(ReduceBackGradientTest, testAPI)
 {
     testGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ReduceBackGradientTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ReduceBackGradientTest,
+    Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES), ValuesIn(LOCATIONS))
+);
 
 TEST_P(ReduceFrontTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ReduceFrontTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ReduceFrontTest,
+    Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES), ValuesIn(LOCATIONS))
+);
 
 class ReduceFrontGradientTest : public ReduceFrontTest
 {
@@ -453,8 +445,9 @@ TEST_P(ReduceFrontGradientTest, testAPI)
 {
     testGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ReduceFrontGradientTest,
-                        Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ReduceFrontGradientTest,
+    Combine(ValuesIn(PARAMS), ValuesIn(REDUCE_TYPES), ValuesIn(LOCATIONS))
+);
 
 }  // namespace

@@ -49,8 +49,9 @@ TEST_P(ConstantTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ConstantTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn({3.14f}),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ConstantTest,
+    Combine(ValuesIn(SHAPES), ValuesIn({3.14f}), ValuesIn(LOCATIONS))
+);
 
 }  // namespace
