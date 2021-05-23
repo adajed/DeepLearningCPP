@@ -52,6 +52,8 @@ TEST_P(InputTest, test)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, InputTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, InputTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS))
+);
 }  // namespace

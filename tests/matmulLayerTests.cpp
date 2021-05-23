@@ -158,8 +158,10 @@ TEST_P(MatmulTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, MatmulTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, MatmulTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS))
+);
 
 class MatmulErrorsTest : public MatmulTest
 {
@@ -168,8 +170,10 @@ TEST_P(MatmulErrorsTest, testWrongShapes)
 {
     testWrongShapes(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, MatmulErrorsTest,
-                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, MatmulErrorsTest,
+    Combine(ValuesIn(ERROR_SHAPES), ValuesIn(LOCATIONS))
+);
 
 class MatmulGradientTest : public MatmulTest
 {
@@ -178,7 +182,9 @@ TEST_P(MatmulGradientTest, testAPI)
 {
     testGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, MatmulGradientTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, MatmulGradientTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS))
+);
 
 }  // namespace

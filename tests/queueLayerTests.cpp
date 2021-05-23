@@ -57,7 +57,9 @@ TEST_P(QueueTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, QueueTest,
-                        Combine(Range(1, 10), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, QueueTest,
+    Combine(Range(1, 10), ValuesIn(LOCATIONS))
+);
 
 }  // namespace

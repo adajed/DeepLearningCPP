@@ -377,10 +377,12 @@ TEST_P(Pooling2DTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DTest,
-                        Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
-                                ValuesIn(POOLINGS), ValuesIn(PADDINGS),
-                                ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, Pooling2DTest,
+    Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
+            ValuesIn(POOLINGS), ValuesIn(PADDINGS),
+            ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS))
+);
 
 class Pooling2DGradientTest : public Pooling2DTest
 {
@@ -389,17 +391,21 @@ TEST_P(Pooling2DGradientTest, testAPI)
 {
     testGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DGradientTest,
-                        Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
-                                ValuesIn(POOLINGS), ValuesIn(PADDINGS),
-                                ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, Pooling2DGradientTest,
+    Combine(ValuesIn(N), ValuesIn(C), ValuesIn(SHAPES),
+            ValuesIn(POOLINGS), ValuesIn(PADDINGS),
+            ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS))
+);
 
 TEST_P(Pooling2DErrorsTest, testWrongShapes)
 {
     testWrongShapes(GetParam());
 };
-INSTANTIATE_TEST_CASE_P(LayerTest, Pooling2DErrorsTest,
-                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(POOLINGS),
-                                ValuesIn(PADDINGS), ValuesIn(DATA_FORMATS),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, Pooling2DErrorsTest,
+    Combine(ValuesIn(ERROR_SHAPES), ValuesIn(POOLINGS),
+            ValuesIn(PADDINGS), ValuesIn(DATA_FORMATS),
+            ValuesIn(LOCATIONS))
+);
 }  // namespace

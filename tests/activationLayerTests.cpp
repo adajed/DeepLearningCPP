@@ -2,6 +2,7 @@
 #include "activation.h"
 #include "graphdl_ops.h"
 #include "layerTests.h"
+#include "utils.h"
 
 namespace
 {
@@ -46,30 +47,6 @@ std::vector<Activation> OPS = {
     Activation::kSOFTSIGN,
     // clang-format on
 };
-
-std::ostream& operator<<(std::ostream& os, Activation a)
-{
-    switch (a)
-    {
-    case Activation::kRELU: return os << "RELU";
-    case Activation::kSIGMOID: return os << "SIGMOID";
-    case Activation::kTANH: return os << "TANH";
-    case Activation::kSQUARE: return os << "SQUARE";
-    case Activation::kABS: return os << "ABS";
-    case Activation::kNEG: return os << "NEG";
-    case Activation::kRECIPROCAL: return os << "RECIPROCAL";
-    case Activation::kLOG: return os << "LOG";
-    case Activation::kSQRT: return os << "SQRT";
-    case Activation::kEXP: return os << "EXP";
-    case Activation::kLEAKY_RELU: return os << "LEAKY_RELU";
-    case Activation::kRELU_6: return os << "RELU6";
-    case Activation::kELU: return os << "ELU";
-    case Activation::kSOFTPLUS: return os << "SOFTPLUS";
-    case Activation::kSOFTSIGN: return os << "SOFTSIGN";
-    }
-
-    return os;
-}
 
 class ActivationTest : public LayerTest,
                        public testing::WithParamInterface<TestCase>
@@ -313,9 +290,10 @@ TEST_P(ActivationTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ActivationTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+        LayerTest, ActivationTest,
+        Combine(ValuesIn(SHAPES), ValuesIn(OPS), ValuesIn(LOCATIONS))
+);
 
 class ActivationGradientTest : public ActivationTest
 {
@@ -324,7 +302,9 @@ TEST_P(ActivationGradientTest, testAPI)
 {
     testGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ActivationGradientTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+        LayerTest, ActivationGradientTest,
+        Combine(ValuesIn(SHAPES), ValuesIn(OPS), ValuesIn(LOCATIONS))
+);
+
 }  // namespace
