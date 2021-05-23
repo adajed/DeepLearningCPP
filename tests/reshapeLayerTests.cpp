@@ -84,14 +84,18 @@ TEST_P(ReshapeTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ReshapeTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ReshapeTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(LOCATIONS))
+);
 
 TEST_P(ReshapeErrorTest, test)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerErrorTest, ReshapeErrorTest,
-                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerErrorTest, ReshapeErrorTest,
+    Combine(ValuesIn(ERROR_SHAPES), ValuesIn(LOCATIONS))
+);
 
 }  // namespace

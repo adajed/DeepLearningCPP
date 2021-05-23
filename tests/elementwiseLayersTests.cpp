@@ -98,19 +98,6 @@ std::vector<Elementwise> OPS = {
     // clang-format on
 };
 
-std::ostream& operator<<(std::ostream& os, Elementwise e)
-{
-    switch (e)
-    {
-    case Elementwise::kADD: return os << "ADD";
-    case Elementwise::kSUB: return os << "SUB";
-    case Elementwise::kMUL: return os << "MUL";
-    case Elementwise::kDIV: return os << "DIV";
-    }
-
-    return os;
-}
-
 class ElementwiseTest : public LayerTest,
                         public testing::WithParamInterface<TestCase>
 {
@@ -406,39 +393,45 @@ TEST_P(ElementwiseBackTest, testAPI)
 {
     testBack(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseBackTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ElementwiseBackTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(OPS), ValuesIn(LOCATIONS))
+);
 
 TEST_P(ElementwiseFrontTest, testAPI)
 {
     testFront(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseFrontTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ElementwiseFrontTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(OPS), ValuesIn(LOCATIONS))
+);
 
 TEST_P(ElementwiseBackGradientTest, testAPI)
 {
     testBackGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseBackGradientTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ElementwiseBackGradientTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(OPS), ValuesIn(LOCATIONS))
+);
 
 TEST_P(ElementwiseFrontGradientTest, testAPI)
 {
     testFrontGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, ElementwiseFrontGradientTest,
-                        Combine(ValuesIn(SHAPES), ValuesIn(OPS),
-                                ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, ElementwiseFrontGradientTest,
+    Combine(ValuesIn(SHAPES), ValuesIn(OPS), ValuesIn(LOCATIONS))
+);
 
 TEST_P(ElementwiseErrorTest, test)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerErrorTest, ElementwiseErrorTest,
-                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(OPS)));
+INSTANTIATE_TESTS(
+    LayerErrorTest, ElementwiseErrorTest,
+    Combine(ValuesIn(ERROR_SHAPES), ValuesIn(OPS))
+);
 
 }  // namespace

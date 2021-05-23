@@ -367,10 +367,12 @@ TEST_P(Conv2DTest, testAPI)
 {
     test(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DTest,
-                        Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
-                                ValuesIn(SHAPES), ValuesIn(PADDINGS),
-                                ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, Conv2DTest,
+    Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
+            ValuesIn(SHAPES), ValuesIn(PADDINGS),
+            ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS))
+);
 
 class Conv2DGradientTest : public Conv2DTest
 {
@@ -379,16 +381,20 @@ TEST_P(Conv2DGradientTest, testAPI)
 {
     testGradient(GetParam());
 }
-INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DGradientTest,
-                        Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
-                                ValuesIn(SHAPES), ValuesIn(PADDINGS),
-                                ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, Conv2DGradientTest,
+    Combine(ValuesIn(N), ValuesIn(C), ValuesIn(C),
+            ValuesIn(SHAPES), ValuesIn(PADDINGS),
+            ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS))
+);
 
 TEST_P(Conv2DErrorsTest, testWrongShapes)
 {
     testWrongShapes(GetParam());
 };
-INSTANTIATE_TEST_CASE_P(LayerTest, Conv2DErrorsTest,
-                        Combine(ValuesIn(ERROR_SHAPES), ValuesIn(PADDINGS),
-                                ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS)));
+INSTANTIATE_TESTS(
+    LayerTest, Conv2DErrorsTest,
+    Combine(ValuesIn(ERROR_SHAPES), ValuesIn(PADDINGS),
+            ValuesIn(DATA_FORMATS), ValuesIn(LOCATIONS))
+);
 }  // namespace
