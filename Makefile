@@ -1,6 +1,9 @@
 include ./makes/defines.inc
 
 .PHONY: release debug clean ctags format tidy help
+.PHONY: library_release library_debug
+.PHONY: tests_release tests_debug
+.PHONY: samples_release samples_debug
 
 SAMPLE_NAMES = toySample mnist mnist_conv cifar10_conv
 

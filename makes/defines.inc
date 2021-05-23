@@ -2,27 +2,24 @@
 ROOT_DIR=$(shell dirname $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 OUTDIR=$(ROOT_DIR)/build
 
-GTEST_LIB_PATH=/usr/lib
+GTEST_INCLUDE=/usr/local/include
+GTEST_LIB_PATH=/usr/local/lib
 
-# check for nvcc and cuda
-NVCC_RESULT=$(shell which /usr/local/cuda/bin/nvcc 2> /dev/null)
-NVCC_TEST=$(notdir $(NVCC_RESULT))
-ifeq ($(NVCC_TEST),nvcc)
-    CUDA_AVAILABLE=1
-    CUDA_VERSION=10.1
-else
-    CUDA_AVAILABLE=0
-endif
+# cuda settings
+
+USE_CUDA ?= 0
+CUDA_PATH ?= /usr/local/cuda
 
 COMMON_CFLAGS=-std=c++14 -Wall -Wno-sign-compare -I$(ROOT_DIR)/includes
 COMMON_LFLAGS=
 
-ifeq ($(CUDA_AVAILABLE),1)
-    COMMON_CFLAGS += -DCUDA_AVAILABLE -I/usr/local/cuda-$(CUDA_VERSION)/include
+ifeq ($(USE_CUDA),1)
+    COMMON_CFLAGS += -DCUDA_AVAILABLE -I$(CUDA_PATH)/include
 endif
 
+# compilers
 CC=g++
-NVCC=/usr/local/cuda-$(CUDA_VERSION)/bin/nvcc
+NVCC=$(CUDA_PATH)/bin/nvcc
 
 # clang-format
 CLANG_FORMAT=clang-format

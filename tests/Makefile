@@ -16,14 +16,14 @@ CFLAGS_R=$(COMMON_CFLAGS) -O3
 CFLAGS_D=$(COMMON_CFLAGS) -g
 
 COMMON_LFLAGS +=-L$(OUTDIR) -L$(GTEST_LIB_PATH)
-ifeq ($(CUDA_AVAILABLE),1)
-	COMMON_LFLAGS += -L/usr/local/cuda-$(CUDA_VERSION)/lib64
+ifeq ($(USE_CUDA),1)
+	COMMON_LFLAGS += -L$(CUDA_PATH)/lib64
 endif
 LFLAGS_R=$(COMMON_LFLAGS) -ldll_static
 LFLAGS_D=$(COMMON_LFLAGS) -ldll_static_debug
-ifeq ($(CUDA_AVAILABLE),1)
-	LFLAGS_R += -L/usr/local/cuda-$(CUDA_VERSION)/lib64 -lcuda -lcurand -lcudart
-	LFLAGS_D += -L/usr/local/cuda-$(CUDA_VERSION)/lib64 -lcuda -lcurand -lcudart
+ifeq ($(USE_CUDA),1)
+	LFLAGS_R += -L$(CUDA_PATH)/lib64 -lcuda -lcurand -lcudart
+	LFLAGS_D += -L$(CUDA_PATH)/lib64 -lcuda -lcurand -lcudart
 endif
 LFLAGS_R += -pthread -lgtest
 LFLAGS_D += -pthread -lgtest
