@@ -24,12 +24,12 @@ debug: cuda_debug $(OBJS_D)
 #### COMPILING
 
 cuda_release:
-ifeq ($(CUDA_AVAILABLE),1)
+ifeq ($(USE_CUDA),1)
 	@+make -C cuda release
 endif
 
 cuda_debug:
-ifeq ($(CUDA_AVAILABLE),1)
+ifeq ($(USE_CUDA),1)
 	@+make -C cuda debug
 endif
 
